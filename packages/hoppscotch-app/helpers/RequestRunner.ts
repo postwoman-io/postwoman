@@ -1,155 +1,80 @@
 import { Observable } from "rxjs"
 import { filter } from "rxjs/operators"
-import getEnvironmentVariablesFromScript from "./preRequest"
+import { chain, right, TaskEither } from "fp-ts/lib/TaskEither"
+import { pipe } from "fp-ts/lib/function"
+import { runTestScript, TestDescriptor } from "@hoppscotch/js-sandbox"
+import { isRight } from "fp-ts/lib/Either"
+import { getFinalEnvsFromPreRequest } from "./preRequest"
 import { getEffectiveRESTRequest } from "./utils/EffectiveURL"
 import { HoppRESTResponse } from "./types/HoppRESTResponse"
 import { createRESTNetworkRequestStream } from "./network"
-import runTestScriptWithVariables, {
-  transformResponseForTesting,
-} from "./postwomanTesting"
 import { HoppTestData, HoppTestResult } from "./types/HoppTestResult"
+import { isJSONContentType } from "./utils/contenttypes"
 import { getRESTRequest, setRESTTestResults } from "~/newstore/RESTSession"
 
-/**
- * Runs a REST network request along with all the
- * other side processes (like running test scripts)
- */
-export function runRESTRequest$(): Observable<HoppRESTResponse> {
-  const envs = getEnvironmentVariablesFromScript(
-    getRESTRequest().preRequestScript
+const getTestableBody = (res: HoppRESTResponse & { type: "success" }) => {
+  const contentTypeHeader = res.headers.find(
+    (h) => h.value.toLowerCase() === "content-type"
   )
 
-  const effectiveRequest = getEffectiveRESTRequest(getRESTRequest(), {
-    name: "Env",
-    variables: Object.keys(envs).map((key) => {
-      return {
-        key,
-        value: envs[key],
-      }
-    }),
-  })
+  const rawBody = new TextDecoder("utf-8").decode(res.body)
 
-  const stream = createRESTNetworkRequestStream(effectiveRequest)
+  if (!contentTypeHeader || !isJSONContentType(contentTypeHeader.value))
+    return rawBody
 
-  // Run Test Script when request ran successfully
-  const subscription = stream
-    .pipe(filter((res) => res.type === "success"))
-    .subscribe((res) => {
-      const testReport: {
-        report: "" // ¯\_(ツ)_/¯
-        testResults: Array<
-          | {
-              result: "FAIL"
-              message: string
-              styles: { icon: "close"; class: "cl-error-response" }
-            }
-          | {
-              result: "PASS"
-              message: string
-              styles: { icon: "check"; class: "success-response" }
-            }
-          | { startBlock: string; styles: { icon: ""; class: "" } }
-          | { endBlock: true; styles: { icon: ""; class: "" } }
-        >
-        errors: [] // ¯\_(ツ)_/¯
-      } = runTestScriptWithVariables(effectiveRequest.testScript, {
-        response: transformResponseForTesting(res),
-      }) as any
+  return JSON.parse(rawBody)
+}
 
-      setRESTTestResults(translateToNewTestResults(testReport))
-
-      subscription.unsubscribe()
+export const runRESTRequest$: TaskEither<
+  string,
+  Observable<HoppRESTResponse>
+> = pipe(
+  getFinalEnvsFromPreRequest(),
+  chain((envs) => {
+    console.log(envs)
+    const effectiveRequest = getEffectiveRESTRequest(getRESTRequest(), {
+      name: "Env",
+      variables: envs,
     })
 
-  return stream
-}
+    const stream = createRESTNetworkRequestStream(effectiveRequest)
 
-function isTestPass(x: any): x is {
-  result: "PASS"
-  styles: { icon: "check"; class: "success-response" }
-} {
-  return x.result !== undefined && x.result === "PASS"
-}
+    // Run Test Script when request ran successfully
+    const subscription = stream
+      .pipe(filter((res) => res.type === "success"))
+      .subscribe(async (res) => {
+        if (res.type === "success") {
+          const runResult = await runTestScript(res.req.testScript, {
+            status: res.statusCode,
+            body: getTestableBody(res),
+            headers: res.headers,
+          })()
 
-function isTestFail(x: any): x is {
-  result: "FAIL"
-  message: string
-  styles: { icon: "close"; class: "cl-error-response" }
-} {
-  return x.result !== undefined && x.result === "FAIL"
-}
+          // TODO: Handle script executation fails (isLeft)
+          if (isRight(runResult)) {
+            setRESTTestResults(translateToSandboxTestResults(runResult.right))
+          }
 
-function isStartBlock(
-  x: any
-): x is { startBlock: string; styles: { icon: ""; class: "" } } {
-  return x.startBlock !== undefined
-}
-
-function isEndBlock(
-  x: any
-): x is { endBlock: true; styles: { icon: ""; class: "" } } {
-  return x.endBlock !== undefined
-}
-
-function translateToNewTestResults(testReport: {
-  report: "" // ¯\_(ツ)_/¯
-  testResults: Array<
-    | {
-        result: "FAIL"
-        message: string
-        styles: { icon: "close"; class: "cl-error-response" }
-      }
-    | {
-        result: "PASS"
-        message: string
-        styles: { icon: "check"; class: "success-response" }
-      }
-    | { startBlock: string; styles: { icon: ""; class: "" } }
-    | { endBlock: true; styles: { icon: ""; class: "" } }
-  >
-  errors: [] // ¯\_(ツ)_/¯
-}): HoppTestResult {
-  // Build a stack of test data which we eventually build up based on the results
-  const testsStack: HoppTestData[] = [
-    {
-      description: "root",
-      tests: [],
-      expectResults: [],
-    },
-  ]
-
-  testReport.testResults.forEach((result) => {
-    // This is a test block start, push an empty test to the stack
-    if (isStartBlock(result)) {
-      testsStack.push({
-        description: result.startBlock,
-        tests: [],
-        expectResults: [],
+          subscription.unsubscribe()
+        }
       })
-    } else if (isEndBlock(result)) {
-      // End of the block, pop the stack and add it as a child to the current stack top
-      const testData = testsStack.pop()!
-      testsStack[testsStack.length - 1].tests.push(testData)
-    } else if (isTestPass(result)) {
-      // A normal PASS expectation
-      testsStack[testsStack.length - 1].expectResults.push({
-        status: "pass",
-        message: result.message,
-      })
-    } else if (isTestFail(result)) {
-      // A normal FAIL expectation
-      testsStack[testsStack.length - 1].expectResults.push({
-        status: "fail",
-        message: result.message,
-      })
-    }
+
+    return right(stream)
   })
+)
 
-  // We should end up with only the root stack entry
-  if (testsStack.length !== 1) throw new Error("Invalid test result structure")
-
+function translateToSandboxTestResults(
+  testDesc: TestDescriptor
+): HoppTestResult {
+  const translateChildTests = (child: TestDescriptor): HoppTestData => {
+    return {
+      description: child.descriptor,
+      expectResults: child.expectResults,
+      tests: child.children.map(translateChildTests),
+    }
+  }
   return {
-    expectResults: testsStack[0].expectResults,
-    tests: testsStack[0].tests,
+    expectResults: testDesc.expectResults,
+    tests: testDesc.children.map(translateChildTests),
   }
 }

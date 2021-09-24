@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["ESNext", "ESNext.AsyncIterable", "DOM"],
+    "esModuleInterop": true,
+    "strict": true,
+    "paths": {
+      "~/*": ["./src/*"],
+      "@/*": ["./src/*"]
+    },
+    "types": [
+      "@types/node",
+      "@types/jest",
+      "@relmify/jest-fp-ts"
+    ],
+    "outDir": "./lib/",
+    "rootDir": "./src/",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["./src", "./src/global.d.ts"],
+  "exclude": ["node_modules", "./src/__tests__", "./src/demo.ts"]
+}

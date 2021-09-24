@@ -22,10 +22,12 @@
     "do-dev": "pnpm run dev",
     "do-build-prod": "pnpm run generate",
     "do-prod-start": "pnpm run start",
-    "do-lintfix": "pnpm run lint"
+    "do-lintfix": "pnpm run lint",
+    "do-test": "pnpm run test"
   },
   "dependencies": {
     "@apollo/client": "^3.4.12",
+    "@hoppscotch/js-sandbox": "workspace:^0.3.1",
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/composition-api": "^0.29.0",
     "@nuxtjs/gtm": "^2.4.0",
@@ -41,6 +43,7 @@
     "core-js": "^3.17.3",
     "esprima": "^4.0.1",
     "firebase": "^9.0.2",
+    "fp-ts": "^2.11.3",
     "fuse.js": "^6.4.6",
     "graphql": "^15.5.3",
     "graphql-language-service-interface": "^2.8.4",

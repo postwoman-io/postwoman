@@ -1,0 +1,59 @@
+{
+  "name": "@hoppscotch/js-sandbox",
+  "version": "0.3.1",
+  "description": "JavaScript sandboxes for running external scripts used by Hoppscotch clients",
+  "main": "./lib/index.js",
+  "types": "./lib/",
+  "type": "module",
+  "engines": {
+    "node": ">=14",
+    "pnpm": ">=3"
+  },
+  "scripts": {
+    "demo": "esrun src/demo.ts",
+    "lint": "eslint --ext .ts,.js --ignore-path .gitignore",
+    "test": "npx jest",
+    "build": "npx tsc",
+    "clean": "npx tsc --build --clean",
+    "prepublish": "npm run build",
+    "do-lintfix": "pnpm run lint",
+    "do-test": "pnpm run test"
+  },
+  "keywords": [
+    "hoppscotch",
+    "sandbox",
+    "js-sandbox",
+    "apis",
+    "test-runner"
+  ],
+  "author": "The Hoppscotch Team <support@hoppscotch.io> (https://hoppscotch.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "fp-ts": "^2.11.3",
+    "lodash": "^4.17.21",
+    "quickjs-emscripten": "^0.13.0"
+  },
+  "devDependencies": {
+    "@digitak/esrun": "^1.2.4",
+    "@relmify/jest-fp-ts": "^1.1.1",
+    "@types/jest": "^26.0.23",
+    "@types/lodash": "^4.14.173",
+    "@types/node": "^15.12.5",
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1",
+    "eslint": "^7.29.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "io-ts": "^2.2.16",
+    "jest": "^27.0.6",
+    "prettier": "^2.3.2",
+    "pretty-quick": "^3.1.1",
+    "ts-jest": "^27.0.3",
+    "typescript": "^4.3.5"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "@relmify/jest-fp-ts"
+    ]
+  }
+}

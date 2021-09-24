@@ -11,7 +11,8 @@
     "generate": "pnpm -r do-build-prod",
     "start": "pnpm -r do-prod-start",
     "lintfix": "pnpm -r do-lintfix",
-    "pre-commit": "pnpm -r do-lintfix"
+    "pre-commit": "pnpm -r do-lintfix",
+    "test": "pnpm -r do-test"
   },
   "workspaces": [
     "./packages/*"

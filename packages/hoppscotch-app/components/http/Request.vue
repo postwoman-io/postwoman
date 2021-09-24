@@ -232,6 +232,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useContext, watch } from "@nuxtjs/composition-api"
+import { isRight } from "fp-ts/lib/Either"
 import {
   updateRESTResponse,
   restEndpoint$,
@@ -303,25 +304,30 @@ watch(loading, () => {
   }
 })
 
-const newSendRequest = () => {
+const newSendRequest = async () => {
   loading.value = true
 
-  subscribeToStream(
-    runRESTRequest$(),
-    (responseState) => {
-      if (loading.value) {
-        // Check exists because, loading can be set to false
-        // when cancelled
-        updateRESTResponse(responseState)
+  const streamResult = await runRESTRequest$()
+
+  // TODO: What if stream fetching failed (script execution errors ?) (isLeft)
+  if (isRight(streamResult)) {
+    subscribeToStream(
+      streamResult.right,
+      (responseState) => {
+        if (loading.value) {
+          // Check exists because, loading can be set to false
+          // when cancelled
+          updateRESTResponse(responseState)
+        }
+      },
+      () => {
+        loading.value = false
+      },
+      () => {
+        loading.value = false
       }
-    },
-    () => {
-      loading.value = false
-    },
-    () => {
-      loading.value = false
-    }
-  )
+    )
+  }
 }
 
 const cancelRequest = () => {
