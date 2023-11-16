@@ -892,6 +892,9 @@ importers:
       '@tauri-apps/cli':
         specifier: ^1.3.0
         version: 1.5.6
+      '@urql/core':
+        specifier: ^4.1.1
+        version: 4.1.4(graphql@16.8.1)
       '@vueuse/core':
         specifier: ^10.4.1
         version: 10.5.0(vue@3.3.4)
@@ -901,6 +904,9 @@ importers:
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
+      cookie:
+        specifier: ^0.5.0
+        version: 0.5.0
       dioc:
         specifier: workspace:^
         version: link:../dioc
@@ -928,18 +934,27 @@ importers:
       stream-browserify:
         specifier: ^3.0.0
         version: 3.0.0
+      subscriptions-transport-ws:
+        specifier: ^0.11.0
+        version: 0.11.0(graphql@16.8.1)
       tauri:
         specifier: link:@tauri-apps/api/tauri
         version: link:@tauri-apps/api/tauri
       tauri-plugin-store-api:
         specifier: github:tauri-apps/tauri-plugin-store#v1
         version: github.com/tauri-apps/tauri-plugin-store/6e19887b1bdea9b921a31993d72396a350731e07
+      tauri-plugin-websocket-api:
+        specifier: github:tauri-apps/tauri-plugin-websocket#v1
+        version: github.com/tauri-apps/tauri-plugin-websocket/b55e90e968b9020d1eb8de97c97655bfa002dfd8
       util:
         specifier: ^0.12.4
         version: 0.12.5
       vue:
         specifier: ^3.2.45
         version: 3.3.4
+      wonka:
+        specifier: ^6.3.4
+        version: 6.3.4
       workbox-window:
         specifier: ^6.5.4
         version: 6.6.0
@@ -974,6 +989,9 @@ importers:
       '@rushstack/eslint-patch':
         specifier: ^1.1.4
         version: 1.3.3
+      '@types/cookie':
+        specifier: ^0.5.1
+        version: 0.5.1
       '@types/lodash-es':
         specifier: ^4.17.9
         version: 4.17.10
@@ -1568,7 +1586,6 @@ packages:
         optional: true
     dependencies:
       graphql: 16.8.1
-    dev: true
 
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
@@ -8333,7 +8350,7 @@ packages:
     dependencies:
       '@intlify/bundle-utils': 7.4.0(vue-i18n@9.2.2)
       '@intlify/shared': 9.4.1
-      '@rollup/pluginutils': 5.0.3(rollup@2.79.1)
+      '@rollup/pluginutils': 5.0.3(rollup@3.29.4)
       '@vue/compiler-sfc': 3.3.4
       debug: 4.3.4(supports-color@9.2.2)
       fast-glob: 3.3.1
@@ -9803,6 +9820,7 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 2.79.1
+    dev: true
 
   /@rollup/pluginutils@5.0.3(rollup@3.29.4):
     resolution: {integrity: sha512-hfllNN4a80rwNQ9QCxhxuHCGHMAvabXqxNdaChUSSadMre7t4iEUI6fFAhBOn/eIYTgYVhBv7vCLsAJ4u3lf3g==}
@@ -9817,7 +9835,6 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.29.4
-    dev: true
 
   /@rushstack/eslint-patch@1.1.4:
     resolution: {integrity: sha512-LwzQKA4vzIct1zNZzBmRKI9QuNpLgTQMEjsQLf3BXuGYb3QPTP4Yjf6mkdX+X1mYttZ808QpOwAzZjv28kq7DA==}
@@ -11534,9 +11551,10 @@ packages:
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
+    dev: false
 
-  /@urql/core@4.1.3(graphql@16.6.0):
-    resolution: {integrity: sha512-Wapa58olpEJtZzSEuZNDxzBxmOmHuivG6Hb/QPc6HjHfCJ6f36gnlWc9a9TsC8Vddle+6PsS6+quMMTuj+bj7A==}
+  /@urql/core@4.1.4(graphql@16.6.0):
+    resolution: {integrity: sha512-wFm67yljv4uFAWNtPwcS1NMhF/n+p/68i+kZU6R1dPxhfq2nBW0142p4szeZsBDrtO7pBdOhp7YeSZROFFlXZg==}
     dependencies:
       '@0no-co/graphql.web': 1.0.4(graphql@16.6.0)
       wonka: 6.3.4
@@ -11544,14 +11562,13 @@ packages:
       - graphql
     dev: false
 
-  /@urql/core@4.1.3(graphql@16.8.0):
-    resolution: {integrity: sha512-Wapa58olpEJtZzSEuZNDxzBxmOmHuivG6Hb/QPc6HjHfCJ6f36gnlWc9a9TsC8Vddle+6PsS6+quMMTuj+bj7A==}
+  /@urql/core@4.1.4(graphql@16.8.0):
+    resolution: {integrity: sha512-wFm67yljv4uFAWNtPwcS1NMhF/n+p/68i+kZU6R1dPxhfq2nBW0142p4szeZsBDrtO7pBdOhp7YeSZROFFlXZg==}
     dependencies:
       '@0no-co/graphql.web': 1.0.4(graphql@16.8.0)
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
-    dev: false
 
   /@urql/core@4.1.4(graphql@16.8.1):
     resolution: {integrity: sha512-wFm67yljv4uFAWNtPwcS1NMhF/n+p/68i+kZU6R1dPxhfq2nBW0142p4szeZsBDrtO7pBdOhp7YeSZROFFlXZg==}
@@ -11560,7 +11577,6 @@ packages:
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
-    dev: true
 
   /@urql/devtools@2.0.3(@urql/core@4.1.1)(graphql@16.8.0):
     resolution: {integrity: sha512-TktPLiBS9LcBPHD6qcnb8wqOVcg3Bx0iCtvQ80uPpfofwwBGJmqnQTjUdEFU6kwaLOFZULQ9+Uo4831G823mQw==}
@@ -11576,7 +11592,7 @@ packages:
   /@urql/exchange-auth@2.1.6(graphql@16.6.0):
     resolution: {integrity: sha512-snOlt7p5kYq0KnPDuXkKe2qW3/BucQZOElvTeo3svLQuk9JiNJVnm6ffQ6QGiGO+G3AtMrctnno1+X44fLtDuQ==}
     dependencies:
-      '@urql/core': 4.1.3(graphql@16.6.0)
+      '@urql/core': 4.1.4(graphql@16.6.0)
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
@@ -11585,7 +11601,7 @@ packages:
   /@urql/exchange-auth@2.1.6(graphql@16.8.0):
     resolution: {integrity: sha512-snOlt7p5kYq0KnPDuXkKe2qW3/BucQZOElvTeo3svLQuk9JiNJVnm6ffQ6QGiGO+G3AtMrctnno1+X44fLtDuQ==}
     dependencies:
-      '@urql/core': 4.1.3(graphql@16.8.0)
+      '@urql/core': 4.1.4(graphql@16.8.0)
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
@@ -11605,7 +11621,7 @@ packages:
     resolution: {integrity: sha512-ajBtuOkCkWgYJVk8MYqlhTF2vNojEREitcUE62q8tUxC6zDHZybk8DUPe6RM0HUyUw6IPAnzmDf6djK5JOEvvw==}
     dependencies:
       '@0no-co/graphql.web': 1.0.4(graphql@16.8.0)
-      '@urql/core': 4.1.1(graphql@16.8.0)
+      '@urql/core': 4.1.4(graphql@16.8.0)
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
@@ -11639,7 +11655,7 @@ packages:
     peerDependencies:
       vue: ^2.7.0 || ^3.0.0
     dependencies:
-      '@urql/core': 4.1.3(graphql@16.6.0)
+      '@urql/core': 4.1.4(graphql@16.6.0)
       vue: 3.2.45
       wonka: 6.3.4
     transitivePeerDependencies:
@@ -23741,7 +23757,7 @@ packages:
       graphql: 16.8.0
       iterall: 1.3.0
       symbol-observable: 1.2.0
-      ws: 7.4.6
+      ws: 7.5.9
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -28155,6 +28171,14 @@ packages:
   github.com/tauri-apps/tauri-plugin-store/6e19887b1bdea9b921a31993d72396a350731e07:
     resolution: {tarball: https://codeload.github.com/tauri-apps/tauri-plugin-store/tar.gz/6e19887b1bdea9b921a31993d72396a350731e07}
     name: tauri-plugin-store-api
+    version: 0.0.0
+    dependencies:
+      '@tauri-apps/api': 1.5.1
+    dev: false
+
+  github.com/tauri-apps/tauri-plugin-websocket/b55e90e968b9020d1eb8de97c97655bfa002dfd8:
+    resolution: {tarball: https://codeload.github.com/tauri-apps/tauri-plugin-websocket/tar.gz/b55e90e968b9020d1eb8de97c97655bfa002dfd8}
+    name: tauri-plugin-websocket-api
     version: 0.0.0
     dependencies:
       '@tauri-apps/api': 1.5.1

@@ -22,6 +22,7 @@ import { RTCookie } from 'src/decorators/rt-cookie.decorator';
 import {
   AuthProvider,
   authCookieHandler,
+  authDesktopDeepLinkHandler,
   authProviderCheck,
   throwHTTPErr,
 } from './helper';
@@ -102,12 +103,16 @@ export class AuthController {
   async googleAuthRedirect(@Request() req, @Res() res) {
     const authTokens = await this.authService.generateAuthTokens(req.user.uid);
     if (E.isLeft(authTokens)) throwHTTPErr(authTokens.left);
-    authCookieHandler(
-      res,
-      authTokens.right,
-      true,
-      req.authInfo.state.redirect_uri,
-    );
+    if (req.authInfo.state.redirect_uri === 'desktop') {
+      authDesktopDeepLinkHandler(res, authTokens.right);
+    } else {
+      authCookieHandler(
+        res,
+        authTokens.right,
+        true,
+        req.authInfo.state.redirect_uri,
+      );
+    }
   }
 
   /**

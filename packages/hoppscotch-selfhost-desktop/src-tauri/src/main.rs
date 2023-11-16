@@ -21,6 +21,7 @@ fn main() {
     tauri_plugin_deep_link::prepare("io.hoppscotch.desktop");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_websocket::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {

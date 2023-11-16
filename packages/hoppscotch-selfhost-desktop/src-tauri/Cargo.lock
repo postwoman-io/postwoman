@@ -550,6 +550,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-encoding"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
+
+[[package]]
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1271,6 +1277,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-deep-link",
  "tauri-plugin-store",
+ "tauri-plugin-websocket",
  "tauri-plugin-window-state",
  "url",
  "windows 0.51.1",
@@ -2798,6 +2805,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest",
+]
+
+[[package]]
 name = "sha2"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3192,13 +3210,29 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-store"
 version = "0.0.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#5b814f56e6368fdec46c4ddb04a07e0923ff995a"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#642a195d34ec5bf6bbc780dde9c02fca33e1bd00"
 dependencies = [
  "log",
  "serde",
  "serde_json",
  "tauri",
  "thiserror",
+]
+
+[[package]]
+name = "tauri-plugin-websocket"
+version = "0.0.0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#642a195d34ec5bf6bbc780dde9c02fca33e1bd00"
+dependencies = [
+ "futures-util",
+ "log",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "tauri",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite",
 ]
 
 [[package]]
@@ -3430,6 +3464,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "212d5dcb2a1ce06d81107c3d0ffa3121fe974b73f068c8282cb1c32328113b6c"
+dependencies = [
+ "futures-util",
+ "log",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+ "tungstenite",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3568,6 +3616,26 @@ name = "try-lock"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
+
+[[package]]
+name = "tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "native-tls",
+ "rand 0.8.5",
+ "sha1",
+ "thiserror",
+ "url",
+ "utf-8",
+]
 
 [[package]]
 name = "typenum"

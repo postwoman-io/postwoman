@@ -49,7 +49,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": "none"
+      "csp": null
     },
     "updater": {
       "active": false
