@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -66,6 +69,7 @@
     "rxjs": "7.6.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "8.4.1",
     "@nestjs/cli": "10.2.1",
     "@nestjs/schematics": "10.0.3",
     "@nestjs/testing": "10.2.7",
