@@ -32,15 +32,30 @@ export class MailerModule {
     return {
       module: MailerModule,
       imports: [
-        NestMailerModule.forRoot({
-          transport: mailerSmtpUrl ?? throwErr(MAILER_SMTP_URL_UNDEFINED),
-          defaults: {
-            from: mailerAddressFrom ?? throwErr(MAILER_FROM_ADDRESS_UNDEFINED),
-          },
-          template: {
-            dir: __dirname + '/templates',
-            adapter: new HandlebarsAdapter(),
-          },
+        NestMailerModule.forRootAsync({
+          useFactory: () => ({
+            transport: {
+              host: process.env.SMTP_DOMAIN,
+              port: process.env.SMTP_PORT,
+              secure: process.env.SMTP_SECURE, // Use `true` for port 465, `false` for all other ports
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD,
+              },
+              tls: {
+                rejectUnauthorized: process.env.SMTP_REJECT_WITHOUT_VALID_CERT, // If not false it will reject TLS with invalid cert
+              },
+            },
+            defaults: {
+              from:
+                process.env.MAILER_ADDRESS_FROM ??
+                throwErr(MAILER_FROM_ADDRESS_UNDEFINED),
+            },
+            template: {
+              dir: __dirname + '/templates',
+              adapter: new HandlebarsAdapter(),
+            },
+          }),
         }),
       ],
     };
