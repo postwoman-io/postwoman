@@ -22,7 +22,7 @@ RUN pnpm exec prisma generate
 RUN pnpm run build
 COPY --from=base_builder /usr/src/app/packages/hoppscotch-backend/backend.Caddyfile /etc/caddy/backend.Caddyfile
 # Remove the env file to avoid backend copying it in and using it
-RUN rm "../../.env"
+RUN rm -f "../../.env"
 ENV PRODUCTION="true"
 ENV PORT=8080
 ENV APP_PORT=${PORT}
