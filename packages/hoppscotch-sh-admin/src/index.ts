@@ -17,14 +17,8 @@ import { auth } from './helpers/auth';
 import { pipe } from 'fp-ts/function';
 import * as O from 'fp-ts/Option';
 import { GRAPHQL_UNAUTHORIZED } from './helpers/errors';
-import { PluginsDef, setPluginsDef } from './plugins';
 
-export function createHoppAdminApp(
-  el: string | Element,
-  pluginsDef: PluginsDef
-) {
-  setPluginsDef(pluginsDef);
-
+export function createHoppAdminApp(el: string | Element) {
   const app = createApp(App).use(
     urql,
     createClient({

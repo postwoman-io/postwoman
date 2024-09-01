@@ -40,6 +40,13 @@
         />
       </div>
     </div>
+
+    <div
+      v-for="(component, index) in plugins.ui.additionalMetricItems"
+      :key="index"
+    >
+      <component :is="component" />
+    </div>
   </div>
 </template>
 
@@ -52,6 +59,7 @@ import UsersIcon from '~icons/lucide/users';
 import LineChartIcon from '~icons/lucide/line-chart';
 import FolderTreeIcon from '~icons/lucide/folder-tree';
 import { useI18n } from '../composables/i18n';
+import { plugins } from '../plugins';
 
 const t = useI18n();
 

@@ -1,0 +1,35 @@
+{
+  "name": "@hoppscotch/shc-admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hoppscotch/common": "workspace:^",
+    "@hoppscotch/sh-admin": "workspace:^",
+    "@hoppscotch/ui": "0.1.3",
+    "@intlify/unplugin-vue-i18n": "1.2.0",
+    "@vueuse/core": "11.0.1",
+    "unplugin-icons": "0.14.9",
+    "unplugin-vue-components": "0.21.0",
+    "vue": "^3.4.31",
+    "vue-router": "4.1.0"
+  },
+  "devDependencies": {
+    "@import-meta-env/unplugin": "0.4.8",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "autoprefixer": "10.4.16",
+    "postcss": "8.4.41",
+    "tailwindcss": "3.4.10",
+    "typescript": "^5.2.2",
+    "unplugin-fonts": "1.0.3",
+    "vite": "^5.3.4",
+    "vite-plugin-pages": "0.26.0",
+    "vite-plugin-vue-layouts": "0.7.0",
+    "vue-tsc": "^2.0.24"
+  }
+}

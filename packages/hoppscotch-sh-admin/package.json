@@ -1,5 +1,5 @@
 {
-  "name": "hoppscotch-sh-admin",
+  "name": "@hoppscotch/sh-admin",
   "private": true,
   "version": "2024.8.1",
   "type": "module",

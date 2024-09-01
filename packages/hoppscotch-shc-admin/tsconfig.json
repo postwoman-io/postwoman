@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@hoppscotch/common": ["../hoppscotch-common/src/index.ts"],
+      "@hoppscotch/common/*": ["../hoppscotch-common/src/*"],
+      "@platform/*": ["./src/platform/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@hoppscotch/sh-admin": ["../hoppscotch-sh-admin/src/index.ts"],
+      "@hoppscotch/sh-admin/*": ["../hoppscotch-sh-admin/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
