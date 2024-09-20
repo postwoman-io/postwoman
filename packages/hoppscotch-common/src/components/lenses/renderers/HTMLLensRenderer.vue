@@ -91,12 +91,14 @@ const htmlResponse = ref<any | null>(null)
 const WRAP_LINES = useNestedSetting("WRAP_LINES", "httpResponseBody")
 
 const { responseBodyText } = useResponseBody(props.response)
+
+const filename = t("filename.lens", {
+  request_name: props.response.req.name,
+})
 const { downloadIcon, downloadResponse } = useDownloadResponse(
   "text/html",
   responseBodyText,
-  t("filename.lens", {
-    request_name: props.response.req.name,
-  })
+  `${filename}.html`
 )
 const defaultPreview =
   persistenceService.getLocalConfig("lens_html_preview") === "true"
