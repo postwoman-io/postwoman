@@ -63,21 +63,20 @@ async function bootstrap() {
     }),
   );
 
-  if (configService.get('PRODUCTION') === 'false') {
-    console.log('Enabling CORS with development settings');
+if (configService.get('PRODUCTION') === 'false') { 
+  console.log('Enabling CORS with development settings'); 
+  app.enableCors({
+    origin: configService.get('DEV_WHITELISTED_ORIGINS').split(','), 
+    credentials: true,
+  }); 
+} else { 
+  console.log('Enabling CORS with production settings'); 
+  app.enableCors({
+    origin: configService.get('PROD_WHITELISTED_ORIGINS'), 
+    credentials: true,
+  });
+}
 
-    app.enableCors({
-      origin: configService.get('WHITELISTED_ORIGINS').split(','),
-      credentials: true,
-    });
-  } else {
-    console.log('Enabling CORS with production settings');
-
-    app.enableCors({
-      origin: configService.get('WHITELISTED_ORIGINS').split(','),
-      credentials: true,
-    });
-  }
   app.enableVersioning({
     type: VersioningType.URI,
   });
