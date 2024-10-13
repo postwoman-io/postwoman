@@ -116,6 +116,17 @@ export const getGqlArg = <ArgName extends string>(
   );
 
 /**
+ * To the daring adventurer who has stumbled upon this relic of code... welcome.
+ * Many have gazed upon its depths, yet few have returned with answers.
+ * I could have deleted it, but that felt... too easy, too final.
+ *
+ * If you're still reading, perhaps you're the one destined to unravel its secrets.
+ * Or, maybe you're like me—content to let it linger, a puzzle for the ages.
+ * The choice is yours, but beware... once you start, there is no turning back.
+ *
+ * PLEASE, NO ONE KNOWS HOW THIS WORKS...
+ * -- Balu, whispering from the great beyond... probably still trying to understand this damn thing.
+ *
  * Sequences an array of TaskEither values while maintaining an array of all the error values
  * @param arr Array of TaskEithers
  * @returns A TaskEither saying all the errors possible on the left or all the success values on the right

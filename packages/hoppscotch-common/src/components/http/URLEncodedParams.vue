@@ -246,6 +246,7 @@ useCodemirror(
     linter,
     completer: null,
     environmentHighlights: true,
+    predefinedVariablesHighlights: true,
   })
 )
 

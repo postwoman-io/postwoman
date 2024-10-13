@@ -1,4 +1,7 @@
+import { HoppCollection } from "@hoppscotch/data";
+import { entityReference } from "verzod";
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 
 import {
   transformWorkspaceCollections,
@@ -16,6 +19,26 @@ import {
 
 import TRANSFORMED_MULTIPLE_CHILD_COLLECTIONS_WITH_AUTH_HEADERS_MOCK from "../e2e/fixtures/collections/multiple-child-collections-auth-headers-coll.json";
 
+// Helper function to validate against `HoppCollection` schema and apply relevant migrations
+const migrateCollections = (collections: unknown[]): HoppCollection[] => {
+  const collectionSchemaParsedResult = z
+    .array(entityReference(HoppCollection))
+    .safeParse(collections);
+
+  if (!collectionSchemaParsedResult.success) {
+    throw new Error(
+      `Incoming collections failed schema validation: ${JSON.stringify(collections, null, 2)}`
+    );
+  }
+
+  return collectionSchemaParsedResult.data.map((collection) => {
+    return {
+      ...collection,
+      folders: migrateCollections(collection.folders),
+    };
+  });
+};
+
 describe("workspace-access", () => {
   describe("transformWorkspaceCollection", () => {
     test("Successfully transforms collection data with deeply nested collections and authorization/headers set at each level to the `HoppCollection` format", () => {
@@ -27,13 +50,15 @@ describe("workspace-access", () => {
     });
 
     test("Successfully transforms collection data with multiple child collections and authorization/headers set at each level to the `HoppCollection` format", () => {
+      const migratedCollections = migrateCollections([
+        TRANSFORMED_MULTIPLE_CHILD_COLLECTIONS_WITH_AUTH_HEADERS_MOCK,
+      ]);
+
       expect(
         transformWorkspaceCollections(
           WORKSPACE_MULTIPLE_CHILD_COLLECTIONS_WITH_AUTH_HEADERS_MOCK
         )
-      ).toEqual([
-        TRANSFORMED_MULTIPLE_CHILD_COLLECTIONS_WITH_AUTH_HEADERS_MOCK,
-      ]);
+      ).toEqual(migratedCollections);
     });
 
     test("Adds the default value for `auth` & `header` fields while transforming collections without authorization/headers set at certain levels", () => {

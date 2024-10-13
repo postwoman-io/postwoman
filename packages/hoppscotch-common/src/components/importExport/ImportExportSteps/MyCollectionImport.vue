@@ -24,7 +24,8 @@
     <HoppButtonPrimary
       class="w-full"
       :label="t('import.title')"
-      :disabled="!hasSelectedCollectionID"
+      :loading="loading"
+      :disabled="!hasSelectedCollectionID || loading"
       @click="fetchCollectionFromMyCollections"
     />
   </div>
@@ -38,6 +39,10 @@ import { useReadonlyStream } from "~/composables/stream"
 import { getRESTCollection, restCollections$ } from "~/newstore/collections"
 
 const t = useI18n()
+
+defineProps<{
+  loading: boolean
+}>()
 
 const mySelectedCollectionID = ref<number | undefined>(undefined)
 

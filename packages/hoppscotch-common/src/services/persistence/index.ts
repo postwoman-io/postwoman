@@ -2,6 +2,8 @@
 
 import {
   Environment,
+  GlobalEnvironment,
+  GlobalEnvironmentVariable,
   translateToNewGQLCollection,
   translateToNewRESTCollection,
 } from "@hoppscotch/data"
@@ -51,9 +53,9 @@ import {
   performSettingsDataMigrations,
   settingsStore,
 } from "../../newstore/settings"
+import { SecretEnvironmentService } from "../secret-environment.service"
 import {
   ENVIRONMENTS_SCHEMA,
-  GLOBAL_ENV_SCHEMA,
   GQL_COLLECTION_SCHEMA,
   GQL_HISTORY_ENTRY_SCHEMA,
   GQL_TAB_STATE_SCHEMA,
@@ -63,16 +65,15 @@ import {
   REST_COLLECTION_SCHEMA,
   REST_HISTORY_ENTRY_SCHEMA,
   REST_TAB_STATE_SCHEMA,
+  SECRET_ENVIRONMENT_VARIABLE_SCHEMA,
   SELECTED_ENV_INDEX_SCHEMA,
   SETTINGS_SCHEMA,
   SOCKET_IO_REQUEST_SCHEMA,
   SSE_REQUEST_SCHEMA,
-  SECRET_ENVIRONMENT_VARIABLE_SCHEMA,
   THEME_COLOR_SCHEMA,
   VUEX_SCHEMA,
   WEBSOCKET_REQUEST_SCHEMA,
 } from "./validation-schemas"
-import { SecretEnvironmentService } from "../secret-environment.service"
 
 /**
  * This service compiles persistence logic across the codebase
@@ -421,9 +422,8 @@ export class PersistenceService extends Service {
 
     if (globalIndex !== -1) {
       const globalEnv = environmentsData[globalIndex]
-      globalEnv.variables.forEach(
-        (variable: Environment["variables"][number]) =>
-          addGlobalEnvVariable(variable)
+      globalEnv.variables.forEach((variable: GlobalEnvironmentVariable) =>
+        addGlobalEnvVariable(variable)
       )
 
       // Remove global from environments
@@ -627,14 +627,14 @@ export class PersistenceService extends Service {
 
   private setupGlobalEnvsPersistence() {
     const globalEnvKey = "globalEnv"
-    let globalEnvData: z.infer<typeof GLOBAL_ENV_SCHEMA> = JSON.parse(
+    let globalEnvData: GlobalEnvironment = JSON.parse(
       window.localStorage.getItem(globalEnvKey) || "[]"
     )
 
     // Validate data read from localStorage
-    const result = GLOBAL_ENV_SCHEMA.safeParse(globalEnvData)
-    if (result.success) {
-      globalEnvData = result.data
+    const result = GlobalEnvironment.safeParse(globalEnvData)
+    if (result.type === "ok") {
+      globalEnvData = result.value
     } else {
       this.showErrorToast(globalEnvKey)
       window.localStorage.setItem(
@@ -643,7 +643,7 @@ export class PersistenceService extends Service {
       )
     }
 
-    setGlobalEnvVariables(globalEnvData as Environment["variables"])
+    setGlobalEnvVariables(globalEnvData)
 
     globalEnv$.subscribe((vars) => {
       window.localStorage.setItem(globalEnvKey, JSON.stringify(vars))

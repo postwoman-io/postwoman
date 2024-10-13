@@ -27,7 +27,7 @@ import {
 } from "~/helpers/backend/graphql"
 import { HoppInheritedProperty } from "../types/HoppInheritedProperties"
 
-const TEAMS_BACKEND_PAGE_SIZE = 10
+export const TEAMS_BACKEND_PAGE_SIZE = 10
 
 /**
  * Finds the parent of a collection and returns the REFERENCE (or null)

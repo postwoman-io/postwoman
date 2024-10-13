@@ -237,6 +237,7 @@ export class TeamsSpotlightSearcherService
       this.tabs.createNewTab({
         request: cloneDeep(selectedRequest.request as HoppRESTRequest),
         isDirty: false,
+        type: "request",
         saveContext: {
           originLocation: "team-collection",
           requestID: selectedRequest.id,

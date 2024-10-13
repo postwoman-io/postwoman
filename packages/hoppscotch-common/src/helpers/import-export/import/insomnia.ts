@@ -230,6 +230,9 @@ const getHoppRequest = (req: InsomniaRequestResource): HoppRESTRequest =>
     testScript: "",
 
     requestVariables: getHoppReqVariables(req),
+
+    //insomnia doesn't have saved response
+    responses: {},
   })
 
 const getHoppFolder = (

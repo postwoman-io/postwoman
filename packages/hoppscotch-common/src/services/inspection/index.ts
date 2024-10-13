@@ -1,4 +1,7 @@
-import { HoppRESTRequest } from "@hoppscotch/data"
+import {
+  HoppRESTRequest,
+  HoppRESTResponseOriginalRequest,
+} from "@hoppscotch/data"
 import { refDebounced } from "@vueuse/core"
 import { Service } from "dioc"
 import { computed, markRaw, reactive } from "vue"
@@ -89,7 +92,7 @@ export interface Inspector {
    * @returns The ref to the inspector results
    */
   getInspections: (
-    req: Readonly<Ref<HoppRESTRequest>>,
+    req: Readonly<Ref<HoppRESTRequest | HoppRESTResponseOriginalRequest>>,
     res: Readonly<Ref<HoppRESTResponse | null | undefined>>
   ) => Ref<InspectorResult[]>
 }
@@ -124,12 +127,21 @@ export class InspectionService extends Service {
     watch(
       () => [this.inspectors.entries(), this.restTab.currentActiveTab.value.id],
       () => {
-        const reqRef = computed(
-          () => this.restTab.currentActiveTab.value.document.request
+        const currentTabRequest = computed(() =>
+          this.restTab.currentActiveTab.value.document.type === "request"
+            ? this.restTab.currentActiveTab.value.document.request
+            : this.restTab.currentActiveTab.value.document.response
+                .originalRequest
         )
-        const resRef = computed(
-          () => this.restTab.currentActiveTab.value.document.response
+
+        const currentTabResponse = computed(() =>
+          this.restTab.currentActiveTab.value.document.type === "request"
+            ? this.restTab.currentActiveTab.value.document.response
+            : null
         )
+
+        const reqRef = computed(() => currentTabRequest.value)
+        const resRef = computed(() => currentTabResponse.value)
 
         const debouncedReq = refDebounced(reqRef, 1000, { maxWait: 2000 })
         const debouncedRes = refDebounced(resRef, 1000, { maxWait: 2000 })

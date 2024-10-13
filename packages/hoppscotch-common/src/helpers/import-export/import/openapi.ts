@@ -18,6 +18,8 @@ import {
   makeCollection,
   HoppRESTRequestVariable,
   HoppRESTRequest,
+  HoppRESTRequestResponses,
+  HoppRESTResponseOriginalRequest,
 } from "@hoppscotch/data"
 import { pipe, flow } from "fp-ts/function"
 import * as A from "fp-ts/Array"
@@ -26,7 +28,8 @@ import * as O from "fp-ts/Option"
 import * as TE from "fp-ts/TaskEither"
 import * as RA from "fp-ts/ReadonlyArray"
 import { IMPORTER_INVALID_FILE_FORMAT } from "."
-import { cloneDeep } from "lodash-es"
+import { cloneDeep, isNumber } from "lodash-es"
+import { getStatusCodeReasonPhrase } from "~/helpers/utils/statusCodes"
 
 export const OPENAPI_DEREF_ERROR = "openapi/deref_error" as const
 
@@ -106,6 +109,105 @@ const parseOpenAPIVariables = (
       )
     )
   )
+
+const parseOpenAPIV3Responses = (
+  op: OpenAPIV3.OperationObject | OpenAPIV31.OperationObject,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses => {
+  const responses = op.responses
+  if (!responses) return {}
+
+  const res: HoppRESTRequestResponses = {}
+
+  for (const [key, value] of Object.entries(responses)) {
+    const response = value as
+      | OpenAPIV3.ResponseObject
+      | OpenAPIV31.ResponseObject
+
+    // add support for schema key as well
+    const contentType = Object.keys(response.content ?? {})[0]
+    const body = response.content?.[contentType]
+
+    const name = response.description ?? key
+
+    const code = isNumber(key) ? Number(key) : 200
+
+    const status = getStatusCodeReasonPhrase(code)
+
+    const headers: HoppRESTHeader[] = [
+      {
+        key: "content-type",
+        value: contentType ?? "application/json",
+        description: "",
+        active: true,
+      },
+    ]
+
+    res[name] = {
+      name,
+      status,
+      code,
+      headers,
+      body: JSON.stringify(body ?? ""),
+      originalRequest,
+    }
+  }
+
+  return res
+}
+
+const parseOpenAPIV2Responses = (
+  op: OpenAPIV2.OperationObject,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses => {
+  const responses = op.responses
+
+  if (!responses) return {}
+
+  const res: HoppRESTRequestResponses = {}
+
+  for (const [key, value] of Object.entries(responses)) {
+    const response = value as OpenAPIV2.ResponseObject
+
+    // add support for schema key as well
+    const contentType = Object.keys(response.examples ?? {})[0]
+    const body = response.examples?.[contentType]
+
+    const name = response.description ?? key
+
+    const code = isNumber(Number(key)) ? Number(key) : 200
+    const status = getStatusCodeReasonPhrase(code)
+
+    const headers: HoppRESTHeader[] = [
+      {
+        key: "content-type",
+        value: contentType ?? "application/json",
+        description: "",
+        active: true,
+      },
+    ]
+
+    res[name] = {
+      name,
+      status,
+      code,
+      headers,
+      body: body ?? "",
+      originalRequest,
+    }
+  }
+
+  return res
+}
+
+const parseOpenAPIResponses = (
+  doc: OpenAPI.Document,
+  op: OpenAPIOperationType,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses =>
+  isOpenAPIV3Operation(doc, op)
+    ? parseOpenAPIV3Responses(op, originalRequest)
+    : parseOpenAPIV2Responses(op, originalRequest)
 
 const parseOpenAPIHeaders = (params: OpenAPIParamsType[]): HoppRESTHeader[] =>
   pipe(
@@ -657,6 +759,25 @@ const convertPathToHoppReqs = (
           requestVariables: parseOpenAPIVariables(
             (info.parameters as OpenAPIParamsType[] | undefined) ?? []
           ),
+
+          responses: parseOpenAPIResponses(doc, info, {
+            name: info.operationId ?? info.summary ?? "Untitled Request",
+            auth: parseOpenAPIAuth(doc, info),
+            body: parseOpenAPIBody(doc, info),
+            endpoint,
+            // We don't need to worry about reference types as the Dereferencing pass should remove them
+            params: parseOpenAPIParams(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            headers: parseOpenAPIHeaders(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            method: method.toUpperCase(),
+            requestVariables: parseOpenAPIVariables(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            v: "1",
+          }),
         }),
         metadata: {
           tags: info.tags ?? [],

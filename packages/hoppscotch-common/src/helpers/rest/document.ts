@@ -1,4 +1,4 @@
-import { HoppRESTRequest } from "@hoppscotch/data"
+import { HoppRESTRequest, HoppRESTRequestResponse } from "@hoppscotch/data"
 import { HoppRESTResponse } from "../types/HoppRESTResponse"
 import { HoppTestResult } from "../types/HoppTestResult"
 import { RESTOptionTabs } from "~/components/http/RequestOptions.vue"
@@ -18,6 +18,10 @@ export type HoppRESTSaveContext =
        * Index to the request
        */
       requestIndex: number
+      /**
+       * ID of the example response
+       */
+      exampleID?: string
     }
   | {
       /**
@@ -36,13 +40,22 @@ export type HoppRESTSaveContext =
        * ID of the collection loaded
        */
       collectionID?: string
+      /**
+       * ID of the example response
+       */
+      exampleID?: string
     }
   | null
 
 /**
  * Defines a live 'document' (something that is open and being edited) in the app
  */
-export type HoppRESTDocument = {
+export type HoppRequestDocument = {
+  /**
+   * The type of the document
+   */
+  type: "request"
+
   /**
    * The request as it is in the document
    */
@@ -93,3 +106,32 @@ export type HoppRESTDocument = {
    */
   cancelFunction?: () => void
 }
+
+export type HoppSavedExampleDocument = {
+  /**
+   * The type of the document
+   */
+  type: "example-response"
+
+  /**
+   * The response as it is in the document
+   */
+  response: HoppRESTRequestResponse
+
+  /**
+   * Info about where this response should be saved.
+   * This contains where the response is originated from basically.
+   */
+  saveContext?: HoppRESTSaveContext
+
+  /**
+   * Whether the response has any unsaved changes
+   * (atleast as far as we can say)
+   */
+  isDirty: boolean
+}
+
+/**
+ * Defines a live 'document' (something that is open and being edited) in the app
+ */
+export type HoppTabDocument = HoppSavedExampleDocument | HoppRequestDocument

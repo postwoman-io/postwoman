@@ -26,8 +26,8 @@
       <HoppButtonPrimary
         class="w-full"
         :label="t('import.title')"
-        :disabled="!hasURL"
-        :loading="isFetchingUrl"
+        :disabled="disableImportCTA"
+        :loading="isFetchingUrl || loading"
         @click="fetchUrlData"
       />
     </div>
@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import { useI18n } from "@composables/i18n"
 import { useToast } from "~/composables/toast"
 import axios, { AxiosResponse } from "axios"
@@ -44,10 +44,14 @@ const t = useI18n()
 
 const toast = useToast()
 
-const props = defineProps<{
-  caption: string
-  fetchLogic?: (url: string) => Promise<AxiosResponse<any>>
-}>()
+const props = withDefaults(
+  defineProps<{
+    caption: string
+    fetchLogic?: (url: string) => Promise<AxiosResponse<any>>
+    loading?: boolean
+  }>(),
+  { fetchLogic: undefined, loading: false }
+)
 
 const emit = defineEmits<{
   (e: "importFromURL", content: unknown): void
@@ -61,6 +65,8 @@ const isFetchingUrl = ref(false)
 watch(inputChooseGistToImportFrom, (url) => {
   hasURL.value = !!url
 })
+
+const disableImportCTA = computed(() => !hasURL.value || props.loading)
 
 const urlFetchLogic =
   props.fetchLogic ??

@@ -102,6 +102,36 @@ export class TeamCollectionResolver {
     return jsonString.right;
   }
 
+  @Query(() => String, {
+    description:
+      'Returns a JSON string of all the contents of a Team Collection',
+  })
+  @UseGuards(GqlAuthGuard, GqlTeamMemberGuard)
+  @RequiresTeamRole(
+    TeamMemberRole.VIEWER,
+    TeamMemberRole.EDITOR,
+    TeamMemberRole.OWNER,
+  )
+  async exportCollectionToJSON(
+    @Args({ name: 'teamID', description: 'ID of the team', type: () => ID })
+    teamID: string,
+    @Args({
+      name: 'collectionID',
+      description: 'ID of the collection',
+      type: () => ID,
+    })
+    collectionID: string,
+  ) {
+    const collectionData =
+      await this.teamCollectionService.exportCollectionToJSONObject(
+        teamID,
+        collectionID,
+      );
+
+    if (E.isLeft(collectionData)) throwErr(collectionData.left as string);
+    return JSON.stringify(collectionData.right);
+  }
+
   @Query(() => [TeamCollection], {
     description: 'Returns the collections of a team',
   })

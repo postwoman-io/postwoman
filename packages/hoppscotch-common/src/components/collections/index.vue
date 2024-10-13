@@ -35,25 +35,29 @@
       :picked="picked"
       @add-folder="addFolder"
       @add-request="addRequest"
+      @edit-request="editRequest"
       @edit-collection="editCollection"
       @edit-folder="editFolder"
+      @edit-response="editResponse"
+      @drop-request="dropRequest"
+      @drop-collection="dropCollection"
+      @display-modal-add="displayModalAdd(true)"
+      @display-modal-import-export="displayModalImportExport(true)"
       @duplicate-collection="duplicateCollection"
+      @duplicate-request="duplicateRequest"
+      @duplicate-response="duplicateResponse"
       @edit-properties="editProperties"
       @export-data="exportData"
       @remove-collection="removeCollection"
       @remove-folder="removeFolder"
+      @remove-request="removeRequest"
+      @remove-response="removeResponse"
       @share-request="shareRequest"
-      @drop-collection="dropCollection"
+      @select="selectPicked"
+      @select-response="selectResponse"
+      @select-request="selectRequest"
       @update-request-order="updateRequestOrder"
       @update-collection-order="updateCollectionOrder"
-      @edit-request="editRequest"
-      @duplicate-request="duplicateRequest"
-      @remove-request="removeRequest"
-      @select-request="selectRequest"
-      @select="selectPicked"
-      @drop-request="dropRequest"
-      @display-modal-add="displayModalAdd(true)"
-      @display-modal-import-export="displayModalImportExport(true)"
     />
     <CollectionsTeamCollections
       v-else
@@ -76,28 +80,32 @@
       :request-move-loading="requestMoveLoading"
       @add-request="addRequest"
       @add-folder="addFolder"
-      @edit-collection="editCollection"
-      @edit-folder="editFolder"
+      @collection-click="handleCollectionClick"
       @duplicate-collection="duplicateCollection"
-      @edit-properties="editProperties"
-      @export-data="exportData"
-      @remove-collection="removeCollection"
-      @remove-folder="removeFolder"
-      @share-request="shareRequest"
-      @edit-request="editRequest"
       @duplicate-request="duplicateRequest"
-      @remove-request="removeRequest"
-      @select-request="selectRequest"
-      @select="selectPicked"
+      @duplicate-response="duplicateResponse"
       @drop-request="dropRequest"
       @drop-collection="dropCollection"
-      @update-request-order="updateRequestOrder"
-      @update-collection-order="updateCollectionOrder"
-      @expand-team-collection="expandTeamCollection"
       @display-modal-add="displayModalAdd(true)"
       @display-modal-import-export="displayModalImportExport(true)"
-      @collection-click="handleCollectionClick"
+      @edit-collection="editCollection"
+      @edit-folder="editFolder"
+      @edit-request="editRequest"
+      @edit-response="editResponse"
+      @edit-properties="editProperties"
+      @export-data="exportData"
+      @expand-team-collection="expandTeamCollection"
+      @remove-collection="removeCollection"
+      @remove-folder="removeFolder"
+      @remove-request="removeRequest"
+      @remove-response="removeResponse"
       @run-collection="runCollectionHandler"
+      @share-request="shareRequest"
+      @select-request="selectRequest"
+      @select-response="selectResponse"
+      @select="selectPicked"
+      @update-request-order="updateRequestOrder"
+      @update-collection-order="updateCollectionOrder"
     />
     <div
       class="py-15 hidden flex-1 flex-col items-center justify-center bg-primaryDark px-4 text-secondaryLight"
@@ -147,6 +155,14 @@
       :loading-state="modalLoadingState"
       @submit="updateEditingRequest"
       @hide-modal="displayModalEditRequest(false)"
+    />
+    <CollectionsEditResponse
+      v-model="editingResponseName"
+      :show="showModalEditResponse"
+      :request-context="editingRequest"
+      :loading-state="modalLoadingState"
+      @submit="updateEditingResponse"
+      @hide-modal="displayModalEditResponse(false)"
     />
     <HoppSmartConfirmModal
       :show="showConfirmModal"
@@ -276,6 +292,7 @@ import { TeamWorkspace, WorkspaceService } from "~/services/workspace.service"
 import { RESTOptionTabs } from "../http/RequestOptions.vue"
 import { Collection as NodeCollection } from "./MyCollections.vue"
 import { EditingProperties } from "./Properties.vue"
+import { getDefaultRESTRequest } from "~/helpers/rest/default"
 
 const t = useI18n()
 const toast = useToast()
@@ -322,8 +339,11 @@ const editingFolderName = ref<string | null>(null)
 const editingFolderPath = ref<string | null>(null)
 const editingRequest = ref<HoppRESTRequest | null>(null)
 const editingRequestName = ref("")
+const editingResponseName = ref("")
+const editingResponseOldName = ref("")
 const editingRequestIndex = ref<number | null>(null)
 const editingRequestID = ref<string | null>(null)
+const editingResponseID = ref<string | null>(null)
 
 const editingProperties = ref<EditingProperties>({
   collection: null,
@@ -665,6 +685,7 @@ const showModalAddFolder = ref(false)
 const showModalEditCollection = ref(false)
 const showModalEditFolder = ref(false)
 const showModalEditRequest = ref(false)
+const showModalEditResponse = ref(false)
 const showModalImportExport = ref(false)
 const showModalEditProperties = ref(false)
 const showConfirmModal = ref(false)
@@ -706,6 +727,12 @@ const displayModalEditFolder = (show: boolean) => {
 
 const displayModalEditRequest = (show: boolean) => {
   showModalEditRequest.value = show
+
+  if (!show) resetSelectedData()
+}
+
+const displayModalEditResponse = (show: boolean) => {
+  showModalEditResponse.value = show
 
   if (!show) resetSelectedData()
 }
@@ -796,12 +823,21 @@ const addRequest = (payload: {
 }
 
 const requestContext = computed(() => {
-  return tabs.currentActiveTab.value.document.request
+  return tabs.currentActiveTab.value.document.type === "request"
+    ? tabs.currentActiveTab.value.document.request
+    : null
 })
 
 const onAddRequest = (requestName: string) => {
+  const request =
+    tabs.currentActiveTab.value.document.type === "request"
+      ? tabs.currentActiveTab.value.document.request
+      : getDefaultRESTRequest()
+
+  if (!request) return
+
   const newRequest = {
-    ...cloneDeep(tabs.currentActiveTab.value.document.request),
+    ...cloneDeep(request),
     name: requestName,
   }
 
@@ -815,6 +851,7 @@ const onAddRequest = (requestName: string) => {
     tabs.createNewTab({
       request: newRequest,
       isDirty: false,
+      type: "request",
       saveContext: {
         originLocation: "user-collection",
         folderPath: path,
@@ -869,6 +906,7 @@ const onAddRequest = (requestName: string) => {
           tabs.createNewTab({
             request: newRequest,
             isDirty: false,
+            type: "request",
             saveContext: {
               originLocation: "team-collection",
               requestID: createRequestInCollection.id,
@@ -1127,7 +1165,10 @@ const updateEditingRequest = (newName: string) => {
 
     editRESTRequest(folderPath, requestIndex, requestUpdated)
 
-    if (possibleActiveTab) {
+    if (
+      possibleActiveTab &&
+      possibleActiveTab.value.document.type === "request"
+    ) {
       possibleActiveTab.value.document.request.name = requestUpdated.name
       nextTick(() => {
         possibleActiveTab.value.document.isDirty = false
@@ -1168,11 +1209,176 @@ const updateEditingRequest = (newName: string) => {
       requestID,
     })
 
-    if (possibleTab) {
+    if (possibleTab && possibleTab.value.document.type === "request") {
       possibleTab.value.document.request.name = requestName
       nextTick(() => {
         possibleTab.value.document.isDirty = false
       })
+    }
+  }
+}
+
+type ResponseConfigPayload = {
+  folderPath: string | undefined
+  requestIndex: string
+  request: HoppRESTRequest
+  responseName: string
+  responseID: string
+}
+
+const editResponse = (payload: ResponseConfigPayload) => {
+  const { folderPath, requestIndex, request, responseID, responseName } =
+    payload
+
+  editingRequest.value = request
+  editingRequestName.value = request.name ?? ""
+  editingResponseID.value = responseID
+  editingResponseName.value = responseName
+
+  //need to store the old name for updating the response key
+  editingResponseOldName.value = responseName
+  if (collectionsType.value.type === "my-collections" && folderPath) {
+    editingFolderPath.value = folderPath
+    editingRequestIndex.value = parseInt(requestIndex)
+  } else {
+    editingRequestID.value = requestIndex
+  }
+  displayModalEditResponse(true)
+}
+
+const updateEditingResponse = (newName: string) => {
+  const request = cloneDeep(editingRequest.value)
+  if (!request) return
+
+  const responseOldName = editingResponseOldName.value
+
+  if (!responseOldName) return
+
+  if (responseOldName !== newName) {
+    // Convert object to entries array (preserving order)
+    const entries = Object.entries(request.responses)
+
+    // Replace the old key with the new key in the array
+    const updatedEntries = entries.map(([key, value]) =>
+      key === responseOldName
+        ? [newName, { ...value, name: newName }]
+        : [key, value]
+    )
+
+    // Convert the array back into an object
+    request.responses = Object.fromEntries(updatedEntries)
+  }
+
+  if (collectionsType.value.type === "my-collections") {
+    const folderPath = editingFolderPath.value
+    const requestIndex = editingRequestIndex.value
+
+    if (folderPath === null || requestIndex === null) return
+
+    const possibleExampleActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      requestIndex,
+      folderPath,
+      exampleID: editingResponseID.value ?? undefined,
+    })
+
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      requestIndex,
+      folderPath,
+    })
+
+    editRESTRequest(folderPath, requestIndex, request)
+
+    if (
+      possibleExampleActiveTab &&
+      possibleExampleActiveTab.value.document.type === "example-response"
+    ) {
+      possibleExampleActiveTab.value.document.response.name = newName
+
+      nextTick(() => {
+        possibleExampleActiveTab.value.document.isDirty = false
+        possibleExampleActiveTab.value.document.saveContext = {
+          originLocation: "user-collection",
+          folderPath: folderPath,
+          requestIndex: requestIndex,
+          exampleID: editingResponseID.value!,
+        }
+      })
+    }
+
+    // update the request tab responses if it's open
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        request.responses
+    }
+
+    displayModalEditResponse(false)
+
+    toast.success(t("response.renamed"))
+  } else if (hasTeamWriteAccess.value) {
+    modalLoadingState.value = true
+
+    const requestID = editingRequestID.value
+
+    if (!requestID) return
+
+    const data = {
+      request: JSON.stringify(request),
+      title: request.name,
+    }
+
+    pipe(
+      updateTeamRequest(requestID, data),
+      TE.match(
+        (err: GQLError<string>) => {
+          toast.error(`${getErrorMessage(err)}`)
+          modalLoadingState.value = false
+        },
+        () => {
+          modalLoadingState.value = false
+          toast.success(t("response.renamed"))
+          displayModalEditResponse(false)
+        }
+      )
+    )()
+
+    const possibleActiveResponseTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID,
+      exampleID: editingResponseID.value ?? undefined,
+    })
+
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID,
+    })
+
+    if (
+      possibleActiveResponseTab &&
+      possibleActiveResponseTab.value.document.type === "example-response"
+    ) {
+      possibleActiveResponseTab.value.document.response.name = newName
+      nextTick(() => {
+        possibleActiveResponseTab.value.document.isDirty = false
+        possibleActiveResponseTab.value.document.saveContext = {
+          originLocation: "team-collection",
+          requestID,
+          exampleID: editingResponseID.value!,
+        }
+      })
+    }
+
+    // update the request tab responses if it's open
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        request.responses
     }
   }
 }
@@ -1217,6 +1423,93 @@ const duplicateRequest = (payload: {
         }
       )
     )()
+  }
+}
+
+const duplicateResponse = (payload: ResponseConfigPayload) => {
+  const { folderPath, requestIndex, request, responseName } = payload
+
+  const response = request.responses[responseName]
+
+  if (!response || !folderPath || !requestIndex) return
+
+  const newName = `${responseName} - ${t("action.duplicate")}`
+
+  // if the new name is already taken, show a toast and return
+  if (Object.keys(request.responses).includes(newName)) {
+    toast.error(t("response.duplicate_name_error"))
+    return
+  }
+
+  const newResponse = {
+    ...cloneDeep(response),
+    name: newName,
+  }
+
+  const updatedRequest = {
+    ...request,
+    responses: {
+      ...request.responses,
+      [newResponse.name]: newResponse,
+    },
+  }
+
+  if (collectionsType.value.type === "my-collections") {
+    editRESTRequest(folderPath, parseInt(requestIndex), updatedRequest)
+    toast.success(t("response.duplicated"))
+
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      requestIndex: parseInt(requestIndex),
+      folderPath,
+    })
+
+    // update the request tab responses if it's open
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        updatedRequest.responses
+    }
+  } else if (hasTeamWriteAccess.value) {
+    duplicateRequestLoading.value = true
+
+    if (!collectionsType.value.selectedTeam) return
+
+    const data = {
+      request: JSON.stringify(updatedRequest),
+      title: request.name,
+    }
+
+    pipe(
+      updateTeamRequest(requestIndex, data),
+      TE.match(
+        (err: GQLError<string>) => {
+          toast.error(`${getErrorMessage(err)}`)
+          modalLoadingState.value = false
+        },
+        () => {
+          modalLoadingState.value = false
+          toast.success(t("response.duplicated"))
+          displayModalEditResponse(false)
+        }
+      )
+    )()
+
+    // update the request tab responses if it's open
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID: requestIndex,
+    })
+
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        updatedRequest.responses
+    }
   }
 }
 
@@ -1406,9 +1699,12 @@ const onRemoveRequest = () => {
     })
 
     // If there is a tab attached to this request, dissociate its state and mark it dirty
-    if (possibleTab) {
+    if (possibleTab && possibleTab.value.document.type === "request") {
       possibleTab.value.document.saveContext = null
       possibleTab.value.document.isDirty = true
+
+      // since the request is deleted, we need to remove the saved responses as well
+      possibleTab.value.document.request.responses = {}
     }
 
     const requestToRemove = navigateToFolderWithIndexPath(
@@ -1464,9 +1760,176 @@ const onRemoveRequest = () => {
       requestID,
     })
 
-    if (possibleTab) {
+    if (possibleTab && possibleTab.value.document.type === "request") {
       possibleTab.value.document.saveContext = null
       possibleTab.value.document.isDirty = true
+
+      // since the request is deleted, we need to remove the saved responses as well
+      possibleTab.value.document.request.responses = {}
+    }
+  }
+}
+
+const removeResponse = (payload: ResponseConfigPayload) => {
+  const { folderPath, requestIndex, request, responseID, responseName } =
+    payload
+  if (collectionsType.value.type === "my-collections" && folderPath) {
+    editingFolderPath.value = folderPath
+    editingRequestIndex.value = parseInt(requestIndex)
+    editingResponseID.value = responseID
+    editingRequest.value = request
+    editingResponseName.value = responseName
+  } else {
+    editingRequestID.value = requestIndex
+    editingResponseID.value = payload.responseID
+    editingRequest.value = request
+    editingResponseName.value = responseName
+  }
+  confirmModalTitle.value = `${t("confirm.remove_response")}`
+  displayConfirmModal(true)
+}
+
+const onRemoveResponse = () => {
+  const request = cloneDeep(editingRequest.value)
+
+  if (!request) return
+
+  const responseName = editingResponseName.value
+  const responseID = editingResponseID.value
+
+  delete request.responses[responseName]
+
+  const requestUpdated: HoppRESTRequest = {
+    ...request,
+  }
+
+  if (collectionsType.value.type === "my-collections") {
+    const folderPath = editingFolderPath.value
+    const requestIndex = editingRequestIndex.value
+
+    if (folderPath === null || requestIndex === null) return
+
+    editRESTRequest(folderPath, requestIndex, requestUpdated)
+
+    const possibleActiveResponseTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      folderPath,
+      requestIndex,
+      exampleID: responseID ?? undefined,
+    })
+
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      requestIndex,
+      folderPath,
+    })
+
+    // If there is a tab attached to this request, close it and set the active tab to the first one
+    if (
+      possibleActiveResponseTab &&
+      possibleActiveResponseTab.value.document.type === "example-response"
+    ) {
+      const activeTabs = tabs.getActiveTabs()
+
+      // if the last tab is the one we are closing, we need to create a new tab
+      if (
+        activeTabs.value.length === 1 &&
+        activeTabs.value[0].id === possibleActiveResponseTab.value.id
+      ) {
+        tabs.createNewTab({
+          request: getDefaultRESTRequest(),
+          isDirty: false,
+          type: "request",
+          saveContext: undefined,
+        })
+        tabs.closeTab(possibleActiveResponseTab.value.id)
+      } else {
+        tabs.closeTab(possibleActiveResponseTab.value.id)
+        tabs.setActiveTab(activeTabs.value[0].id)
+      }
+    }
+
+    // update the request tab responses if it's open
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        requestUpdated.responses
+    }
+
+    toast.success(t("state.deleted"))
+    displayConfirmModal(false)
+  } else if (hasTeamWriteAccess.value) {
+    const requestID = editingRequestID.value
+
+    if (!requestID) return
+
+    modalLoadingState.value = true
+
+    const data = {
+      request: JSON.stringify(requestUpdated),
+      title: request.name,
+    }
+
+    pipe(
+      updateTeamRequest(requestID, data),
+      TE.match(
+        (err: GQLError<string>) => {
+          toast.error(`${getErrorMessage(err)}`)
+          modalLoadingState.value = false
+        },
+        () => {
+          modalLoadingState.value = false
+          toast.success(t("state.deleted"))
+          displayConfirmModal(false)
+        }
+      )
+    )()
+
+    const possibleActiveResponseTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID,
+      exampleID: responseID ?? undefined,
+    })
+
+    const possibleRequestActiveTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID,
+    })
+
+    // If there is a tab attached to this request, close it and set the active tab to the first one
+    if (
+      possibleActiveResponseTab &&
+      possibleActiveResponseTab.value.document.type === "example-response"
+    ) {
+      const activeTabs = tabs.getActiveTabs()
+
+      // if the last tab is the one we are closing, we need to create a new tab
+      if (
+        activeTabs.value.length === 1 &&
+        activeTabs.value[0].id === possibleActiveResponseTab.value.id
+      ) {
+        tabs.createNewTab({
+          request: getDefaultRESTRequest(),
+          isDirty: false,
+          type: "request",
+          saveContext: undefined,
+        })
+        tabs.closeTab(possibleActiveResponseTab.value.id)
+      } else {
+        tabs.closeTab(possibleActiveResponseTab.value.id)
+        tabs.setActiveTab(activeTabs.value[0].id)
+      }
+    }
+
+    // update the request tab responses if it's open
+    if (
+      possibleRequestActiveTab &&
+      possibleRequestActiveTab.value.document.type === "request"
+    ) {
+      possibleRequestActiveTab.value.document.request.responses =
+        requestUpdated.responses
     }
   }
 }
@@ -1516,10 +1979,12 @@ const selectRequest = (selectedRequest: {
       tabs.createNewTab({
         request: cloneDeep(request),
         isDirty: false,
+        type: "request",
         saveContext: {
           originLocation: "team-collection",
           requestID: requestIndex,
           collectionID: folderPath,
+          exampleID: undefined,
         },
         inheritedProperties: inheritedProperties,
       })
@@ -1541,6 +2006,7 @@ const selectRequest = (selectedRequest: {
       tabs.createNewTab({
         request: cloneDeep(request),
         isDirty: false,
+        type: "request",
         saveContext: {
           originLocation: "user-collection",
           folderPath: folderPath!,
@@ -1549,6 +2015,72 @@ const selectRequest = (selectedRequest: {
         inheritedProperties: {
           auth,
           headers,
+        },
+      })
+    }
+  }
+}
+
+const selectResponse = (payload: {
+  folderPath: string
+  requestIndex: string
+  responseName: string
+  request: HoppRESTRequest
+  responseID: string
+}) => {
+  const { folderPath, requestIndex, responseName, request, responseID } =
+    payload
+
+  const response = request.responses[responseName]
+
+  if (collectionsType.value.type === "my-collections") {
+    const possibleTab = tabs.getTabRefWithSaveContext({
+      originLocation: "user-collection",
+      requestIndex: parseInt(requestIndex),
+      folderPath: folderPath!,
+      exampleID: responseID,
+    })
+
+    if (possibleTab) {
+      tabs.setActiveTab(possibleTab.value.id)
+    } else {
+      tabs.createNewTab({
+        response: {
+          ...cloneDeep(response),
+          name: responseName,
+        },
+        isDirty: false,
+        type: "example-response",
+        saveContext: {
+          originLocation: "user-collection",
+          folderPath: folderPath!,
+          requestIndex: parseInt(requestIndex),
+          exampleID: responseID,
+        },
+      })
+    }
+  } else {
+    const possibleTab = tabs.getTabRefWithSaveContext({
+      originLocation: "team-collection",
+      requestID: requestIndex,
+      exampleID: responseID,
+    })
+
+    if (possibleTab) {
+      tabs.setActiveTab(possibleTab.value.id)
+    } else {
+      tabs.createNewTab({
+        response: {
+          ...cloneDeep(response),
+          name: responseName,
+        },
+        isDirty: false,
+        type: "example-response",
+        saveContext: {
+          originLocation: "team-collection",
+          requestID: requestIndex,
+          collectionID: folderPath,
+          exampleID: responseID,
         },
       })
     }
@@ -1593,7 +2125,7 @@ const dropRequest = (payload: {
     })
 
     // If there is a tab attached to this request, change save its save context
-    if (possibleTab) {
+    if (possibleTab && possibleTab.value.document.type === "request") {
       possibleTab.value.document.saveContext = {
         originLocation: "user-collection",
         folderPath: destinationCollectionIndex,
@@ -1654,7 +2186,7 @@ const dropRequest = (payload: {
             requestID: requestIndex,
           })
 
-          if (possibleTab) {
+          if (possibleTab && possibleTab.value.document.type === "request") {
             possibleTab.value.document.saveContext = {
               originLocation: "team-collection",
               requestID: requestIndex,
@@ -1872,6 +2404,13 @@ const dropToRoot = ({ dataTransfer }: DragEvent) => {
       } else {
         moveRESTFolder(collectionIndexDragged, null)
         toast.success(`${t("collection.moved")}`)
+
+        const rootLength = myCollections.value.length
+
+        updateSaveContextForAffectedRequests(
+          collectionIndexDragged,
+          `${rootLength - 1}`
+        )
       }
 
       draggingToRoot.value = false
@@ -2352,6 +2891,7 @@ const resolveConfirmModal = (title: string | null) => {
   if (title === `${t("confirm.remove_collection")}`) onRemoveCollection()
   else if (title === `${t("confirm.remove_request")}`) onRemoveRequest()
   else if (title === `${t("confirm.remove_folder")}`) onRemoveFolder()
+  else if (title === `${t("confirm.remove_response")}`) onRemoveResponse()
   else {
     console.error(
       `Confirm modal title ${title} is not handled by the component`

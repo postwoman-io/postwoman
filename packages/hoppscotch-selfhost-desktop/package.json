@@ -1,7 +1,7 @@
 {
   "name": "@hoppscotch/selfhost-desktop",
   "private": true,
-  "version": "2024.8.3",
+  "version": "2024.9.1",
   "type": "module",
   "scripts": {
     "dev:vite": "vite",

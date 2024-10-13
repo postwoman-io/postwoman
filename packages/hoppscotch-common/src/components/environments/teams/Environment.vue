@@ -48,6 +48,7 @@
               :icon="IconEdit"
               :label="`${t('action.edit')}`"
               :shortcut="['E']"
+              :disabled="duplicateEnvironmentLoading"
               @click="
                 () => {
                   emit('edit-environment')
@@ -62,12 +63,8 @@
               :icon="IconCopy"
               :label="`${t('action.duplicate')}`"
               :shortcut="['D']"
-              @click="
-                () => {
-                  duplicateEnvironments()
-                  hide()
-                }
-              "
+              :loading="duplicateEnvironmentLoading"
+              @click="duplicateEnvironment"
             />
             <HoppSmartItem
               v-if="!isViewer"
@@ -75,6 +72,7 @@
               :icon="IconEdit"
               :label="`${t('export.as_json')}`"
               :shortcut="['J']"
+              :disabled="duplicateEnvironmentLoading"
               @click="
                 () => {
                   exportEnvironmentAsJSON()
@@ -88,6 +86,7 @@
               :icon="IconTrash2"
               :label="`${t('action.delete')}`"
               :shortcut="['⌫']"
+              :disabled="duplicateEnvironmentLoading"
               @click="
                 () => {
                   confirmRemove = true
@@ -100,6 +99,7 @@
               :icon="IconSettings2"
               :label="t('action.properties')"
               :shortcut="['P']"
+              :disabled="duplicateEnvironmentLoading"
               @click="
                 () => {
                   emit('show-environment-properties')
@@ -134,8 +134,9 @@ import { useI18n } from "~/composables/i18n"
 import { GQLError } from "~/helpers/backend/GQLClient"
 import {
   deleteTeamEnvironment,
-  createDuplicateEnvironment as duplicateEnvironment,
+  createDuplicateEnvironment as duplicateTeamEnvironment,
 } from "~/helpers/backend/mutations/TeamEnvironment"
+import { getEnvActionErrorMessage } from "~/helpers/error-messages"
 import { exportAsJSON } from "~/helpers/import-export/export/environment"
 import { TeamEnvironment } from "~/helpers/teams/TeamEnvironment"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
@@ -177,13 +178,15 @@ const deleteAction = ref<typeof HoppSmartItem>()
 const exportAsJsonEl = ref<typeof HoppSmartItem>()
 const propertiesAction = ref<typeof HoppSmartItem>()
 
+const duplicateEnvironmentLoading = ref(false)
+
 const removeEnvironment = () => {
   pipe(
     deleteTeamEnvironment(props.environment.id),
     TE.match(
       (err: GQLError<string>) => {
         console.error(err)
-        toast.error(`${getErrorMessage(err)}`)
+        toast.error(t(getEnvActionErrorMessage(err)))
       },
       () => {
         toast.success(`${t("team_environment.deleted")}`)
@@ -193,32 +196,24 @@ const removeEnvironment = () => {
   )()
 }
 
-const duplicateEnvironments = () => {
-  pipe(
-    duplicateEnvironment(props.environment.id),
+const duplicateEnvironment = async () => {
+  duplicateEnvironmentLoading.value = true
+
+  await pipe(
+    duplicateTeamEnvironment(props.environment.id),
     TE.match(
       (err: GQLError<string>) => {
         console.error(err)
-        toast.error(`${getErrorMessage(err)}`)
+        toast.error(t(getEnvActionErrorMessage(err)))
       },
       () => {
         toast.success(`${t("environment.duplicated")}`)
       }
     )
   )()
-}
 
-const getErrorMessage = (err: GQLError<string>) => {
-  if (err.type === "network_error") {
-    return t("error.network_error")
-  }
-  switch (err.error) {
-    case "team_environment/not_found":
-      return t("team_environment.not_found")
-    case "team_environment/short_name":
-      return t("environment.short_name")
-    default:
-      return t("error.something_went_wrong")
-  }
+  duplicateEnvironmentLoading.value = false
+
+  options.value!.tippy?.hide()
 }
 </script>

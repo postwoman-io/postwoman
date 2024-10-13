@@ -1,0 +1,15 @@
+subscription UserCollectionDuplicated {
+  userCollectionDuplicated {
+    id
+    parentID
+    title
+    type
+    data
+    childCollections
+    requests {
+      id
+      request
+      collectionID
+    }
+  }
+}

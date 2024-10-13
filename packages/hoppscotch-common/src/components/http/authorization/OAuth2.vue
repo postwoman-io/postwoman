@@ -401,7 +401,7 @@ const supportedGrantTypes = [
         return E.right(undefined)
       }
 
-      const runAction = () => {
+      const runAction = async () => {
         const params: AuthCodeOauthFlowParams = {
           authEndpoint: authEndpoint.value,
           tokenEndpoint: tokenEndpoint.value,
@@ -420,7 +420,11 @@ const supportedGrantTypes = [
           return E.left("VALIDATION_FAILED" as const)
         }
 
-        authCode.init(parsedArgs.data)
+        const res = await authCode.init(parsedArgs.data)
+
+        if (E.isLeft(res)) {
+          return res
+        }
 
         return E.right(undefined)
       }
@@ -1047,8 +1051,14 @@ const generateOAuthToken = async () => {
       VALIDATION_FAILED: t("authorization.oauth.validation_failed"),
       OAUTH_TOKEN_FETCH_FAILED: t("authorization.oauth.token_fetch_failed"),
     }
+    if (res.left in errorMessages) {
+      // @ts-expect-error - not possible to have a key that doesn't exist
+      toast.error(errorMessages[res.left])
+      return
+    }
 
-    toast.error(errorMessages[res.left])
+    toast.error(t("error.something_went_wrong"))
+
     return
   }
 }

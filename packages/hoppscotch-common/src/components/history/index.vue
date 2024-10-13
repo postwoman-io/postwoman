@@ -300,6 +300,7 @@ const useHistory = (entry: RESTHistoryEntry) => {
   tabs.createNewTab({
     request: entry.request,
     isDirty: false,
+    type: "request",
   })
 }
 

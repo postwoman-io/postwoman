@@ -23,6 +23,7 @@ import { TeamInvitation } from 'src/team-invitation/team-invitation.model';
 import { InvitedUser } from '../admin/invited-user.model';
 import {
   UserCollection,
+  UserCollectionDuplicatedData,
   UserCollectionRemovedData,
   UserCollectionReorderData,
 } from 'src/user-collection/user-collections.model';
@@ -48,6 +49,7 @@ export type TopicDef = {
   [
     topic: `user_coll/${string}/${'created' | 'updated' | 'moved'}`
   ]: UserCollection;
+  [topic: `user_coll/${string}/${'duplicated'}`]: UserCollectionDuplicatedData;
   [topic: `user_coll/${string}/${'deleted'}`]: UserCollectionRemovedData;
   [topic: `user_coll/${string}/${'order_updated'}`]: UserCollectionReorderData;
   [topic: `team/${string}/member_removed`]: string;

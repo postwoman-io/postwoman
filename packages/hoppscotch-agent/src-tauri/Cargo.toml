@@ -1,0 +1,49 @@
+[package]
+name = "hoppscotch-agent"
+version = "0.1.1"
+description = "A cross-platform HTTP request agent for Hoppscotch for advanced request handling including custom headers, certificates, proxies, and local system integration."
+authors = ["CuriousCorrelation", "AndrewBastin"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "hoppscotch_agent_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-rc", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-rc.0", features = ["tray-icon", "image-png"] }
+tauri-plugin-shell = "2.0.0-rc"
+tauri-plugin-autostart = "2.0.0-rc"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.40.0", features = ["full"] }
+dashmap = { version = "6.1.0", features = ["serde"] }
+axum = { version = "0.7.6" }
+axum-extra = { version = "0.9.4", features = ["typed-header"] }
+tower-http = { version = "0.6.1", features = ["cors"] }
+tokio-util = "0.7.12"
+uuid = { version = "1.10.0", features = [ "v4", "fast-rng" ] }
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8.5"
+log = "0.4.22"
+env_logger = "0.11.5"
+curl = { version = "0.4.46", features = ["ntlm", "static-curl", "static-ssl"] }
+openssl = { version = "0.10.66", features = ["vendored"] }
+openssl-sys = { version = "0.9.103", features = ["vendored"] }
+url-escape = "0.1.1"
+thiserror = "1.0.64"
+tauri-plugin-store = "2.0.0-rc.3"
+x25519-dalek = { version = "2.0.1", features = ["getrandom"] }
+base16 = "0.2.1"
+aes-gcm = { version = "0.10.3", features = ["aes"] }
+tauri-plugin-updater = "2.0.0-rc.3"
+tauri-plugin-dialog = "2.0.0-rc.7"
+http = "1.1.0"
+lazy_static = "1.5.0"
+
+[dev-dependencies]
+mockito = "1.5.0"

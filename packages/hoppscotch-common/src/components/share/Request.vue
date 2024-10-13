@@ -142,7 +142,7 @@ const parseRequest = computed(() =>
 )
 
 const requestLabelColor = computed(() =>
-  getMethodLabelColorClassOf(parseRequest.value)
+  getMethodLabelColorClassOf(parseRequest.value.method)
 )
 
 const customizeSharedRequest = () => {

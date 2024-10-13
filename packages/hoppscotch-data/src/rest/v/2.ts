@@ -1,11 +1,5 @@
 import { defineVersion } from "verzod"
 import { z } from "zod"
-import {
-  HoppRESTAuth,
-  HoppRESTHeaders,
-  HoppRESTParams,
-  HoppRESTReqBody,
-} from "./1"
 import { V1_SCHEMA } from "./1"
 
 export const HoppRESTRequestVariables = z.array(

@@ -265,8 +265,13 @@ export class HoppEnvironmentPlugin {
     const aggregateEnvs = getAggregateEnvs()
     const currentTab = restTabs.currentActiveTab.value
 
+    const currentTabRequest =
+      currentTab.document.type === "request"
+        ? currentTab.document.request
+        : currentTab.document.response.originalRequest
+
     watch(
-      currentTab.document.request,
+      currentTabRequest,
       (reqVariables) => {
         this.envs = [
           ...reqVariables.requestVariables.map(({ key, value }) => ({
@@ -290,14 +295,12 @@ export class HoppEnvironmentPlugin {
 
     subscribeToStream(aggregateEnvsWithSecrets$, (envs) => {
       this.envs = [
-        ...currentTab.document.request.requestVariables.map(
-          ({ key, value }) => ({
-            key,
-            value,
-            sourceEnv: "RequestVariable",
-            secret: false,
-          })
-        ),
+        ...currentTabRequest.requestVariables.map(({ key, value }) => ({
+          key,
+          value,
+          sourceEnv: "RequestVariable",
+          secret: false,
+        })),
         ...envs,
       ]
 

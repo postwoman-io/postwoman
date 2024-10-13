@@ -46,7 +46,7 @@ import {
   safelyExtractRESTRequest,
 } from "@hoppscotch/data"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 import { applySetting } from "~/newstore/settings"
 import { useI18n } from "~/composables/i18n"
 
@@ -69,12 +69,13 @@ const sharedRequestDetails = useGQLQuery<
   },
 })
 
-const tab = ref<HoppTab<HoppRESTDocument>>({
+const tab = ref<HoppTab<HoppRequestDocument>>({
   id: "0",
   document: {
     request: getDefaultRESTRequest(),
     response: null,
     isDirty: false,
+    type: "request",
   },
 })
 

@@ -25,7 +25,7 @@ import { linter } from "@codemirror/lint"
 import { watch, ref, Ref, onMounted, onBeforeUnmount } from "vue"
 import { javascriptLanguage } from "@codemirror/lang-javascript"
 import { xmlLanguage } from "@codemirror/lang-xml"
-import { jsonLanguage } from "@codemirror/lang-json"
+import { jsoncLanguage } from "@shopify/lang-jsonc"
 import { GQLLanguage } from "@hoppscotch/codemirror-lang-graphql"
 import { html } from "@codemirror/legacy-modes/mode/xml"
 import { shell } from "@codemirror/legacy-modes/mode/shell"
@@ -47,9 +47,11 @@ import { useDebounceFn } from "@vueuse/core"
 // TODO: Migrate from legacy mode
 
 import * as E from "fp-ts/Either"
+import { HoppPredefinedVariablesPlugin } from "~/helpers/editor/extensions/HoppPredefinedVariables"
 
 type ExtendedEditorConfig = {
   mode: string
+  useLang: boolean
   placeholder: string
   readOnly: boolean
   lineWrapping: boolean
@@ -63,12 +65,19 @@ type CodeMirrorOptions = {
   // NOTE: This property is not reactive
   environmentHighlights: boolean
 
+  /**
+   * Whether or not to highlight predefined variables, such as: `<<$guid>>`.
+   * - These are special variables that starts with a dolar sign.
+   */
+  predefinedVariablesHighlights?: boolean
+
   additionalExts?: Extension[]
 
   contextMenuEnabled?: boolean
 
   // callback on editor update
   onUpdate?: (view: ViewUpdate) => void
+  onChange?: (value: string) => void
 
   // callback on view initialization
   onInit?: (view: EditorView) => void
@@ -150,7 +159,7 @@ const hoppLang = (
 
 const getLanguage = (langMime: string): Language | null => {
   if (isJSONContentType(langMime)) {
-    return jsonLanguage
+    return jsoncLanguage
   } else if (langMime === "application/javascript") {
     return javascriptLanguage
   } else if (langMime === "graphql") {
@@ -219,6 +228,8 @@ export function useCodemirror(
 
   // Set default value for contextMenuEnabled if not provided
   options.contextMenuEnabled = options.contextMenuEnabled ?? true
+  options.extendedEditorConfig.useLang =
+    options.extendedEditorConfig.useLang ?? true
 
   const additionalExts = new Compartment()
   const language = new Compartment()
@@ -251,6 +262,10 @@ export function useCodemirror(
       text: null,
     })
   }
+  const predefinedVariable: HoppPredefinedVariablesPlugin | null =
+    options.predefinedVariablesHighlights
+      ? new HoppPredefinedVariablesPlugin()
+      : null
 
   function handleTextSelection() {
     const selection = view.value?.state.selection.main
@@ -326,8 +341,12 @@ export function useCodemirror(
               cachedValue.value = update.state.doc
                 .toJSON()
                 .join(update.state.lineBreak)
-              if (!options.extendedEditorConfig.readOnly)
+              if (!options.extendedEditorConfig.readOnly) {
                 value.value = cachedValue.value
+                if (options.onChange) {
+                  options.onChange(cachedValue.value)
+                }
+              }
             }
           }
         }
@@ -355,7 +374,9 @@ export function useCodemirror(
       ),
       language.of(
         getEditorLanguage(
-          options.extendedEditorConfig.mode ?? "",
+          options.extendedEditorConfig.useLang
+            ? (options.extendedEditorConfig.mode as any) ?? ""
+            : "",
           options.linter ?? undefined,
           options.completer ?? undefined
         )
@@ -396,6 +417,7 @@ export function useCodemirror(
     ]
 
     if (environmentTooltip) extensions.push(environmentTooltip.extension)
+    if (predefinedVariable) extensions.push(predefinedVariable.extension)
 
     view.value = new EditorView({
       parent: el,
@@ -403,6 +425,8 @@ export function useCodemirror(
         doc: parseDoc(value.value, options.extendedEditorConfig.mode ?? ""),
         extensions,
       }),
+      // scroll to top when mounting
+      scrollTo: EditorView.scrollIntoView(0),
     })
 
     options.onInit?.(view.value)
@@ -461,7 +485,9 @@ export function useCodemirror(
       view.value?.dispatch({
         effects: language.reconfigure(
           getEditorLanguage(
-            (options.extendedEditorConfig.mode as any) ?? "",
+            options.extendedEditorConfig.useLang
+              ? (options.extendedEditorConfig.mode as any) ?? ""
+              : "",
             options.linter ?? undefined,
             options.completer ?? undefined
           )

@@ -9,6 +9,7 @@ import {
 
 import IconDownload from "~icons/lucide/download"
 import IconCopy from "~icons/lucide/copy"
+import IconNetwork from "~icons/lucide/network"
 import { Container } from "dioc"
 
 type Doc = {
@@ -40,6 +41,8 @@ export class ResponseSpotlightSearcherService extends StaticSpotlightSearcherSer
     "response.file.download"
   )
 
+  private dataSchemaActionEnabled = isActionBound("response.schema.toggle")
+
   private documents: Record<string, Doc> = reactive({
     copy_response: {
       text: this.t("spotlight.response.copy"),
@@ -54,6 +57,12 @@ export class ResponseSpotlightSearcherService extends StaticSpotlightSearcherSer
       excludeFromSearch: computed(
         () => !this.downloadResponseActionEnabled.value
       ),
+    },
+    generate_data_schema: {
+      text: this.t("response.generate_data_schema"),
+      alternates: ["generate", "data", "schema", "typescript", "response"],
+      icon: markRaw(IconNetwork),
+      excludeFromSearch: computed(() => !this.dataSchemaActionEnabled.value),
     },
   })
 
@@ -87,5 +96,6 @@ export class ResponseSpotlightSearcherService extends StaticSpotlightSearcherSer
   public onDocSelected(id: string): void {
     if (id === "copy_response") invokeAction(`response.copy`)
     if (id === "download_response") invokeAction(`response.file.download`)
+    if (id === "generate_data_schema") invokeAction(`response.schema.toggle`)
   }
 }

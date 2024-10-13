@@ -221,6 +221,7 @@ describe("HistorySpotlightSearcherService", () => {
       doc: {
         request: historyEntry.request,
         isDirty: false,
+        type: "request",
       },
     })
   })

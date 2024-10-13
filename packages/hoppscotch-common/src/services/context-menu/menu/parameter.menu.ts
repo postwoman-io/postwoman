@@ -89,21 +89,25 @@ export class ParameterMenuService extends Service implements ContextMenu {
 
     const tabService = getService(RESTTabService)
 
+    const currentActiveRequest =
+      tabService.currentActiveTab.value.document.type === "request"
+        ? tabService.currentActiveTab.value.document.request
+        : tabService.currentActiveTab.value.document.response.originalRequest
+
     // add the parameters to the current request parameters
-    tabService.currentActiveTab.value.document.request.params = [
-      ...tabService.currentActiveTab.value.document.request.params,
+    currentActiveRequest.params = [
+      ...currentActiveRequest.params,
       ...queryParams.map((param) => ({ ...param, description: "" })),
     ]
 
     if (newURL) {
-      tabService.currentActiveTab.value.document.request.endpoint = newURL
+      currentActiveRequest.endpoint = newURL
     } else {
       // remove the parameter from the URL
       const textRegex = new RegExp(`\\b${text.replace(/\?/g, "")}\\b`, "gi")
-      const sanitizedWord =
-        tabService.currentActiveTab.value.document.request.endpoint
+      const sanitizedWord = currentActiveRequest.endpoint
       const newURL = sanitizedWord.replace(textRegex, "")
-      tabService.currentActiveTab.value.document.request.endpoint = newURL
+      currentActiveRequest.endpoint = newURL
     }
   }
 

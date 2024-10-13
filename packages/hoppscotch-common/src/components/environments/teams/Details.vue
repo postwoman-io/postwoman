@@ -165,6 +165,7 @@ import IconHelpCircle from "~icons/lucide/help-circle"
 import { platform } from "~/platform"
 import { useService } from "dioc/vue"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
+import { getEnvActionErrorMessage } from "~/helpers/error-messages"
 
 type EnvironmentVariable = {
   id: number
@@ -405,7 +406,7 @@ const saveEnvironment = async () => {
         TE.match(
           (err: GQLError<string>) => {
             console.error(err)
-            toast.error(`${getErrorMessage(err)}`)
+            toast.error(t(getEnvActionErrorMessage(err)))
             isLoading.value = false
           },
           (res) => {
@@ -453,7 +454,7 @@ const saveEnvironment = async () => {
         TE.match(
           (err: GQLError<string>) => {
             console.error(err)
-            toast.error(`${getErrorMessage(err)}`)
+            toast.error(t(getEnvActionErrorMessage(err)))
             isLoading.value = false
           },
           () => {
@@ -473,19 +474,5 @@ const hideModal = () => {
   editingName.value = null
   selectedEnvOption.value = "variables"
   emit("hide-modal")
-}
-
-const getErrorMessage = (err: GQLError<string>) => {
-  if (err.type === "network_error") {
-    return t("error.network_error")
-  }
-  switch (err.error) {
-    case "team_environment/not_found":
-      return t("team_environment.not_found")
-    case "team_environment/short_name":
-      return t("environment.short_name")
-    default:
-      return t("error.something_went_wrong")
-  }
 }
 </script>

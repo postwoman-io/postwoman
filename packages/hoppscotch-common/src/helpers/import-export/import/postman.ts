@@ -30,6 +30,7 @@ import {
 import { stringArrayJoin } from "~/helpers/functional/array"
 import { PMRawLanguage } from "~/types/pm-coll-exts"
 import { IMPORTER_INVALID_FILE_FORMAT } from "."
+import { HoppRESTRequestResponses } from "@hoppscotch/data/dist/rest/v/8"
 
 const safeParseJSON = (jsonStr: string) => O.tryCatch(() => JSON.parse(jsonStr))
 
@@ -77,9 +78,12 @@ const parseDescription = (descField?: string | DescriptionDefinition) => {
   return descField.content
 }
 
-const getHoppReqHeaders = (item: Item): HoppRESTHeader[] =>
-  pipe(
-    item.request.headers.all(),
+const getHoppReqHeaders = (
+  headers: Item["request"]["headers"] | null
+): HoppRESTHeader[] => {
+  if (!headers) return []
+  return pipe(
+    headers.all(),
     A.map((header) => {
       const description = parseDescription(header.description)
 
@@ -91,43 +95,94 @@ const getHoppReqHeaders = (item: Item): HoppRESTHeader[] =>
       }
     })
   )
-
-const getHoppReqParams = (item: Item): HoppRESTParam[] => {
-  return pipe(
-    item.request.url.query.all(),
-    A.filter(
-      (param): param is QueryParam & { key: string } =>
-        param.key !== undefined && param.key !== null && param.key.length > 0
-    ),
-    A.map((param) => {
-      const description = parseDescription(param.description)
-
-      return <HoppRESTHeader>{
-        key: replacePMVarTemplating(param.key),
-        value: replacePMVarTemplating(param.value ?? ""),
-        active: !param.disabled,
-        description,
-      }
-    })
-  )
 }
 
-const getHoppReqVariables = (item: Item) => {
-  return pipe(
-    item.request.url.variables.all(),
-    A.filter(
-      (variable): variable is Variable =>
-        variable.key !== undefined &&
-        variable.key !== null &&
-        variable.key.length > 0
-    ),
-    A.map((variable) => {
-      return <HoppRESTRequestVariable>{
-        key: replacePMVarTemplating(variable.key ?? ""),
-        value: replacePMVarTemplating(variable.value ?? ""),
-        active: !variable.disabled,
-      }
-    })
+const getHoppReqParams = (
+  query: Item["request"]["url"]["query"] | null
+): HoppRESTParam[] => {
+  {
+    if (!query) return []
+    return pipe(
+      query.all(),
+      A.filter(
+        (param): param is QueryParam & { key: string } =>
+          param.key !== undefined && param.key !== null && param.key.length > 0
+      ),
+      A.map((param) => {
+        const description = parseDescription(param.description)
+
+        return <HoppRESTHeader>{
+          key: replacePMVarTemplating(param.key),
+          value: replacePMVarTemplating(param.value ?? ""),
+          active: !param.disabled,
+          description,
+        }
+      })
+    )
+  }
+}
+
+const getHoppReqVariables = (
+  variables: Item["request"]["url"]["variables"] | null
+): HoppRESTRequestVariable[] => {
+  {
+    if (!variables) return []
+    return pipe(
+      variables.all(),
+      A.filter(
+        (variable): variable is Variable =>
+          variable.key !== undefined &&
+          variable.key !== null &&
+          variable.key.length > 0
+      ),
+      A.map((variable) => {
+        return <HoppRESTRequestVariable>{
+          key: replacePMVarTemplating(variable.key ?? ""),
+          value: replacePMVarTemplating(variable.value ?? ""),
+          active: !variable.disabled,
+        }
+      })
+    )
+  }
+}
+
+const getHoppResponses = (
+  responses: Item["responses"]
+): HoppRESTRequestResponses => {
+  return Object.fromEntries(
+    pipe(
+      responses.all(),
+      A.map((response) => {
+        const res = {
+          name: response.name,
+          status: response.status,
+          body: response.body ?? "",
+          headers: getHoppReqHeaders(response.headers),
+          code: response.code,
+          originalRequest: {
+            auth: getHoppReqAuth(response.originalRequest?.auth),
+            body: getHoppReqBody({
+              body: response.originalRequest?.body,
+              headers: response.originalRequest?.headers ?? null,
+            }) ?? { contentType: null, body: null },
+            endpoint: getHoppReqURL(response.originalRequest?.url ?? null),
+            headers: getHoppReqHeaders(
+              response.originalRequest?.headers ?? null
+            ),
+            method: response.originalRequest?.method ?? "",
+            name: response.originalRequest?.name ?? response.name,
+            params: getHoppReqParams(
+              response.originalRequest?.url.query ?? null
+            ),
+            requestVariables: getHoppReqVariables(
+              response.originalRequest?.url.variables ?? null
+            ),
+            v: "1" as const,
+          },
+        }
+        return [response.name, res]
+      })
+    )
   )
 }
 
@@ -142,11 +197,11 @@ type PMRequestAuthDef<
 const getVariableValue = (defs: VariableDefinition[], key: string) =>
   defs.find((param) => param.key === key)?.value as string | undefined
 
-const getHoppReqAuth = (item: Item): HoppRESTAuth => {
-  if (!item.request.auth) return { authType: "none", authActive: true }
+const getHoppReqAuth = (hoppAuth: Item["request"]["auth"]): HoppRESTAuth => {
+  if (!hoppAuth) return { authType: "none", authActive: true }
 
   // Cast to the type for more stricter checking down the line
-  const auth = item.request.auth as unknown as PMRequestAuthDef
+  const auth = hoppAuth as unknown as PMRequestAuthDef
 
   if (auth.type === "basic") {
     return {
@@ -217,10 +272,14 @@ const getHoppReqAuth = (item: Item): HoppRESTAuth => {
   return { authType: "none", authActive: true }
 }
 
-const getHoppReqBody = (item: Item): HoppRESTReqBody => {
-  if (!item.request.body) return { contentType: null, body: null }
-
-  const body = item.request.body
+const getHoppReqBody = ({
+  body,
+  headers,
+}: {
+  body: Item["request"]["body"] | null
+  headers: Item["request"]["headers"] | null
+}): HoppRESTReqBody => {
+  if (!body) return { contentType: null, body: null }
 
   if (body.mode === "formdata") {
     return {
@@ -262,7 +321,7 @@ const getHoppReqBody = (item: Item): HoppRESTReqBody => {
       O.bind("contentType", () =>
         pipe(
           // Get the info from the content-type header
-          getHoppReqHeaders(item),
+          getHoppReqHeaders(headers),
           A.findFirst(({ key }) => key.toLowerCase() === "content-type"),
           O.map((x) => x.value),
 
@@ -315,23 +374,29 @@ const getHoppReqBody = (item: Item): HoppRESTReqBody => {
   return { contentType: null, body: null }
 }
 
-const getHoppReqURL = (item: Item): string =>
-  pipe(
-    item.request.url.toString(false),
+const getHoppReqURL = (url: Item["request"]["url"] | null): string => {
+  if (!url) return ""
+  return pipe(
+    url.toString(false),
     S.replace(/\?.+/g, ""),
     replacePMVarTemplating
   )
+}
 
 const getHoppRequest = (item: Item): HoppRESTRequest => {
   return makeRESTRequest({
     name: item.name,
-    endpoint: getHoppReqURL(item),
+    endpoint: getHoppReqURL(item.request.url),
     method: item.request.method.toUpperCase(),
-    headers: getHoppReqHeaders(item),
-    params: getHoppReqParams(item),
-    auth: getHoppReqAuth(item),
-    body: getHoppReqBody(item),
-    requestVariables: getHoppReqVariables(item),
+    headers: getHoppReqHeaders(item.request.headers),
+    params: getHoppReqParams(item.request.url.query),
+    auth: getHoppReqAuth(item.request.auth),
+    body: getHoppReqBody({
+      body: item.request.body,
+      headers: item.request.headers,
+    }),
+    requestVariables: getHoppReqVariables(item.request.url.variables),
+    responses: getHoppResponses(item.responses),
 
     // TODO: Decide about this
     preRequestScript: "",

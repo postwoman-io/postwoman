@@ -147,6 +147,8 @@ const handleImport = () => {
       type: "HOPP_REST_IMPORT_CURL",
     })
 
+    if (tabs.currentActiveTab.value.document.type === "example-response") return
+
     tabs.currentActiveTab.value.document.request = req
   } catch (e) {
     console.error(e)

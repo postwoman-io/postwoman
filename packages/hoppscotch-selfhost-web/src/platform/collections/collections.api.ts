@@ -39,6 +39,7 @@ import {
   UserCollectionRemovedDocument,
   UserCollectionMovedDocument,
   UserCollectionOrderUpdatedDocument,
+  UserCollectionDuplicatedDocument,
   ExportUserCollectionsToJsonQuery,
   ExportUserCollectionsToJsonQueryVariables,
   ExportUserCollectionsToJsonDocument,
@@ -325,6 +326,12 @@ export const runUserCollectionMovedSubscription = () =>
 export const runUserCollectionOrderUpdatedSubscription = () =>
   runGQLSubscription({
     query: UserCollectionOrderUpdatedDocument,
+    variables: {},
+  })
+
+export const runUserCollectionDuplicatedSubscription = () =>
+  runGQLSubscription({
+    query: UserCollectionDuplicatedDocument,
     variables: {},
   })
 

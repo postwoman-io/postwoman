@@ -45,9 +45,10 @@
     </p>
     <div>
       <HoppButtonPrimary
-        class="w-full"
+        :disabled="disableImportCTA"
         :label="t('import.title')"
-        :disabled="!hasFile || showFileSizeLimitExceededWarning"
+        :loading="loading"
+        class="w-full"
         @click="emit('importFromFile', fileContent)"
       />
     </div>
@@ -55,14 +56,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
 import { useI18n } from "@composables/i18n"
 import { useToast } from "@composables/toast"
+import { computed, ref } from "vue"
 
-defineProps<{
-  caption: string
-  acceptedFileTypes: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    caption: string
+    acceptedFileTypes: string
+    loading?: boolean
+  }>(),
+  {
+    loading: false,
+  }
+)
 
 const t = useI18n()
 const toast = useToast()
@@ -80,6 +87,12 @@ const inputChooseFileToImportFrom = ref<HTMLInputElement | any>()
 const emit = defineEmits<{
   (e: "importFromFile", content: string[]): void
 }>()
+
+// Disable the import CTA if no file is selected, the file size limit is exceeded, or during an import action indicated by the `isLoading` prop
+const disableImportCTA = computed(
+  () =>
+    !hasFile.value || showFileSizeLimitExceededWarning.value || props.loading
+)
 
 const onFileChange = async () => {
   // Reset the state on entering the handler to avoid any stale state

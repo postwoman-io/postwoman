@@ -6,6 +6,7 @@ import {
   HoppRESTAuth,
   HoppRESTRequest,
   HoppRESTHeaders,
+  HoppRESTRequestResponse,
 } from "@hoppscotch/data"
 import { entityReference } from "verzod"
 import { z } from "zod"
@@ -248,8 +249,6 @@ const EnvironmentVariablesSchema = z.union([
     value: z.string(),
   }),
 ])
-
-export const GLOBAL_ENV_SCHEMA = z.array(EnvironmentVariablesSchema)
 
 const OperationTypeSchema = z.enum([
   "subscription",
@@ -499,6 +498,7 @@ const HoppRESTSaveContextSchema = z.nullable(
         originLocation: z.literal("user-collection"),
         folderPath: z.string(),
         requestIndex: z.number(),
+        exampleID: z.optional(z.string()),
       })
       .strict(),
     z
@@ -507,6 +507,7 @@ const HoppRESTSaveContextSchema = z.nullable(
         requestID: z.string(),
         teamID: z.optional(z.string()),
         collectionID: z.optional(z.string()),
+        exampleID: z.optional(z.string()),
       })
       .strict(),
   ])
@@ -528,10 +529,11 @@ export const REST_TAB_STATE_SCHEMA = z
     orderedDocs: z.array(
       z.object({
         tabID: z.string(),
-        doc: z
-          .object({
+        doc: z.union([
+          z.object({
             // !Versioned entity
             request: entityReference(HoppRESTRequest),
+            type: z.literal("request").catch("request"),
             isDirty: z.boolean(),
             saveContext: z.optional(HoppRESTSaveContextSchema),
             response: z.optional(z.nullable(HoppRESTResponseSchema)),
@@ -540,8 +542,14 @@ export const REST_TAB_STATE_SCHEMA = z
             optionTabPreference: z.optional(z.enum(validRestOperations)),
             inheritedProperties: z.optional(HoppInheritedPropertySchema),
             cancelFunction: z.optional(z.function()),
-          })
-          .strict(),
+          }),
+          z.object({
+            type: z.literal("example-response").catch("example-response"),
+            response: HoppRESTRequestResponse,
+            saveContext: z.optional(HoppRESTSaveContextSchema),
+            isDirty: z.boolean(),
+          }),
+        ]),
       })
     ),
   })

@@ -2,11 +2,13 @@ import UrlImport from "~/components/importExport/ImportExportSteps/UrlImport.vue
 import { defineStep } from "~/composables/step-components"
 
 import { v4 as uuidv4 } from "uuid"
+import { Ref } from "vue"
 
 export function UrlSource(metadata: {
   caption: string
   onImportFromURL: (content: string) => any | Promise<any>
   fetchLogic?: (url: string) => Promise<any>
+  isLoading?: Ref<boolean>
 }) {
   const stepID = uuidv4()
 
@@ -17,5 +19,6 @@ export function UrlSource(metadata: {
         metadata.onImportFromURL(content)
       }
     },
+    loading: metadata.isLoading?.value,
   }))
 }

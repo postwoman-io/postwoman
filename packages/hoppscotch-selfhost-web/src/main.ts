@@ -8,6 +8,7 @@ import { browserInterceptor } from "@hoppscotch/common/platform/std/interceptors
 import { proxyInterceptor } from "@hoppscotch/common/platform/std/interceptors/proxy"
 import { ExtensionInspectorService } from "@hoppscotch/common/platform/std/inspections/extension.inspector"
 import { ExtensionInterceptorService } from "@hoppscotch/common/platform/std/interceptors/extension"
+import { AgentInterceptorService } from "@hoppscotch/common/platform/std/interceptors/agent"
 import { stdFooterItems } from "@hoppscotch/common/platform/std/ui/footerItem"
 import { stdSupportOptionItems } from "@hoppscotch/common/platform/std/ui/supportOptionsItem"
 import { browserIODef } from "@hoppscotch/common/platform/std/io"
@@ -32,6 +33,7 @@ createHoppApp("#app", {
       { type: "standalone", interceptor: browserInterceptor },
       { type: "standalone", interceptor: proxyInterceptor },
       { type: "service", service: ExtensionInterceptorService },
+      { type: "service", service: AgentInterceptorService },
     ],
   },
   additionalInspectors: [
@@ -40,7 +42,6 @@ createHoppApp("#app", {
   platformFeatureFlags: {
     exportAsGIST: false,
     hasTelemetry: false,
-    duplicateCollectionDisabledInPersonalWorkspace: true,
   },
   infra: InfraPlatform,
 })

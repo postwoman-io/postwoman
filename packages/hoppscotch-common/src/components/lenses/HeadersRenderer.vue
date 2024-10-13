@@ -19,7 +19,10 @@
     <LensesHeadersRendererEntry
       v-for="(header, index) in headers"
       :key="index"
-      :header="header"
+      v-model:headerKey="header.key"
+      v-model:headerValue="header.value"
+      :is-editable="isEditable"
+      @delete-header="deleteHeader(index)"
     />
   </div>
 </template>
@@ -32,14 +35,22 @@ import { copyToClipboard } from "~/helpers/utils/clipboard"
 import { useI18n } from "@composables/i18n"
 import { useToast } from "@composables/toast"
 import type { HoppRESTResponseHeader } from "~/helpers/types/HoppRESTResponse"
+import { useVModel } from "@vueuse/core"
 
 const t = useI18n()
 
 const toast = useToast()
 
 const props = defineProps<{
-  headers: HoppRESTResponseHeader[]
+  modelValue: HoppRESTResponseHeader[]
+  isEditable: boolean
 }>()
+
+const emit = defineEmits<{
+  (e: "update:modelValue"): void
+}>()
+
+const headers = useVModel(props, "modelValue", emit)
 
 const copyIcon = refAutoReset<typeof IconCopy | typeof IconCheck>(
   IconCopy,
@@ -47,8 +58,12 @@ const copyIcon = refAutoReset<typeof IconCopy | typeof IconCheck>(
 )
 
 const copyHeaders = () => {
-  copyToClipboard(JSON.stringify(props.headers))
+  copyToClipboard(JSON.stringify(props.modelValue))
   copyIcon.value = IconCheck
   toast.success(`${t("state.copied_to_clipboard")}`)
+}
+
+const deleteHeader = (index: number) => {
+  headers.value.splice(index, 1)
 }
 </script>

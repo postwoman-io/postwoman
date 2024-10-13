@@ -6,18 +6,20 @@ import * as E from "fp-ts/Either"
 import { z } from "zod"
 
 import { v4 as uuidv4 } from "uuid"
+import { Ref } from "vue"
 
 export function GistSource(metadata: {
   caption: string
   onImportFromGist: (
     importResult: E.Either<string, string[]>
   ) => any | Promise<any>
+  isLoading?: Ref<boolean>
 }) {
   const stepID = uuidv4()
 
   return defineStep(stepID, UrlImport, () => ({
     caption: metadata.caption,
-    onImportFromURL: (gistResponse: Record<string, unknown>) => {
+    onImportFromURL: (gistResponse: unknown) => {
       const fileSchema = z.object({
         files: z.record(z.object({ content: z.string() })),
       })
@@ -36,6 +38,7 @@ export function GistSource(metadata: {
       metadata.onImportFromGist(E.right(contents))
     },
     fetchLogic: fetchGistFromUrl,
+    loading: metadata.isLoading?.value,
   }))
 }
 

@@ -1,4 +1,4 @@
-export default function (responseStatus) {
+export default function (responseStatus: number) {
   if (responseStatus >= 100 && responseStatus < 200)
     return {
       name: "informational",

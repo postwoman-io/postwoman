@@ -609,3 +609,17 @@ details[open] summary .indicator {
 .gql-operation-highlight {
   @apply opacity-100;
 }
+
+.predefined-variable-highlight {
+  color: inherit;
+
+  &.predefined-variable-valid {
+    @apply bg-yellow-500;
+    @apply hover:bg-yellow-600;
+  }
+
+  &.predefined-variable-invalid {
+    @apply hover:bg-red-300;
+    @apply bg-red-300;
+  }
+}

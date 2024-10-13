@@ -133,21 +133,27 @@
 </template>
 
 <script setup lang="ts">
-import IconTrash2 from "~icons/lucide/trash-2"
-import IconDone from "~icons/lucide/check"
-import IconPlus from "~icons/lucide/plus"
-import IconTrash from "~icons/lucide/trash"
-import IconHelpCircle from "~icons/lucide/help-circle"
-import { ComputedRef, computed, ref, watch } from "vue"
-import * as E from "fp-ts/Either"
-import * as A from "fp-ts/Array"
-import * as O from "fp-ts/Option"
-import { pipe, flow } from "fp-ts/function"
-import { Environment, parseTemplateStringE } from "@hoppscotch/data"
+import { useI18n } from "@composables/i18n"
+import { useReadonlyStream } from "@composables/stream"
+import { useColorMode } from "@composables/theming"
+import { useToast } from "@composables/toast"
+import {
+  Environment,
+  GlobalEnvironment,
+  parseTemplateStringE,
+} from "@hoppscotch/data"
 import { refAutoReset } from "@vueuse/core"
+import { useService } from "dioc/vue"
+import * as A from "fp-ts/Array"
+import * as E from "fp-ts/Either"
+import * as O from "fp-ts/Option"
+import { flow, pipe } from "fp-ts/function"
+import { ComputedRef, computed, ref, watch } from "vue"
+import { uniqueID } from "~/helpers/utils/uniqueID"
 import {
   createEnvironment,
   environments$,
+  environmentsStore,
   getEnvironment,
   getGlobalVariables,
   globalEnv$,
@@ -155,15 +161,13 @@ import {
   setSelectedEnvironmentIndex,
   updateEnvironment,
 } from "~/newstore/environments"
-import { useI18n } from "@composables/i18n"
-import { useToast } from "@composables/toast"
-import { useReadonlyStream } from "@composables/stream"
-import { useColorMode } from "@composables/theming"
-import { environmentsStore } from "~/newstore/environments"
 import { platform } from "~/platform"
-import { useService } from "dioc/vue"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
-import { uniqueID } from "~/helpers/utils/uniqueID"
+import IconDone from "~icons/lucide/check"
+import IconHelpCircle from "~icons/lucide/help-circle"
+import IconPlus from "~icons/lucide/plus"
+import IconTrash from "~icons/lucide/trash"
+import IconTrash2 from "~icons/lucide/trash-2"
 
 type EnvironmentVariable = {
   id: number
@@ -257,7 +261,7 @@ const clearIcon = refAutoReset<typeof IconTrash2 | typeof IconDone>(
   1000
 )
 
-const globalVars = useReadonlyStream(globalEnv$, [])
+const globalEnv = useReadonlyStream(globalEnv$, {} as GlobalEnvironment)
 
 type SelectedEnv = "variables" | "secret"
 
@@ -315,8 +319,18 @@ const liveEnvs = computed(() => {
   }
   return [
     ...vars.value.map((x) => ({ ...x.env, source: editingName.value! })),
-    ...globalVars.value.map((x) => ({ ...x, source: "Global" })),
+    ...globalEnv.value.variables.map((x) => ({ ...x, source: "Global" })),
   ]
+})
+
+const workingEnvID = computed(() => {
+  const activeEnv = workingEnv.value
+
+  if (activeEnv && "id" in activeEnv) {
+    return activeEnv.id
+  }
+
+  return uniqueID()
 })
 
 watch(
@@ -329,7 +343,7 @@ watch(
         : "variables"
 
       if (props.editingEnvironmentIndex !== "Global") {
-        editingID.value = workingEnv.value?.id || uniqueID()
+        editingID.value = workingEnvID.value
       }
       vars.value = pipe(
         workingEnv.value?.variables ?? [],
@@ -341,7 +355,7 @@ watch(
               ? secretEnvironmentService.getSecretEnvironmentVariable(
                   props.editingEnvironmentIndex === "Global"
                     ? "Global"
-                    : workingEnv.value?.id,
+                    : workingEnvID.value,
                   index
                 )?.value ?? ""
               : e.value,
@@ -448,7 +462,7 @@ const saveEnvironment = () => {
     })
   } else if (props.editingEnvironmentIndex === "Global") {
     // Editing the Global environment
-    setGlobalEnvVariables(environmentUpdated.variables)
+    setGlobalEnvVariables(environmentUpdated)
     toast.success(`${t("environment.updated")}`)
   } else if (props.editingEnvironmentIndex !== null) {
     const envID =

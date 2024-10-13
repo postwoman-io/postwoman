@@ -27,11 +27,11 @@
 import { computed, useModel } from "vue"
 import { ref } from "vue"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 import { RESTOptionTabs } from "../http/RequestOptions.vue"
 
 const props = defineProps<{
-  modelTab: HoppTab<HoppRESTDocument>
+  modelTab: HoppTab<HoppRequestDocument>
   properties: RESTOptionTabs[]
   sharedRequestID: string
 }>()

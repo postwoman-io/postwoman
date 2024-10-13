@@ -75,6 +75,7 @@ import { InterceptorService } from "~/services/interceptor.service"
 import { editGraphqlRequest } from "~/newstore/collections"
 import { GQLTabService } from "~/services/tab/graphql"
 import { HoppInheritedProperty } from "~/helpers/types/HoppInheritedProperties"
+import { HoppRESTHeaders } from "@hoppscotch/data"
 
 const VALID_GQL_OPERATIONS = [
   "query",
@@ -158,7 +159,10 @@ const runQuery = async (
     let runHeaders: HoppGQLRequest["headers"] = []
 
     if (inheritedHeaders) {
-      runHeaders = [...inheritedHeaders, ...clone(request.value.headers)]
+      runHeaders = [
+        ...inheritedHeaders,
+        ...clone(request.value.headers),
+      ] as HoppRESTHeaders
     } else {
       runHeaders = clone(request.value.headers)
     }
@@ -266,7 +270,7 @@ const changeOptionTab = (e: GQLOptionTabs) => {
 }
 
 defineActionHandler("request.send-cancel", runQuery)
-defineActionHandler("request.save", saveRequest)
+defineActionHandler("request-response.save", saveRequest)
 defineActionHandler("request.save-as", () => {
   showSaveRequestModal.value = true
 })

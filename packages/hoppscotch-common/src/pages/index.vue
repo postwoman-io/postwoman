@@ -14,7 +14,7 @@
             v-for="tab in activeTabs"
             :id="tab.id"
             :key="tab.id"
-            :label="tab.document.request.name"
+            :label="getTabName(tab)"
             :is-removable="activeTabs.length > 1"
             :close-visibility="'hover'"
           >
@@ -45,6 +45,12 @@
               </span>
             </template>
             <HttpRequestTab
+              v-if="tab.document.type === 'request'"
+              :model-value="tab"
+              @update:model-value="onTabUpdate"
+            />
+            <HttpExampleResponseTab
+              v-else-if="tab.document.type === 'example-response'"
               :model-value="tab"
               @update:model-value="onTabUpdate"
             />
@@ -136,7 +142,7 @@ import { ResponseInspectorService } from "~/services/inspection/inspectors/respo
 import { cloneDeep } from "lodash-es"
 import { RESTTabService } from "~/services/tab/rest"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument, HoppTabDocument } from "~/helpers/rest/document"
 
 const savingRequest = ref(false)
 const confirmingCloseForTabID = ref<string | null>(null)
@@ -187,6 +193,8 @@ function bindRequestToURLParams() {
     // We skip URL params parsing
     if (Object.keys(query).length === 0 || query.code || query.error) return
 
+    if (tabs.currentActiveTab.value.document.type !== "request") return
+
     const request = tabs.currentActiveTab.value.document.request
 
     tabs.currentActiveTab.value.document.request = safelyExtractRESTRequest(
@@ -196,7 +204,7 @@ function bindRequestToURLParams() {
   })
 }
 
-const onTabUpdate = (tab: HoppTab<HoppRESTDocument>) => {
+const onTabUpdate = (tab: HoppTab<HoppRequestDocument>) => {
   tabs.updateTab(tab)
 }
 
@@ -204,6 +212,7 @@ const addNewTab = () => {
   const tab = tabs.createNewTab({
     request: getDefaultRESTRequest(),
     isDirty: false,
+    type: "request",
   })
 
   tabs.setActiveTab(tab.id)
@@ -243,10 +252,11 @@ const closeOtherTabsAction = (tabID: string) => {
 
 const duplicateTab = (tabID: string) => {
   const tab = tabs.getTabRef(tabID)
-  if (tab.value) {
+  if (tab.value && tab.value.document.type === "request") {
     const newTab = tabs.createNewTab({
       request: cloneDeep(tab.value.document.request),
       isDirty: true,
+      type: "request",
     })
     tabs.setActiveTab(newTab.id)
   }
@@ -257,19 +267,32 @@ const onResolveConfirmCloseAllTabs = () => {
   confirmingCloseAllTabs.value = false
 }
 
+const getTabName = (tab: HoppTab<HoppTabDocument>) => {
+  if (tab.document.type === "request") {
+    return tab.document.request.name
+  } else if (tab.document.type === "example-response") {
+    return tab.document.response.name
+  }
+}
+
 const requestToRename = computed(() => {
   if (!renameTabID.value) return null
   const tab = tabs.getTabRef(renameTabID.value)
-  return tab.value.document.request
+  return getTabName(tab.value)
 })
 
 const openReqRenameModal = (tabID?: string) => {
   if (tabID) {
     const tab = tabs.getTabRef(tabID)
+
+    if (tab.value.document.type !== "request") return
+
     reqName.value = tab.value.document.request.name
     renameTabID.value = tabID
   } else {
     const { id, document } = tabs.currentActiveTab.value
+
+    if (document.type !== "request") return
 
     reqName.value = document.request.name
     renameTabID.value = id
@@ -279,7 +302,7 @@ const openReqRenameModal = (tabID?: string) => {
 
 const renameReqName = () => {
   const tab = tabs.getTabRef(renameTabID.value ?? currentTabID.value)
-  if (tab.value) {
+  if (tab.value && tab.value.document.type === "request") {
     tab.value.document.request.name = reqName.value
     tabs.updateTab(tab.value)
   }
@@ -302,7 +325,7 @@ const onCloseConfirmSaveTab = () => {
  */
 const onResolveConfirmSaveTab = () => {
   if (tabs.currentActiveTab.value.document.saveContext) {
-    invokeAction("request.save")
+    invokeAction("request-response.save")
 
     if (confirmingCloseForTabID.value) {
       tabs.closeTab(confirmingCloseForTabID.value)
@@ -326,7 +349,7 @@ const onSaveModalClose = () => {
 
 const shareTabRequest = (tabID: string) => {
   const tab = tabs.getTabRef(tabID)
-  if (tab.value) {
+  if (tab.value && tab.value.document.type === "request") {
     if (currentUser.value) {
       invokeAction("share.request", {
         request: tab.value.document.request,

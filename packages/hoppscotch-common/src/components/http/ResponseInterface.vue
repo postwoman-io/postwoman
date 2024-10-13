@@ -179,9 +179,15 @@ const response = computed(() => {
   const pageCategory = getCurrentPageCategory()
 
   if (pageCategory === "rest") {
-    const res = restTabs.currentActiveTab.value.document.response
-    if (res?.type === "success" || res?.type === "fail") {
-      response = getResponseBodyText(res.body)
+    const doc = restTabs.currentActiveTab.value.document
+    if (doc.type === "request") {
+      const res = doc.response
+      if (res?.type === "success" || res?.type === "fail") {
+        response = getResponseBodyText(res.body)
+      }
+    } else {
+      const res = doc.response.body
+      response = res
     }
   }
 
@@ -244,6 +250,7 @@ const filteredResponseInterfaces = computed(() => {
 const { copyIcon, copyResponse } = useCopyResponse(interfaceCode)
 const { downloadIcon, downloadResponse } = useDownloadResponse(
   "",
-  interfaceCode
+  interfaceCode,
+  t("filename.response_interface")
 )
 </script>

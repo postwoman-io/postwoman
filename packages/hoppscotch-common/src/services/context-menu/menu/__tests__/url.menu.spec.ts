@@ -76,6 +76,7 @@ describe("URLMenuService", () => {
       expect(createNewTabFn).toHaveBeenCalledWith({
         request: request,
         isDirty: false,
+        type: "request",
       })
     })
   })

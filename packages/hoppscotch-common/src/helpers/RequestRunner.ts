@@ -29,7 +29,7 @@ import {
   getCombinedEnvVariables,
   getFinalEnvsFromPreRequest,
 } from "./preRequest"
-import { HoppRESTDocument } from "./rest/document"
+import { HoppRequestDocument } from "./rest/document"
 import { HoppRESTResponse } from "./types/HoppRESTResponse"
 import { HoppTestData, HoppTestResult } from "./types/HoppTestResult"
 import { getEffectiveRESTRequest } from "./utils/EffectiveURL"
@@ -166,7 +166,7 @@ const filterNonEmptyEnvironmentVariables = (
 }
 
 export function runRESTRequest$(
-  tab: Ref<HoppTab<HoppRESTDocument>>
+  tab: Ref<HoppTab<HoppRequestDocument>>
 ): [
   () => void,
   Promise<
@@ -303,12 +303,15 @@ export function runRESTRequest$(
             tab.value.document.testResults =
               translateToSandboxTestResults(updatedRunResult)
 
-            setGlobalEnvVariables(
-              updateEnvironmentsWithSecret(
-                runResult.right.envs.global,
-                "global"
-              )
+            const globalEnvVariables = updateEnvironmentsWithSecret(
+              runResult.right.envs.global,
+              "global"
             )
+
+            setGlobalEnvVariables({
+              v: 1,
+              variables: globalEnvVariables,
+            })
             if (
               environmentsStore.value.selectedEnvironmentIndex.type === "MY_ENV"
             ) {

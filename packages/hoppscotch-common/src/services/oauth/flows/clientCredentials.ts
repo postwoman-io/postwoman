@@ -24,7 +24,6 @@ const ClientCredentialsFlowParamsSchema = ClientCredentialsGrantTypeParams.pick(
     return (
       params.authEndpoint.length >= 1 &&
       params.clientID.length >= 1 &&
-      params.clientSecret.length >= 1 &&
       (!params.scopes || params.scopes.length >= 1)
     )
   },
@@ -56,7 +55,10 @@ const initClientCredentialsOAuthFlow = async ({
   const formData = new URLSearchParams()
   formData.append("grant_type", "client_credentials")
   formData.append("client_id", clientID)
-  formData.append("client_secret", clientSecret)
+
+  if (clientSecret) {
+    formData.append("client_secret", clientSecret)
+  }
 
   if (scopes) {
     formData.append("scope", scopes)

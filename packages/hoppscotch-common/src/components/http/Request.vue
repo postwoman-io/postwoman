@@ -263,7 +263,7 @@ import { useService } from "dioc/vue"
 import { InspectionService } from "~/services/inspection"
 import { InterceptorService } from "~/services/interceptor.service"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 import { RESTTabService } from "~/services/tab/rest"
 import { getMethodLabelColor } from "~/helpers/rest/labelColoring"
 import { WorkspaceService } from "~/services/workspace.service"
@@ -288,7 +288,7 @@ const toast = useToast()
 
 const { subscribeToStream } = useStreamSubscriber()
 
-const props = defineProps<{ modelValue: HoppTab<HoppRESTDocument> }>()
+const props = defineProps<{ modelValue: HoppTab<HoppRequestDocument> }>()
 const emit = defineEmits(["update:modelValue"])
 
 const tab = useVModel(props, "modelValue", emit)
@@ -583,10 +583,10 @@ defineActionHandler("request.reset", clearContent)
 defineActionHandler("request.share-request", shareRequest)
 defineActionHandler("request.method.next", cycleDownMethod)
 defineActionHandler("request.method.prev", cycleUpMethod)
-defineActionHandler("request.save", saveRequest)
+defineActionHandler("request-response.save", saveRequest)
 defineActionHandler("request.save-as", (req) => {
   showSaveRequestModal.value = true
-  if (req?.requestType === "rest") {
+  if (req?.requestType === "rest" && req.request) {
     request.value = req.request
   }
 })

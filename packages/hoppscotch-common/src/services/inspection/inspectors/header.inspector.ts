@@ -1,7 +1,10 @@
 import { Service } from "dioc"
 import { InspectionService, Inspector, InspectorResult } from ".."
 import { getI18n } from "~/modules/i18n"
-import { HoppRESTRequest } from "@hoppscotch/data"
+import {
+  HoppRESTRequest,
+  HoppRESTResponseOriginalRequest,
+} from "@hoppscotch/data"
 import { Ref, computed, markRaw } from "vue"
 import IconAlertTriangle from "~icons/lucide/alert-triangle"
 import { InterceptorService } from "~/services/interceptor.service"
@@ -32,10 +35,11 @@ export class HeaderInspectorService extends Service implements Inspector {
     return cookieKeywords.includes(headerKey)
   }
 
-  getInspections(req: Readonly<Ref<HoppRESTRequest>>) {
+  getInspections(
+    req: Readonly<Ref<HoppRESTRequest | HoppRESTResponseOriginalRequest>>
+  ) {
     return computed(() => {
       const results: InspectorResult[] = []
-
       const headers = req.value.headers
 
       const headerKeys = Object.values(headers).map((header) => header.key)

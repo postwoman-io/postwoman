@@ -50,26 +50,35 @@
       />
     </HoppSmartTab>
     <HoppSmartTab
-      v-if="properties?.includes('preRequestScript') ?? true"
+      v-if="showPreRequestScriptTab"
       :id="'preRequestScript'"
       :label="`${t('tab.pre_request_script')}`"
       :indicator="
-        request.preRequestScript && request.preRequestScript.length > 0
+        'preRequestScript' in request &&
+        request.preRequestScript &&
+        request.preRequestScript.length > 0
           ? true
           : false
       "
     >
-      <HttpPreRequestScript v-model="request.preRequestScript" />
+      <HttpPreRequestScript
+        v-if="'preRequestScript' in request"
+        v-model="request.preRequestScript"
+      />
     </HoppSmartTab>
     <HoppSmartTab
-      v-if="properties?.includes('tests') ?? true"
+      v-if="showTestsTab"
       :id="'tests'"
       :label="`${t('tab.tests')}`"
       :indicator="
-        request.testScript && request.testScript.length > 0 ? true : false
+        'testScript' in request &&
+        request.testScript &&
+        request.testScript.length > 0
+          ? true
+          : false
       "
     >
-      <HttpTests v-model="request.testScript" />
+      <HttpTests v-if="'testScript' in request" v-model="request.testScript" />
     </HoppSmartTab>
     <HoppSmartTab
       v-if="properties?.includes('requestVariables') ?? true"
@@ -85,7 +94,10 @@
 
 <script setup lang="ts">
 import { useI18n } from "@composables/i18n"
-import { HoppRESTRequest } from "@hoppscotch/data"
+import {
+  HoppRESTRequest,
+  HoppRESTResponseOriginalRequest,
+} from "@hoppscotch/data"
 import { useVModel } from "@vueuse/core"
 import { computed } from "vue"
 import { defineActionHandler } from "~/helpers/actions"
@@ -109,7 +121,7 @@ const t = useI18n()
 // v-model integration with props and emit
 const props = withDefaults(
   defineProps<{
-    modelValue: HoppRESTRequest
+    modelValue: HoppRESTRequest | HoppRESTResponseOriginalRequest
     optionTab: RESTOptionTabs
     properties?: string[]
     inheritedProperties?: HoppInheritedProperty
@@ -127,6 +139,17 @@ const emit = defineEmits<{
 
 const request = useVModel(props, "modelValue", emit)
 const selectedOptionTab = useVModel(props, "optionTab", emit)
+
+const showPreRequestScriptTab = computed(() => {
+  return (
+    props.properties?.includes("preRequestScript") ??
+    "preRequestScript" in request.value
+  )
+})
+
+const showTestsTab = computed(() => {
+  return props.properties?.includes("tests") ?? "testScript" in request.value
+})
 
 const changeOptionTab = (e: RESTOptionTabs) => {
   selectedOptionTab.value = e

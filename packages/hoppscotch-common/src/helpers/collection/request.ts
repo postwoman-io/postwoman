@@ -2,6 +2,7 @@ import {
   HoppCollection,
   HoppGQLRequest,
   HoppRESTRequest,
+  RESTReqSchemaVersion,
 } from "@hoppscotch/data"
 import { getAffectedIndexes } from "./affectedIndex"
 import { RESTTabService } from "~/services/tab/rest"
@@ -67,7 +68,7 @@ export function getRequestsByPath(
 
   if (pathArray.length === 1) {
     const latestVersionedRequests = currentCollection.requests.filter(
-      (req): req is HoppRESTRequest => req.v === "3"
+      (req): req is HoppRESTRequest => req.v === RESTReqSchemaVersion
     )
 
     return latestVersionedRequests
@@ -78,7 +79,7 @@ export function getRequestsByPath(
   }
 
   const latestVersionedRequests = currentCollection.requests.filter(
-    (req): req is HoppRESTRequest => req.v === "3"
+    (req): req is HoppRESTRequest => req.v === RESTReqSchemaVersion
   )
 
   return latestVersionedRequests

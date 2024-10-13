@@ -42,9 +42,15 @@ export class ExtensionInspectorService extends Service implements Inspector {
       () => currentExtensionStatus.value === "available"
     )
 
-    const EXTENSIONS_ENABLED = computed(
-      () => this.interceptorService.currentInterceptorID.value === "extension"
+    const activeInterceptor = computed(
+      () => this.interceptorService.currentInterceptorID.value
     )
+
+    const EXTENSION_ENABLED = computed(
+      () => activeInterceptor.value === "extension"
+    )
+
+    const AGENT_ENABLED = computed(() => activeInterceptor.value === "agent")
 
     return computed(() => {
       const results: InspectorResult[] = []
@@ -56,9 +62,11 @@ export class ExtensionInspectorService extends Service implements Inspector {
         url.includes(host)
       )
 
+      // Prompt the user to install or enable the extension via inspector if the endpoint is `localhost`, and an interceptor other than `Agent` is active
       if (
         isContainLocalhost &&
-        (!EXTENSIONS_ENABLED.value || !isExtensionInstalled.value)
+        !AGENT_ENABLED.value &&
+        (!EXTENSION_ENABLED.value || !isExtensionInstalled.value)
       ) {
         let text
 
@@ -68,7 +76,7 @@ export class ExtensionInspectorService extends Service implements Inspector {
           } else {
             text = this.t("inspections.url.extension_not_installed")
           }
-        } else if (!EXTENSIONS_ENABLED.value) {
+        } else if (!EXTENSION_ENABLED.value) {
           text = this.t("inspections.url.extention_not_enabled")
         } else {
           text = this.t("inspections.url.localhost")

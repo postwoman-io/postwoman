@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Hoppscotch",
-    "version": "24.8.3"
+    "version": "24.9.1"
   },
   "tauri": {
     "allowlist": {
@@ -49,7 +49,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": "none"
+      "csp": null
     },
     "updater": {
       "active": false
