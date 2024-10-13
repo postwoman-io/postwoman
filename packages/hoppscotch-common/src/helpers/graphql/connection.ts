@@ -42,6 +42,15 @@ export type GQLResponseEvent =
       operationType: OperationType
       data: string
       rawQuery?: RunQueryOptions
+      document: {
+        type: string
+        statusCode: number
+        statusText: string
+        meta: {
+          responseSize: number
+          responseDuration: number
+        }
+      }
     }
   | {
       type: "error"
@@ -256,6 +265,7 @@ const getSchema = async (url: string, headers: GQLHeader[]) => {
 }
 
 export const runGQLOperation = async (options: RunQueryOptions) => {
+  const timeStart = Date.now()
   const { url, headers, query, variables, auth, operationName, operationType } =
     options
 
@@ -370,13 +380,24 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     .decode(res.data as any)
     .replace(/\0+$/, "")
 
+  const timeEnd = Date.now()
+
   gqlMessageEvent.value = {
     type: "response",
-    time: Date.now(),
+    time: timeEnd,
     operationName: operationName ?? "query",
     data: responseText,
     rawQuery: options,
     operationType,
+    document: {
+      type: "success",
+      statusCode: res.status,
+      statusText: res.statusText,
+      meta: {
+        responseSize: res.data.byteLength,
+        responseDuration: timeEnd - timeStart,
+      },
+    },
   }
 
   if (connection.state !== "CONNECTED") {
