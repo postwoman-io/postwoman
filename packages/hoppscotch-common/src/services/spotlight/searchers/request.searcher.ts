@@ -47,7 +47,11 @@ export class RequestSpotlightSearcherService extends StaticSpotlightSearcherServ
   private readonly restTab = this.bind(RESTTabService)
 
   private route = useRoute()
-  private isRESTPage = computed(() => this.route.name === "index")
+  private isRESTPage = computed(
+    () =>
+      this.route.name === "index" &&
+      this.restTab.currentActiveTab.value.document.type === "request"
+  )
   private isGQLPage = computed(() => this.route.name === "graphql")
   private isRESTOrGQLPage = computed(
     () => this.isRESTPage.value || this.isGQLPage.value

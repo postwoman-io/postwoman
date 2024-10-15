@@ -278,7 +278,10 @@ const getTabName = (tab: HoppTab<HoppTabDocument>) => {
 const requestToRename = computed(() => {
   if (!renameTabID.value) return null
   const tab = tabs.getTabRef(renameTabID.value)
-  return getTabName(tab.value)
+
+  return tab.value.document.type === "request"
+    ? tab.value.document.request
+    : null
 })
 
 const openReqRenameModal = (tabID?: string) => {
