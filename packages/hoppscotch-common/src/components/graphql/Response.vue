@@ -1,5 +1,9 @@
 <template>
   <div class="flex flex-1 flex-col overflow-auto whitespace-nowrap">
+    <HttpResponseMeta
+      :response="props.response?.[0]?.document"
+      :is-embed="isEmbed"
+    />
     <div
       v-if="
         response && response.length === 1 && response[0].type === 'response'
@@ -88,7 +92,7 @@
     >
       <GraphqlSubscriptionLog :log="response" />
     </div>
-    <AppShortcutsPrompt v-else class="p-4" />
+    <!-- <AppShortcutsPrompt v-else class="p-4" /> -->
   </div>
 </template>
 
