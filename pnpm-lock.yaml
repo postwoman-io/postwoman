@@ -940,6 +940,34 @@ importers:
         specifier: 5.4.9
         version: 5.4.9(@types/node@22.7.6)(sass@1.80.3)(terser@5.34.1)
 
+  packages/hoppscotch-desktop:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2
+        version: 2.0.2
+      '@tauri-apps/plugin-shell':
+        specifier: ^2
+        version: 2.0.0
+      vue:
+        specifier: 3.5.12
+        version: 3.5.12(typescript@5.6.3)
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2
+        version: 2.0.4
+      '@vitejs/plugin-vue':
+        specifier: ^5.0.5
+        version: 5.1.4(vite@5.4.9(@types/node@22.7.6)(sass@1.80.3)(terser@5.34.1))(vue@3.5.12(typescript@5.6.3))
+      typescript:
+        specifier: ^5.2.2
+        version: 5.6.3
+      vite:
+        specifier: ^5.3.1
+        version: 5.4.9(@types/node@22.7.6)(sass@1.80.3)(terser@5.34.1)
+      vue-tsc:
+        specifier: ^2.0.22
+        version: 2.1.6(typescript@5.6.3)
+
   packages/hoppscotch-js-sandbox:
     dependencies:
       '@hoppscotch/data':
@@ -5752,9 +5780,6 @@ packages:
       typescript:
         optional: true
 
-  '@vue/reactivity@3.5.11':
-    resolution: {integrity: sha512-Nqo5VZEn8MJWlCce8XoyVqHZbd5P2NH+yuAaFzuNSR96I+y1cnuUiq7xfSG+kyvLSiWmaHTKP1r3OZY4mMD50w==}
-
   '@vue/reactivity@3.5.12':
     resolution: {integrity: sha512-UzaN3Da7xnJXdz4Okb/BGbAaomRHc3RdoWqTzlvd9+WBR5m3J39J1fGcHes7U3za0ruYn/iYy/a1euhMEHvTAg==}
 
@@ -5768,9 +5793,6 @@ packages:
     resolution: {integrity: sha512-I3QoeDDeEPZm8yR28JtY+rk880Oqmj43hreIBVTicisFTx/Dl7JpG72g/X7YF8hnQD3IFhkky5i2bPonwrTVPg==}
     peerDependencies:
       vue: 3.5.12
-
-  '@vue/shared@3.5.11':
-    resolution: {integrity: sha512-W8GgysJVnFo81FthhzurdRAWP/byq3q2qIw70e0JWblzVhjgOMiC2GyovXrZTFQJnFVryYaKGP3Tc9vYzYm6PQ==}
 
   '@vue/shared@3.5.12':
     resolution: {integrity: sha512-L2RPSAwUFbgZH20etwrXyVyCBu9OxRSi8T/38QsvnkJyvq2LufW2lDCOzm7t/U9C1mkhJGWYfCuFBCmIuNivrg==}
@@ -17901,7 +17923,7 @@ snapshots:
       '@volar/language-core': 1.10.10
       '@volar/source-map': 1.10.10
       '@vue/compiler-dom': 3.5.12
-      '@vue/reactivity': 3.5.11
+      '@vue/reactivity': 3.5.12
       '@vue/shared': 3.5.12
       minimatch: 9.0.5
       muggle-string: 0.3.1
@@ -17934,10 +17956,6 @@ snapshots:
       path-browserify: 1.0.1
     optionalDependencies:
       typescript: 5.6.3
-
-  '@vue/reactivity@3.5.11':
-    dependencies:
-      '@vue/shared': 3.5.11
 
   '@vue/reactivity@3.5.12':
     dependencies:
@@ -17972,8 +17990,6 @@ snapshots:
       '@vue/compiler-ssr': 3.5.12
       '@vue/shared': 3.5.12
       vue: 3.5.12(typescript@5.6.3)
-
-  '@vue/shared@3.5.11': {}
 
   '@vue/shared@3.5.12': {}
 
