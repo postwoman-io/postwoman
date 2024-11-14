@@ -1,8 +1,8 @@
 [package]
 name = "hoppscotch-desktop"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Desktop App for hoppscotch.io"
+authors = ["CuriousCorrelation"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,7 +19,13 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
-tauri-plugin-shell = "2"
+tauri-plugin-shell = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-
+serde_json = { version = "1", features = [] }
+thiserror = { version = "2.0.3", features = [] }
+url = { version = "2.5.3", features = ["serde"] }
+reqwest = { version = "0.12.9", features = [] }
+zip = { version = "2.2.0", features = [] }
+tokio = { version = "1.41.1", features = [] }
+mime-infer = { version = "3.0.0", features = [] }
+regex = { version = "1.11.1", features = [] }
