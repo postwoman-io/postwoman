@@ -1,18 +1,23 @@
+use std::sync::Arc;
+
 use tauri::{command, AppHandle, Manager, Runtime};
 
-use crate::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse, Result};
+use crate::{
+    bundle::BundleManager, DownloadOptions, DownloadResponse, Error, LoadOptions,
+    LoadResponse, Result,
+};
 
-/// Download an app bundle from the given URL
+/// Download an app bundle from the given URL and optionally load it immediately
 #[command]
 pub async fn download<R: Runtime>(
     app: AppHandle<R>,
     options: DownloadOptions,
 ) -> Result<DownloadResponse> {
-    tracing::debug!(?options, "Downloading app bundle");
+    tracing::info!(?options, "Starting app bundle download");
 
-    let paths = app.path().app_data_dir().map_err(|_| {
-        tracing::error!("Failed to get app data directory");
-        crate::Error::PathAccess("app data directory".into())
+    let paths = app.path().app_data_dir().map_err(|e| {
+        tracing::error!(?e, "Failed to access app data directory");
+        Error::PathAccess("app data directory".into())
     })?;
 
     let bundle_name = options.name.unwrap_or_else(|| {
@@ -24,36 +29,41 @@ pub async fn download<R: Runtime>(
     });
     tracing::debug!(?bundle_name, "Using bundle name");
 
+    let bundle_path = paths.join(format!("{}.zip", bundle_name));
+    tracing::debug!(?bundle_path, "Target bundle path");
+
+    if bundle_path.exists() {
+        tracing::debug!("Found existing bundle - downloading update");
+        tracing::debug!(
+            ?bundle_path,
+            "Existing bundle will be replaced with updated version"
+        );
+    }
+
     let mut bundle_url = options.url;
     bundle_url.set_path("assets/bundle.zip");
-    tracing::debug!(?bundle_url, "Downloading from URL");
 
-    // Download the bundle
-    let content = match reqwest::get(bundle_url).await {
-        Ok(response) => {
-            tracing::debug!("Successfully contacted download URL");
-            response.bytes().await?
-        }
-        Err(e) => {
+    tracing::debug!(?bundle_url, "Downloading bundle from URL");
+    let content = reqwest::get(bundle_url)
+        .await
+        .map_err(|e| {
             tracing::error!(?e, "Failed to download bundle");
-            return Err(e.into());
-        }
-    };
+            e
+        })?
+        .bytes()
+        .await?;
 
-    // Make sure target directory exists
-    if let Err(e) = tokio::fs::create_dir_all(&paths).await {
-        tracing::error!(?e, ?paths, "Failed to create app data directory");
-        return Err(e.into());
-    }
-    tracing::debug!(?paths, "Created app data directory");
+    tokio::fs::create_dir_all(&paths).await?;
+    tokio::fs::write(&bundle_path, content).await?;
+    tracing::debug!(?bundle_path, "Bundle written to disk");
 
-    // Save the bundle
-    let bundle_path = paths.join(format!("{}.zip", bundle_name));
-    if let Err(e) = tokio::fs::write(&bundle_path, content).await {
-        tracing::error!(?e, ?bundle_path, "Failed to write bundle to disk");
-        return Err(e.into());
+    if let Some(manager) = app.try_state::<Arc<BundleManager>>() {
+        tracing::debug!(?bundle_name, "Caching bundle in memory");
+        manager.get_archive(&bundle_name)?;
+        tracing::info!(?bundle_path, "Bundle successfully cached in memory");
+    } else {
+        tracing::warn!("BundleManager not found in app state");
     }
-    tracing::info!(?bundle_path, "Successfully saved bundle to disk");
 
     Ok(DownloadResponse {
         success: true,
@@ -63,54 +73,59 @@ pub async fn download<R: Runtime>(
 
 const KERNEL_JS: &str = include_str!("./kernel.js");
 
-/// Load an app in a new window
 #[command]
 pub async fn load<R: Runtime>(app: AppHandle<R>, options: LoadOptions) -> Result<LoadResponse> {
-    tracing::debug!(?options, "Loading app");
+    tracing::info!(?options, "Starting app load process");
 
     let window_label = format!("app-{}", options.name);
-    let url = format!("app://{}/index.html", options.name);
-    let webview_url = tauri::WebviewUrl::App(url.clone().into());
+    let url = format!("app://{}/", options.name);
+    tracing::debug!(?window_label, ?url, "Initialized load parameters");
 
     if options.inline {
-        if let Some(window) = app.get_focused_window() {
-            tracing::debug!(?url, "Navigating current window");
-            window.webviews()[0].eval(&format!("window.location.href = '{}'", url))?;
-
-            Ok(LoadResponse {
-                success: true,
-                window_label: window.label().into(),
-            })
-        } else {
+        tracing::debug!("Attempting inline load");
+        let window = app.get_focused_window().ok_or_else(|| {
             tracing::error!("No focused window found for inline loading");
-            Err(crate::Error::PathAccess("No focused window".into()))
-        }
-    } else {
-        tracing::debug!(?window_label, ?url, "Creating window");
+            Error::PathAccess("No focused window".into())
+        })?;
 
-        let window = match tauri::WebviewWindowBuilder::new(&app, &window_label, webview_url)
+        tracing::debug!(?url, "Attempting to navigate current window");
+        window
+            .webviews()
+            .first()
+            .ok_or_else(|| {
+                tracing::error!("No webview found in focused window");
+                Error::PathAccess("No focused window".into())
+            })?
+            .eval(&format!("window.location.href = '{}'", url))?;
+
+        tracing::info!(?window_label, "Successfully completed inline load");
+        return Ok(LoadResponse {
+            success: true,
+            window_label: window.label().into(),
+        });
+    }
+
+    tracing::debug!(?window_label, "Creating new window");
+    let window =
+        tauri::WebviewWindowBuilder::new(&app, &window_label, tauri::WebviewUrl::App(url.into()))
             .title(&options.window.title)
             .inner_size(options.window.width, options.window.height)
             .resizable(options.window.resizable)
             .initialization_script(KERNEL_JS)
             .build()
-        {
-            Ok(window) => {
-                tracing::info!(?window_label, "Successfully created window");
-                window
-            }
-            Err(e) => {
+            .map_err(|e| {
                 tracing::error!(?e, ?window_label, "Failed to create window");
-                return Err(e.into());
-            }
-        };
+                e
+            })?;
 
-        let visible = window.is_visible().unwrap_or(false);
-        tracing::debug!(?visible, ?window_label, "Window visibility status");
-
-        Ok(LoadResponse {
-            success: visible,
-            window_label,
-        })
+    let visible = window.is_visible().unwrap_or(false);
+    if !visible {
+        tracing::warn!(?window_label, "Window created but not visible");
     }
+    tracing::info!(?window_label, ?visible, "Window creation completed");
+
+    Ok(LoadResponse {
+        success: visible,
+        window_label,
+    })
 }

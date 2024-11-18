@@ -4,7 +4,7 @@ use std::collections::HashMap;
 /// Handles replacing environment variables in HTML content
 #[derive(Debug)]
 pub(super) struct Replacer {
-    // The placeholder we look for and replace
+    // Placeholder to look for and replace
     placeholder_text: &'static str,
 }
 
@@ -12,7 +12,7 @@ impl Replacer {
     pub(super) fn new() -> Self {
         tracing::debug!("Creating new Replacer instance");
         Self {
-            placeholder_text: "\"import_meta_env_placeholder\"", // Include the quotes in the placeholder
+            placeholder_text: "\"import_meta_env_placeholder\"",
         }
     }
 
