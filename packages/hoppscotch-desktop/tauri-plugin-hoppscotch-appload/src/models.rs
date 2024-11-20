@@ -1,64 +1,170 @@
+use blake3::Hash;
+use chrono::{DateTime, Utc};
+use ed25519_dalek::Signature;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-/// Options for downloading an app bundle
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleMetadata {
+    pub version: String,
+    pub created_at: DateTime<Utc>,
+    #[serde(with = "signature_serde")]
+    pub signature: Signature,
+    pub manifest: Manifest,
+    #[serde(default)]
+    pub properties: std::collections::HashMap<String, String>,
+}
+
+mod signature_serde {
+    use super::*;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    use serde::{de::Error, Deserializer, Serializer};
+
+    pub fn serialize<S>(sig: &Signature, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&STANDARD.encode(sig.to_bytes()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Signature, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let bytes = STANDARD.decode(&s).map_err(D::Error::custom)?;
+        let bytes: [u8; 64] = bytes
+            .try_into()
+            .map_err(|_| D::Error::custom("invalid signature length"))?;
+        Ok(Signature::from_bytes(&bytes))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileEntry {
+    pub path: String,
+    pub size: u64,
+    #[serde(with = "hash_serde")]
+    pub hash: Hash,
+    pub mime_type: Option<String>,
+}
+
+mod hash_serde {
+    use super::*;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    use blake3::Hash;
+
+    pub fn serialize<S>(sig: &Hash, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&STANDARD.encode(sig.as_bytes()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Hash, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let s = String::deserialize(deserializer)?;
+        let bytes = STANDARD.decode(&s).map_err(D::Error::custom)?;
+        let bytes: [u8; 32] = bytes
+            .try_into()
+            .map_err(|_| D::Error::custom("invalid signature length"))?;
+        Ok(Hash::from_bytes(bytes))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Manifest {
+    pub files: Vec<FileEntry>,
+}
+
+impl Manifest {
+    pub fn total_size(&self) -> u64 {
+        self.files.iter().map(|f| f.size).sum()
+    }
+
+    pub fn get_file(&self, path: &str) -> Option<&FileEntry> {
+        self.files.iter().find(|f| f.path == path)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ApiResponse<T> {
+    pub success: bool,
+    #[serde(default)]
+    pub error: Option<String>,
+    pub data: T,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BundleList {
+    pub bundles: Vec<BundleSummary>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BundleSummary {
+    pub name: String,
+    pub version: String,
+    pub created_at: DateTime<Utc>,
+    pub file_count: usize,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct VerificationResponse {
+    pub status: String,
+    pub created_at: DateTime<Utc>,
+    pub version: String,
+    pub file_count: usize,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PublicKeyInfo {
+    pub key: String,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadOptions {
-    /// URL from which to download the app bundle
-    pub url: Url,
-    /// Optional name to save the bundle as
-    pub name: Option<String>,
+    pub server_url: Url,
+    pub bundle_name: Option<String>,
 }
 
-/// Response for download operation
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadResponse {
-    /// Whether the download was successful
     pub success: bool,
-    /// Path where the bundle was saved
     pub path: String,
+    pub server_url: Url,
 }
 
-/// Options for loading an app
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoadOptions {
-    /// Name of the app to load
     pub name: String,
-    /// Whether to load in current window
     #[serde(default)]
     pub inline: bool,
-    /// Window configuration
     #[serde(default)]
     pub window: WindowOptions,
 }
 
-/// Response for load operation
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoadResponse {
-    /// Whether the app was loaded successfully
     pub success: bool,
-    /// Label of the created window
     pub window_label: String,
 }
 
-/// Window configuration options
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowOptions {
-    /// Window title
     #[serde(default = "default_window_title")]
     pub title: String,
-    /// Initial window width
     #[serde(default = "default_window_width")]
     pub width: f64,
-    /// Initial window height
     #[serde(default = "default_window_height")]
     pub height: f64,
-    /// Whether window should be resizable
     #[serde(default = "default_resizable")]
     pub resizable: bool,
 }

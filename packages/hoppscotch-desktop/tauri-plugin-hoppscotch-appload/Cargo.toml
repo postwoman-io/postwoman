@@ -22,6 +22,17 @@ regex = { version = "1.11.1", features = [] }
 tracing = "0.1.40"
 dashmap = { version = "6.1.0" }
 flate2 = { version = "1.0.35" }
+chrono = { version = "0.4.38", features = ["serde"] }
+base64 = "0.22.1"
+blake3 = { version = "1.5.4", features = ["serde"] }
+ed25519-dalek = { version = "2.1.1", features = ["serde"] }
+hex = "0.4.3"
+lru = "0.12.5"
+sys-info = "0.9.1"
+humantime-serde = "1.1.1"
+futures = "0.3.31"
+mime_guess = "2.0.5"
+rayon = "1.10.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.1", features = ["build"] }

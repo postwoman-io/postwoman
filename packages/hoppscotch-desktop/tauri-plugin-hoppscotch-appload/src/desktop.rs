@@ -1,26 +1,36 @@
+use std::sync::Arc;
+
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
 
-use crate::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse};
+use crate::{
+    bundle::BundleLoader,
+    models::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse},
+    Result,
+};
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
     app: &AppHandle<R>,
-    _api: PluginApi<R, C>,
-) -> crate::Result<HoppscotchAppload<R>> {
-    Ok(HoppscotchAppload(app.clone()))
+    api: PluginApi<R, C>,
+    bundle_loader: Arc<BundleLoader>,
+) -> Result<HoppscotchAppload<R>> {
+    Ok(HoppscotchAppload {
+        app: app.clone(),
+        bundle_loader,
+    })
 }
 
-/// Desktop implementation of the Hoppscotch app loading plugin
-pub struct HoppscotchAppload<R: Runtime>(AppHandle<R>);
+pub struct HoppscotchAppload<R: Runtime> {
+    app: AppHandle<R>,
+    bundle_loader: Arc<BundleLoader>,
+}
 
 impl<R: Runtime> HoppscotchAppload<R> {
-    /// Download an app bundle
-    pub async fn download(&self, options: DownloadOptions) -> crate::Result<DownloadResponse> {
-        super::commands::download(self.0.clone(), options).await
+    pub async fn download(&self, options: DownloadOptions) -> Result<DownloadResponse> {
+        super::commands::download(self.app.clone(), options).await
     }
 
-    /// Load an app in a new window
-    pub async fn load(&self, options: LoadOptions) -> crate::Result<LoadResponse> {
-        super::commands::load(self.0.clone(), options).await
+    pub async fn load(&self, options: LoadOptions) -> Result<LoadResponse> {
+        super::commands::load(self.app.clone(), options).await
     }
 }

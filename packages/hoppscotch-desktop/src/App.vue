@@ -115,15 +115,14 @@ async function handleSubmit() {
   error.value = ""
 
   try {
-    const urlString = appUrl.value.startsWith("http")
+    const bundleName = "default"
+    const serverUrl = appUrl.value.startsWith("http")
       ? appUrl.value
       : `http://${appUrl.value}`
-    const url = new URL(urlString)
-    const name = url.hostname
 
-    const downloadResponse = await download({ url: urlString, name })
+    const downloadResponse = await download({ serverUrl, bundleName })
     console.info(downloadResponse)
-    const loadResponse = await load({ name, inline: true })
+    const loadResponse = await load({ name: bundleName, inline: true })
     console.info(loadResponse)
   } catch (e) {
     console.error(e)

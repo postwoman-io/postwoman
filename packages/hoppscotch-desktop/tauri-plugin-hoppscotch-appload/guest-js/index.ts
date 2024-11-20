@@ -5,13 +5,14 @@ import { invoke } from '@tauri-apps/api/core'
  */
 export interface DownloadOptions {
   /**
-   * URL from which to download the app bundle
+   * URL of the bundle server
    */
-  url: string
+  serverUrl: string
   /**
-   * Optional name to save the bundle as
+   * Optional name to save the bundle as. If not provided,
+   * will be derived from the server URL
    */
-  name?: string
+  bundleName?: string
 }
 
 /**
@@ -26,6 +27,10 @@ export interface DownloadResponse {
    * Path where the bundle was saved
    */
   path: string
+  /**
+   * Server URL that was used for the download
+   */
+  serverUrl: string
 }
 
 /**
@@ -87,18 +92,25 @@ export interface LoadResponse {
 }
 
 /**
- * Downloads an app bundle from a remote URL
+ * Downloads an app bundle from a trusted server
  * @param options Download configuration options
  * @returns Promise resolving to download status and location
+ * @throws Error if the server is not trusted or verification fails
  * @example
  * ```typescript
  * import { download } from '@tauri-apps/plugin-hoppscotch-appload'
  *
- * // Download an app bundle
- * const result = await download({
- *   url: 'https://example.com/app',
- *   name: 'my-app'
- * })
+ * // Download an app bundle from a trusted server
+ * try {
+ *   const result = await download({
+ *     serverUrl: 'https://bundles.example.com',
+ *     bundleName: 'my-app'
+ *   })
+ *   console.log(`Bundle downloaded to ${result.path}`)
+ * } catch (err) {
+ *   console.error('Download failed:', err)
+ *   // Handle untrusted server or other errors
+ * }
  * ```
  */
 export async function download(options: DownloadOptions): Promise<DownloadResponse> {
