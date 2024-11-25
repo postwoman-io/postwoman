@@ -1,4 +1,4 @@
-use crate::state::AppState;
+use crate::{show_main_window, state::AppState};
 use lazy_static::lazy_static;
 use std::sync::Arc;
 use tauri::{
@@ -42,6 +42,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
         .item(&app_version_item)
         .separator()
         .item(&clear_registrations)
+        .separator()
         .item(&quit_i)
         .build()?;
 
@@ -58,7 +59,8 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "quit" => {
                 log::info!("Exiting the agent...");
-                app.exit(-1);
+                // Exit with a specific code to allow actual exit.
+                app.exit(1);
             }
             "clear_registrations" => {
                 let app_state = app.state::<Arc<AppState>>();
@@ -79,9 +81,8 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
             } = event
             {
                 let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                if let Err(e) = show_main_window(&app) {
+                    log::error!("Failed to show window from tray: {}", e);
                 }
             }
         })

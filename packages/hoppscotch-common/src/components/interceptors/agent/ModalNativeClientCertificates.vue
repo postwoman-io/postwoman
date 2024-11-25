@@ -83,7 +83,6 @@
   />
 </template>
 
-<!-- TODO: i18n -->
 <script setup lang="ts">
 import IconPlus from "~icons/lucide/plus"
 import IconCheckCircle from "~icons/lucide/check-circle"

@@ -15,8 +15,11 @@ use x25519_dalek::{EphemeralSecret, PublicKey};
 
 use crate::{
     error::{AgentError, AgentResult},
-    model::{AuthKeyResponse, ConfirmedRegistrationRequest, HandshakeResponse},
-    state::{AppState, Registration},
+    model::{
+        AuthKeyResponse, ConfirmedRegistrationRequest, HandshakeResponse, MaskedRegistration,
+        Registration,
+    },
+    state::AppState,
     util::EncryptedJson,
 };
 use chrono::Utc;
@@ -79,8 +82,8 @@ pub async fn verify_registration(
 
     let auth_key_copy = auth_key.clone();
 
-    let agent_secret_key = EphemeralSecret::random();
-    let agent_public_key = PublicKey::from(&agent_secret_key);
+    let secret_key = EphemeralSecret::random();
+    let public_key = PublicKey::from(&secret_key);
 
     let their_public_key = {
         let public_key_slice: &[u8; 32] =
@@ -92,7 +95,7 @@ pub async fn verify_registration(
         PublicKey::from(public_key_slice.to_owned())
     };
 
-    let shared_secret = agent_secret_key.diffie_hellman(&their_public_key);
+    let shared_secret = secret_key.diffie_hellman(&their_public_key);
 
     let _ = state.update_registrations(app_handle.clone(), |regs| {
         regs.insert(
@@ -113,11 +116,58 @@ pub async fn verify_registration(
         .emit("authenticated", &auth_payload)
         .map_err(|_| AgentError::InternalServerError)?;
 
+    let _ = state.clear_active_registration().await;
+
     Ok(Json(AuthKeyResponse {
         auth_key,
         created_at,
-        agent_public_key_b16: base16::encode_lower(agent_public_key.as_bytes()),
+        agent_public_key_b16: base16::encode_lower(public_key.as_bytes()),
     }))
+}
+
+pub async fn registrations(
+    State((state, _)): State<(Arc<AppState>, AppHandle)>,
+    TypedHeader(auth_header): TypedHeader<Authorization<Bearer>>,
+) -> AgentResult<EncryptedJson<Vec<MaskedRegistration>>> {
+    if !state.validate_access(auth_header.token()) {
+        return Err(AgentError::Unauthorized);
+    }
+
+    let reg_info = state
+        .get_registration_info(auth_header.token())
+        .ok_or(AgentError::Unauthorized)?;
+
+    let registrations = state
+        .get_registrations()
+        .iter()
+        .map(|registration| MaskedRegistration {
+            registered_at: registration.value().registered_at,
+            auth_key: registration.key().to_string(),
+        })
+        .collect();
+
+    Ok(EncryptedJson {
+        key_b16: reg_info.shared_secret_b16,
+        data: registrations,
+    })
+}
+
+pub async fn delete_registration(
+    State((state, app_handle)): State<(Arc<AppState>, AppHandle)>,
+    TypedHeader(auth_header): TypedHeader<Authorization<Bearer>>,
+    Path(auth_key): Path<String>,
+) -> AgentResult<Json<serde_json::Value>> {
+    if !state.validate_access(auth_header.token()) {
+        return Err(AgentError::Unauthorized);
+    }
+
+    let _removed = state.update_registrations(app_handle.clone(), |regs| {
+        regs.remove(&auth_key);
+    })?;
+
+    let message = format!("{} registration deleted successfully", auth_key);
+
+    Ok(Json(json!({ "message": message })))
 }
 
 pub async fn run_request<T>(

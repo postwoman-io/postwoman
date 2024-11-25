@@ -8,6 +8,10 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AgentError {
+    #[error("FATAL: No `main` window found")]
+    NoMainWindow,
+    #[error("Tauri error: {0}")]
+    Tauri(#[from] tauri::Error),
     #[error("Invalid Registration")]
     InvalidRegistration,
     #[error("Invalid Client Public Key")]

@@ -288,6 +288,8 @@ export class AgentInterceptorService extends Service implements Interceptor {
     component: SettingsAgentInterceptor,
   }
 
+  public registrations = ref<{ authKey: string; registeredAt: Date }[]>([])
+
   public caCertificates = ref<CACertificateEntry[]>([])
 
   public clientCertificates = ref<Map<string, ClientCertificateEntry>>(
@@ -540,6 +542,8 @@ export class AgentInterceptorService extends Service implements Interceptor {
           if (parsedData !== true) {
             throw "handshake-mismatch"
           }
+
+          await this.fetchRegistrations()
         } catch (e) {
           if (e === "handshake-mismatch") {
             this.sharedSecretB16.value = null
@@ -638,6 +642,8 @@ export class AgentInterceptorService extends Service implements Interceptor {
           SHARED_SECRET_PERSIST_KEY,
           sharedSecretB16
         )
+
+        await this.fetchRegistrations()
       } else {
         throw new Error("Invalid auth key received")
       }
@@ -707,6 +713,53 @@ export class AgentInterceptorService extends Service implements Interceptor {
     const plainText = new TextDecoder().decode(plainTextDefBytes)
 
     return JSON.parse(plainText) as T
+  }
+
+  private async fetchRegistrations() {
+    try {
+      const nonce = window.crypto.getRandomValues(new Uint8Array(12))
+      const nonceB16 = base16.encode(nonce).toLowerCase()
+
+      const response = await axios.get("http://localhost:9119/registrations", {
+        headers: {
+          Authorization: `Bearer ${this.authKey.value}`,
+          "X-Hopp-Nonce": nonceB16,
+        },
+        responseType: "arraybuffer",
+      })
+
+      const responseNonceB16: string = response.headers["x-hopp-nonce"]
+      const encryptedResponseBytes = response.data
+
+      const registrationsData = await this.getDecryptedResponse<
+        Array<{
+          auth_key: string
+          registered_at: string
+        }>
+      >(responseNonceB16, encryptedResponseBytes)
+
+      this.registrations.value = registrationsData.map((reg) => ({
+        authKey: reg.auth_key,
+        registeredAt: new Date(reg.registered_at),
+      }))
+    } catch (error) {
+      console.error("Failed to fetch registrations:", error)
+    }
+  }
+
+  public async deleteRegistration(authKeyToDelete: string): Promise<void> {
+    const nonce = window.crypto.getRandomValues(new Uint8Array(12))
+    const nonceB16 = base16.encode(nonce).toLowerCase()
+
+    await axios.delete(
+      `http://localhost:9119/registrations/${authKeyToDelete}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.authKey.value}`,
+          "X-Hopp-Nonce": nonceB16,
+        },
+      }
+    )
   }
 
   public runRequest(

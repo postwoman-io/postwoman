@@ -1,27 +1,15 @@
 use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit};
 use axum::body::Bytes;
-use chrono::{DateTime, Utc};
 use dashmap::DashMap;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 use tauri_plugin_store::StoreExt;
 use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
     error::{AgentError, AgentResult},
-    global::{AGENT_STORE, REGISTRATIONS},
+    global::{AGENT_STORE, REGISTRATIONS}, model::Registration
 };
-
-/// Describes one registered app instance
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Registration {
-    pub registered_at: DateTime<Utc>,
-
-    /// base16 (lowercase) encoded shared secret that the client
-    /// and agent established during registration that is used
-    /// to encrypt traffic between them
-    pub shared_secret_b16: String,
-}
 
 #[derive(Default)]
 pub struct AppState {
@@ -107,6 +95,11 @@ impl AppState {
     /// Clear all the registrations
     pub fn clear_registrations(&self, app_handle: tauri::AppHandle) -> Result<(), AgentError> {
         Ok(self.update_registrations(app_handle, |registrations| registrations.clear())?)
+    }
+
+    pub async fn clear_active_registration(&self) {
+        let mut active_registration_code = self.active_registration_code.write().await;
+        *active_registration_code = None;
     }
 
     pub async fn validate_registration(&self, registration: &str) -> bool {

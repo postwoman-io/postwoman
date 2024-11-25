@@ -2,28 +2,31 @@
   <div class="font-sans min-h-screen flex flex-col">
     <div class="p-5 flex flex-col flex-grow gap-y-2">
       <h1 class="font-bold text-lg text-white">Agent Registration Request</h1>
-      <p class="tracking-wide">
-        An app is trying to register against the Hoppscotch Agent. If this was intentional, copy the given code into
-        the app to complete the registration process. Please close the window if you did not initiate this request.
-        Do not close this window until the verification code is entered. Once done, this window will close by itself.
-      </p>
-      <p class="font-bold text-5xl tracking-wider text-center pt-10 text-white">
-        {{ otpCode }}
-      </p>
+      <div v-if="otpCode">
+        <p class="tracking-wide">
+          An app is trying to register against the Hoppscotch Agent. If this was intentional, copy the given code into
+          the app to complete the registration process. Please hide the window if you did not initiate this request.
+          Do not hide this window until the verification code is entered. The window will hide automatically once done.
+        </p>
+        <p class="font-bold text-5xl tracking-wider text-center pt-10 text-white">{{ otpCode }}</p>
+      </div>
+      <div v-else class="text-center pt-10">
+        <p class="tracking-wide">Waiting for registration requests...</p>
+        <p
+          class="text-sm text-gray-400 mt-2"
+        >You can hide this window and access it again from the tray icon.</p>
+      </div>
     </div>
     <div class="border-t border-divider p-5 flex justify-between">
       <HoppButtonSecondary
+        v-if="otpCode"
         label="Copy Code"
         outline
         filled
         :icon="copyIcon"
         @click="copyCode"
       />
-      <HoppButtonPrimary
-        label="Close"
-        outline
-        @click="closeWindow"
-      />
+      <HoppButtonPrimary label="Hide Window" outline @click="hideWindow" />
     </div>
   </div>
 </template>
@@ -36,7 +39,7 @@ import IconCheck from "~icons/lucide/check"
 import { useClipboard, refAutoReset } from "@vueuse/core"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { invoke } from "@tauri-apps/api/core"
-import { listen } from '@tauri-apps/api/event'
+import { listen } from "@tauri-apps/api/event"
 
 const { copy } = useClipboard()
 const otpCode = ref("")
@@ -47,25 +50,33 @@ function copyCode() {
   copy(otpCode.value)
 }
 
-function closeWindow() {
+function hideWindow() {
   const currentWindow = getCurrentWindow()
-  currentWindow.close()
+  currentWindow.hide()
+  otpCode.value = ""
 }
 
 onMounted(async () => {
   const currentWindow = getCurrentWindow()
+  currentWindow.setAlwaysOnTop(true)
 
-  currentWindow.setFocus(true);
-  currentWindow.setAlwaysOnTop(true);
+  const initialOtp = await invoke("get_otp", {})
+  if (initialOtp) {
+    otpCode.value = initialOtp
+  }
 
-  otpCode.value = await invoke("get_otp", {})
-
-  await listen('registration_received', (event) => {
+  await listen("registration_received", (event) => {
     otpCode.value = event.payload
+    currentWindow.setFocus()
   })
 
-  await listen('authenticated', () => {
-    closeWindow()
+  await listen("window-hidden", () => {
+    otpCode.value = ""
+  })
+
+  await listen("authenticated", () => {
+    otpCode.value = ""
+    hideWindow()
   })
 })
 </script>

@@ -1,5 +1,12 @@
 <template>
   <div class="py-4 space-y-4">
+    <HoppButtonSecondary
+      :icon="IconLucideListChecks"
+      :label="t('agent.registrations')"
+      outline
+      @click="showRegistrationsModal = true"
+    />
+
     <div class="flex items-center">
       <HoppSmartToggle
         :on="allowSSLVerification"
@@ -33,6 +40,11 @@
       @hide-modal="showClientCertificatesModal = false"
     />
 
+    <InterceptorsAgentModalRegistrations
+      :show="showRegistrationsModal"
+      @hide-modal="showRegistrationsModal = false"
+    />
+
     <div class="pt-4 space-y-4">
       <div class="flex items-center">
         <HoppSmartToggle :on="allowProxy" @change="allowProxy = !allowProxy" />
@@ -61,6 +73,7 @@ import { computed, ref } from "vue"
 import { useI18n } from "@composables/i18n"
 import IconLucideFileKey from "~icons/lucide/file-key"
 import IconLucideFileBadge from "~icons/lucide/file-badge"
+import IconLucideListChecks from "~icons/lucide/list-checks"
 import { useService } from "dioc/vue"
 import {
   RequestDef,
@@ -78,6 +91,7 @@ const allowSSLVerification = agentInterceptorService.validateCerts
 
 const showCACertificatesModal = ref(false)
 const showClientCertificatesModal = ref(false)
+const showRegistrationsModal = ref(false)
 
 const allowProxy = ref(false)
 const proxyURL = ref("")

@@ -1,5 +1,23 @@
 use chrono::{DateTime, Utc};
+use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
+
+/// Describes one registered app instance
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Registration {
+    pub registered_at: DateTime<Utc>,
+
+    /// base16 (lowercase) encoded shared secret that the client
+    /// and agent established during registration that is used
+    /// to encrypt traffic between them
+    pub shared_secret_b16: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MaskedRegistration {
+    pub registered_at: DateTime<Utc>,
+    pub auth_key: String,
+}
 
 /// Single instance payload.
 #[derive(Clone, Serialize)]

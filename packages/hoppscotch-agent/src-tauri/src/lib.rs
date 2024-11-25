@@ -13,12 +13,47 @@ pub mod webview;
 
 use log::{error, info};
 use std::sync::Arc;
-use tauri::{Emitter, Listener, Manager, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Listener, Manager, WebviewWindowBuilder};
 use tauri_plugin_updater::UpdaterExt;
 use tokio_util::sync::CancellationToken;
 
+use error::{AgentError, AgentResult};
 use model::Payload;
 use state::AppState;
+
+fn create_main_window(app_handle: &AppHandle) -> AgentResult<()> {
+    let main = &app_handle
+        .config()
+        .app
+        .windows
+        .first()
+        .ok_or(AgentError::NoMainWindow)?;
+
+    let window = WebviewWindowBuilder::from_config(app_handle, main)?.build()?;
+
+    window.hide()?;
+
+    log::info!("Created main window and hidden");
+
+    Ok(())
+}
+
+pub fn show_main_window(app_handle: &AppHandle) -> AgentResult<()> {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        window.show()?;
+        window.set_focus()?;
+        log::info!("Showing existing window");
+    }
+    Ok(())
+}
+
+pub fn hide_main_window(app_handle: &AppHandle) -> AgentResult<()> {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        window.hide()?;
+        log::info!("Hiding window");
+    }
+    Ok(())
+}
 
 #[tauri::command]
 async fn get_otp(state: tauri::State<'_, Arc<AppState>>) -> Result<Option<String>, ()> {
@@ -48,11 +83,8 @@ pub fn run() {
                 .unwrap();
 
             // Application is already running, bring it to foreground.
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            } else {
-                error!("Failed to get `main` window");
+            if let Err(e) = show_main_window(&app) {
+                error!("Failed to show window: {}", e);
             }
         }))
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -104,6 +136,9 @@ pub fn run() {
                 });
             };
 
+            // Create and hide the main window during setup.
+            create_main_window(&app_handle)?;
+
             let app_state = Arc::new(AppState::new(app_handle.clone())?);
 
             app.manage(app_state.clone());
@@ -133,15 +168,9 @@ pub fn run() {
             let app_handle_ref = app_handle.clone();
 
             app_handle.listen("registration_received", move |_| {
-                WebviewWindowBuilder::from_config(
-                    &app_handle_ref,
-                    &app_handle_ref.config().app.windows[0],
-                )
-                .unwrap()
-                .build()
-                .unwrap()
-                .show()
-                .unwrap();
+                if let Err(e) = show_main_window(&app_handle_ref) {
+                    log::error!("Failed to show window: {}", e);
+                }
             });
 
             Ok(())
@@ -149,14 +178,18 @@ pub fn run() {
         .manage(cancellation_token)
         .on_window_event(|window, event| {
             match &event {
-                tauri::WindowEvent::CloseRequested { .. } => {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    api.prevent_close();
+
+                    let _ = window.hide();
+
                     let app_state = window.state::<Arc<AppState>>();
-
                     let mut current_code = app_state.active_registration_code.blocking_write();
-
                     if current_code.is_some() {
                         *current_code = None;
                     }
+
+                    let _ = window.emit("window-hidden", ());
                 }
                 _ => {}
             };

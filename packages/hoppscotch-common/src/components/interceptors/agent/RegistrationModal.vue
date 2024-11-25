@@ -1,5 +1,4 @@
 <template>
-  <!-- TODO: i18n -->
   <HoppSmartModal
     v-if="show"
     dialog
