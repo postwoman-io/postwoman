@@ -237,7 +237,7 @@ declare module 'vue' {
     RealtimeSubscription: typeof import('./components/realtime/Subscription.vue')['default']
     SettingsAgent: typeof import('./components/settings/Agent.vue')['default']
     SettingsExtension: typeof import('./components/settings/Extension.vue')['default']
-    SettingsNativeInterceptor: typeof import('./components/settings/NativeInterceptor.vue')['default']
+    SettingsNative: typeof import('./components/settings/Native.vue')['default']
     SettingsProxy: typeof import('./components/settings/Proxy.vue')['default']
     Share: typeof import('./components/share/index.vue')['default']
     ShareCreateModal: typeof import('./components/share/CreateModal.vue')['default']

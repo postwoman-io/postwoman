@@ -19,6 +19,7 @@ import { PersistenceService } from "./services/persistence"
 
 export function createHoppApp(el: string | Element, platformDef: PlatformDef) {
   initKernel(getKernelMode())
+  // initKernel("desktop")
   setPlatformDef(platformDef)
 
   const app = createApp(App)
