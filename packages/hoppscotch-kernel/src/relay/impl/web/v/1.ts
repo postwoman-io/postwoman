@@ -151,12 +151,7 @@ export const implementation: VersionedAPI<RelayV1> = {
       ]),
       security: new Set([]),
       proxy: new Set([]),
-      advanced: new Set([
-        'retry',
-        'redirects',
-        'timeout',
-        'cookies'
-      ])
+      advanced: new Set([])
     },
 
     canHandle(request: Request) {

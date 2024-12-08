@@ -2,7 +2,8 @@ import * as E from "fp-ts/Either"
 import { Service } from "dioc"
 import { Component, computed, reactive, watchEffect, markRaw } from "vue"
 import type { getI18n } from "~/modules/i18n"
-import { Request, Response, RelayError } from "@hoppscotch/kernel"
+import { Request, Response, RelayError, Capabilities } from "@hoppscotch/kernel"
+import { Relay } from "~/kernel/relay"
 
 export type ExecutionResult<Err extends RelayError = RelayError> = {
   cancel: () => void
@@ -55,6 +56,10 @@ export class KernelInterceptorService extends Service {
   override onServiceInit(): void {
     this.setupInterceptorValidation()
   }
+
+  public readonly capabilities = computed<Capabilities>(() =>
+    Relay.capabilities()
+  )
 
   private setupInterceptorValidation(): void {
     watchEffect(() => {

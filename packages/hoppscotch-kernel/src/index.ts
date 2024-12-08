@@ -78,4 +78,5 @@ export type {
   ContentType,
   AuthType,
   CertificateType,
+  Capabilities
 } from '@relay/v/1'
