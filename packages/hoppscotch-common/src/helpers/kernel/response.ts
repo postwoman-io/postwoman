@@ -4,6 +4,7 @@ import {
   HoppRESTResponse,
   HoppRESTResponseHeader,
 } from "../types/HoppRESTResponse"
+import { ResponseData, ResponseMetadata } from "./type"
 
 abstract class ResponseBodyHandler {
   abstract convert(content: ContentType): ArrayBuffer

@@ -248,8 +248,7 @@
       "nonce_count": "Nonce Count",
       "client_nonce": "Client Nonce",
       "opaque": "Opaque",
-      "disable_retry": "Disable Retrying Request",
-      "inspector_warning": "Agent interceptor is recommended when using Digest Authorization."
+      "disable_retry": "Disable Retrying Request"
     }
   },
   "collection": {
@@ -610,8 +609,11 @@
       "extention_enable_action": "Enable Browser Extension",
       "extention_not_enabled": "Extension not enabled."
     },
-    "requestBody": {
-      "active_interceptor_doesnt_support_binary_body": "Sending binary data via the current interceptor is not supported yet."
+    "auth": {
+      "digest": "Agent interceptor is recommended when using Digest Authorization."
+    },
+    "body": {
+      "binary": "Sending binary data via the current interceptor is not supported yet."
     }
   },
   "layout": {
