@@ -55,11 +55,11 @@ class TextContentHandler extends ContentHandler {
 
 class FormContentHandler extends ContentHandler {
   async convert(formData: FormData): Promise<ContentType> {
-    const converted = new Map<string, FormDataValue[]>();
+    const converted = new Map<string, FormDataValue[]>()
 
     for (const [key, value] of formData.entries()) {
       if (!converted.has(key)) {
-        converted.set(key, []);
+        converted.set(key, [])
       }
 
       if (value instanceof File) {
@@ -67,13 +67,13 @@ class FormContentHandler extends ContentHandler {
           kind: "file",
           filename: value.name,
           contentType: value.type || "application/octet-stream",
-          data: new Uint8Array(await value.arrayBuffer())
-        });
+          data: new Uint8Array(await value.arrayBuffer()),
+        })
       } else {
         converted.get(key)!.push({
           kind: "text",
-          value: value.toString()
-        });
+          value: value.toString(),
+        })
       }
     }
 
@@ -81,7 +81,7 @@ class FormContentHandler extends ContentHandler {
       kind: "form",
       content: converted,
       mediaType: "multipart/form-data" as const,
-    };
+    }
   }
 }
 

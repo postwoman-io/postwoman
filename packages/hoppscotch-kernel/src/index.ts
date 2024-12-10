@@ -82,3 +82,5 @@ export type {
   CertificateType,
   Capabilities
 } from '@relay/v/1'
+
+export { content } from '@relay/v/1'
