@@ -86,8 +86,7 @@ export class ResponseBuilder {
     }
 
     return {
-      type:
-        "success",
+      type: "success",
       ...responseData,
     }
   }
