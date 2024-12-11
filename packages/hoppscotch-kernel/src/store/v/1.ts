@@ -64,7 +64,7 @@ export const StoredDataSchema = z.object({
 
 export type StoredData = z.infer<typeof StoredDataSchema>
 
-export interface EventEmitter<T> {
+export interface StoreEventEmitter<T> {
   on<K extends keyof T>(event: K, handler: (payload: T[K]) => void): () => void
   once<K extends keyof T>(event: K, handler: (payload: T[K]) => void): () => void
   off<K extends keyof T>(event: K, handler: (payload: T[K]) => void): void
@@ -72,7 +72,7 @@ export interface EventEmitter<T> {
 
 export interface StoreV1 {
   readonly id: string
-  readonly features: Set<StoreCapability>
+  readonly capabilities: Set<StoreCapability>
 
   init(): Promise<E.Either<StoreError, void>>
 
@@ -90,14 +90,14 @@ export interface StoreV1 {
 
   listKeys(namespace: string): Promise<E.Either<StoreError, string[]>>
 
-  watch(namespace: string, key: string): EventEmitter<StoreEvents>
+  watch(namespace: string, key: string): StoreEventEmitter<StoreEvents>
 }
 
 export const v1: VersionedAPI<StoreV1> = {
   version: { major: 1, minor: 0, patch: 0 },
   api: {
     id: 'default',
-    features: new Set(),
+    capabilities: new Set(),
 
     init: async () => E.left({ kind: 'version', message: 'Not implemented' }),
 
