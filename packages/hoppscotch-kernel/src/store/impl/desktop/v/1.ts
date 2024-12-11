@@ -6,7 +6,7 @@ import {
     StorageOptions,
     StoredData,
     StoredDataSchema,
-    EventEmitter,
+    StoreEventEmitter,
 } from '@store/v/1';
 import { Store } from '@tauri-apps/plugin-store';
 
@@ -112,7 +112,7 @@ class TauriStoreManager {
         return Object.keys(this.data[namespace] || {});
     }
 
-    watch(namespace: string, key: string): EventEmitter<StoreEvents> {
+    watch(namespace: string, key: string): StoreEventEmitter<StoreEvents> {
         const watchKey = `${namespace}:${key}`;
         return {
             on: <K extends keyof StoreEvents>(
@@ -169,7 +169,7 @@ export const implementation: VersionedAPI<StoreV1> = {
     version: { major: 1, minor: 0, patch: 0 },
     api: {
         id: 'tauri-store',
-        features: new Set(['permanent', 'structured', 'watch', 'namespace', 'secure']),
+        capabilities: new Set(['permanent', 'structured', 'watch', 'namespace', 'secure']),
 
         async init() {
             try {
@@ -292,7 +292,7 @@ export const implementation: VersionedAPI<StoreV1> = {
             }
         },
 
-        watch(namespace: string, key: string): EventEmitter<StoreEvents> {
+        watch(namespace: string, key: string): StoreEventEmitter<StoreEvents> {
             const manager = TauriStoreManager.new();
             return manager.watch(namespace, key);
         },

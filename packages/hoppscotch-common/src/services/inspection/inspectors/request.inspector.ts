@@ -8,11 +8,11 @@ import {
 import IconAlertTriangle from "~icons/lucide/alert-triangle"
 import { getI18n } from "~/modules/i18n"
 import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
-import { Capabilities } from "@hoppscotch/kernel"
+import { RelayCapabilities } from "@hoppscotch/kernel"
 
-type CapabilityRequirement<K extends keyof Capabilities> = {
+type CapabilityRequirement<K extends keyof RelayCapabilities> = {
   type: K
-  name: string & Capabilities[K] extends Set<infer T> ? T : never
+  name: string & RelayCapabilities[K] extends Set<infer T> ? T : never
 }
 
 interface InspectionMatch {
@@ -24,7 +24,7 @@ interface CapabilityCheck {
   matcher: (
     req: HoppRESTRequest | HoppRESTResponseOriginalRequest
   ) => InspectionMatch | null
-  requires: CapabilityRequirement<keyof Capabilities>
+  requires: CapabilityRequirement<keyof RelayCapabilities>
   createInspection: (match: InspectionMatch) => InspectorResult
 }
 

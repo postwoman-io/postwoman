@@ -5,7 +5,7 @@ import {
     StoredData,
     StoredDataSchema,
     StoreEvents,
-    EventEmitter,
+    StoreEventEmitter,
 } from '@store/v/1';
 
 class BrowserStoreManager {
@@ -84,7 +84,7 @@ class BrowserStoreManager {
             .map(key => key.replace(`${namespace}:`, ''));
     }
 
-    watch(namespace: string, key: string): EventEmitter<StoreEvents> {
+    watch(namespace: string, key: string): StoreEventEmitter<StoreEvents> {
         const fullKey = this.getFullKey(namespace, key);
         return {
             on: (event, handler) => {
@@ -120,7 +120,7 @@ export const implementation: VersionedAPI<StoreV1> = {
     version: { major: 1, minor: 0, patch: 0 },
     api: {
         id: 'browser-store',
-        features: new Set(['permanent', 'structured', 'watch', 'namespace']),
+        capabilities: new Set(['permanent', 'structured', 'watch', 'namespace']),
 
         async init() {
             try {

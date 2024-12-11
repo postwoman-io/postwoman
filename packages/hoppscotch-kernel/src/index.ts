@@ -1,10 +1,16 @@
 import type { Version } from './type/versioning'
+
 import { VERSIONS as IO_VERSIONS } from './io'
-import { VERSIONS as RELAY_VERSIONS } from './relay'
 import { IO_IMPLS as WEB_IO_IMPLS } from './io/impl/web'
 import { IO_IMPLS as DESKTOP_IO_IMPLS } from './io/impl/desktop'
+
+import { VERSIONS as RELAY_VERSIONS } from './relay'
 import { RELAY_IMPLS as WEB_RELAY_IMPLS } from './relay/impl/web'
 import { RELAY_IMPLS as DESKTOP_RELAY_IMPLS } from './relay/impl/desktop'
+
+import { VERSIONS as STORE_VERSIONS } from './store'
+import { STORE_IMPLS as WEB_STORE_IMPLS } from './store/impl/web'
+import { STORE_IMPLS as DESKTOP_STORE_IMPLS } from './store/impl/desktop'
 
 export interface KernelInfo {
   name: string
@@ -16,6 +22,7 @@ export interface KernelAPI {
   info: KernelInfo
   io: typeof IO_VERSIONS.v1.api
   relay: typeof RELAY_VERSIONS.v1.api
+  store: typeof STORE_VERSIONS.v1.api
 }
 
 export type KernelMode = 'web' | 'desktop'
@@ -40,7 +47,8 @@ export function initKernel(mode?: KernelMode): KernelAPI {
         capabilities: ["basic-io"]
       },
       io: DESKTOP_IO_IMPLS.v1.api,
-      relay: DESKTOP_RELAY_IMPLS.v1.api
+      relay: DESKTOP_RELAY_IMPLS.v1.api,
+      store: DESKTOP_STORE_IMPLS.v1.api
     }
 
     window.__KERNEL__ = kernel
@@ -53,7 +61,8 @@ export function initKernel(mode?: KernelMode): KernelAPI {
         capabilities: ["basic-io"]
       },
       io: WEB_IO_IMPLS.v1.api,
-      relay: WEB_RELAY_IMPLS.v1.api
+      relay: WEB_RELAY_IMPLS.v1.api,
+      store: WEB_STORE_IMPLS.v1.api
     }
 
     window.__KERNEL__ = kernel
@@ -80,7 +89,20 @@ export type {
   ContentType,
   AuthType,
   CertificateType,
-  Capabilities
+  RelayCapabilities
 } from '@relay/v/1'
+
+export type {
+  StoreCapability,
+  StoreError,
+  StorageOptions,
+  StoreEvents,
+  StoreMetadataSchema,
+  StoreMetadata,
+  StoredDataSchema,
+  StoredData,
+  StoreEventEmitter,
+  StoreV1,
+} from '@store/v/1'
 
 export { content } from '@relay/v/1'

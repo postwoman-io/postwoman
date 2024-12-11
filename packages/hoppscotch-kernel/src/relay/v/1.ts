@@ -214,7 +214,7 @@ export type EventEmitter<T> = {
     off<K extends keyof T>(event: K, handler: (payload: T[K]) => void): void
 }
 
-// NOTE: Capabilities and their corresponding objects being two separate types
+// NOTE: RelayCapabilities and their corresponding objects being two separate types
 // even with sometimes identical contents is intentional.
 export type MethodCapability =
     | 'GET'
@@ -278,7 +278,7 @@ export type AdvancedCapability =
     | 'http2'
     | 'http3'
 
-export interface Capabilities {
+export interface RelayCapabilities {
     method: Set<MethodCapability>
     header: Set<HeaderCapability>
     content: Set<ContentCapability>
@@ -435,7 +435,7 @@ export interface Response {
 
 export interface RelayV1 {
     readonly id: string
-    readonly capabilities: Capabilities
+    readonly capabilities: RelayCapabilities
 
     canHandle(request: Request): E.Either<UnsupportedFeatureError, true>
 

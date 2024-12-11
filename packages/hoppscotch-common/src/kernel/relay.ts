@@ -1,7 +1,7 @@
-import { Request, Capabilities } from "@hoppscotch/kernel"
+import { Request, RelayCapabilities } from "@hoppscotch/kernel"
 
 export const Relay = {
-  capabilities(): Capabilities {
+  capabilities(): RelayCapabilities {
     if (!window.__KERNEL__) {
       throw new Error("Kernel is not initialized")
     }
