@@ -39,14 +39,10 @@ export function createRESTNetworkRequestStream(
 
   const makeRequest = async () => {
     try {
-      logger.debug("Converting request to kernel format", request)
       const kernelRequest =
         await convertEffectiveHoppRESTRequestToRequest(request)
-      logger.debug("Converted request to kernel format", kernelRequest)
 
-      logger.debug("Executing kernel request")
       const result = await service.execute(kernelRequest).response
-      logger.debug("Got response", result)
       const endTime = Date.now()
 
       logger.debug("Request completed", {
@@ -60,7 +56,6 @@ export function createRESTNetworkRequestStream(
           const { start, end } = kernelResponse.meta.timing
           const { total } = kernelResponse.meta.size
 
-          logger.debug("kernelResponse", kernelResponse)
           const response = convertResponseToHoppRESTResponse(
             kernelResponse,
             request,
@@ -73,7 +68,6 @@ export function createRESTNetworkRequestStream(
             size: kernelResponse.body?.byteLength ?? 0,
             duration: end - start,
           })
-          logger.debug("Response", response)
           return response
         }),
         E.mapLeft((error) => {
@@ -86,13 +80,11 @@ export function createRESTNetworkRequestStream(
         })
       )
     } catch (err) {
-      logger.error("Unexpected error during request", { error: err })
       throw err
     }
   }
 
   makeRequest().then((result) => {
-    logger.debug("Emitting final response")
     response.next(E.isRight(result) ? result.right : result.left)
     response.complete()
   })
@@ -100,7 +92,6 @@ export function createRESTNetworkRequestStream(
   return [
     response,
     () => {
-      logger.debug("Cancelling request")
       const current = service.current.value
       if (current) current.execute(request).cancel()
     },

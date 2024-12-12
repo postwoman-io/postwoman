@@ -102,45 +102,37 @@ export class KernelInterceptorNativeStore extends Service {
     base: Required<Request>["security"],
     ...overrides: (Required<Request>["security"] | undefined)[]
   ): Required<Request>["security"] {
-    console.log("[Store] Merging security with base:", base)
-    console.log("[Store] Security overrides:", overrides)
 
     const result = overrides.reduce(
       (acc, override) => (override ? { ...acc, ...override } : acc),
       { ...base }
     )
 
-    console.log("[Store] Merged security result:", result)
     return result
   }
 
   private mergeProxy(
     ...settings: (Required<Request>["proxy"] | undefined)[]
   ): Required<Request>["proxy"] | undefined {
-    console.log("[Store] Merging proxy settings:", settings)
 
     const result = settings.reduce(
       (acc, setting) => (setting ? { ...acc, ...setting } : acc),
       undefined as Required<Request>["proxy"] | undefined
     )
 
-    console.log("[Store] Merged proxy result:", result)
     return result
   }
 
   private getMergedSettings(
     domain: string
   ): Pick<Request, "proxy" | "security"> {
-    console.log("[Store] Getting merged settings for domain:", domain)
 
     const domainSettings = this.domainSettings.get(domain)
-    console.log("[Store] Domain settings:", domainSettings)
 
     const globalSettings =
       domain !== KernelInterceptorNativeStore.GLOBAL_DOMAIN
         ? this.domainSettings.get(KernelInterceptorNativeStore.GLOBAL_DOMAIN)
         : undefined
-    console.log("[Store] Global settings:", globalSettings)
 
     const result = {
       security: this.mergeSecurity(
@@ -151,19 +143,15 @@ export class KernelInterceptorNativeStore extends Service {
       proxy: this.mergeProxy(globalSettings?.proxy, domainSettings?.proxy),
     }
 
-    console.log("[Store] Final merged settings:", result)
     return result
   }
 
   public completeRequest(
     request: Omit<Request, "proxy" | "security">
   ): Request {
-    console.log("[Store] Completing request for URL:", request.url)
     const host = new URL(request.url).host
-    console.log("[Store] Extracted host:", host)
     const settings = this.getMergedSettings(host)
     const completedRequest = { ...request, ...settings }
-    console.log("[Store] Completed request:", completedRequest)
     return completedRequest
   }
 
@@ -171,11 +159,8 @@ export class KernelInterceptorNativeStore extends Service {
     domain: string,
     settings: Partial<DomainSetting>
   ): Promise<void> {
-    console.log("[Store] Saving settings for domain:", domain)
-    console.log("[Store] New settings:", settings)
 
     const current = this.getMergedSettings(domain)
-    console.log("[Store] Current merged settings:", current)
 
     const updatedSettings: DomainSetting = {
       version: "v1",
@@ -189,36 +174,29 @@ export class KernelInterceptorNativeStore extends Service {
           : current.proxy,
     }
 
-    console.log("[Store] Updated settings:", updatedSettings)
     this.domainSettings.set(domain, updatedSettings)
     await this.persistSettings()
   }
 
   public getDomainSettings(domain: string): DomainSetting {
-    console.log("[Store] Getting settings for domain:", domain)
     const settings = this.domainSettings.get(domain) ?? {
       version: "v1",
       ...defaultConfig,
     }
-    console.log("[Store] Retrieved settings:", settings)
     return settings
   }
 
   public async clearDomainSettings(domain: string): Promise<void> {
-    console.log("[Store] Clearing settings for domain:", domain)
     this.domainSettings.delete(domain)
-    console.log("[Store] Settings cleared")
     await this.persistSettings()
   }
 
   public getDomains(): string[] {
     const domains = Array.from(this.domainSettings.keys())
-    console.log("[Store] Retrieved all domains:", domains)
     return domains
   }
 
   public getAllDomainSettings(): Map<string, DomainSetting> {
-    console.log("[Store] Retrieved all domain settings:", this.domainSettings)
     return new Map(this.domainSettings)
   }
 }

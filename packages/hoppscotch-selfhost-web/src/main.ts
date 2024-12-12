@@ -18,6 +18,7 @@ import { InfraPlatform } from "@platform/infra/infra.platform"
 
 import { getKernelMode } from "@hoppscotch/kernel"
 import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/native"
+import { ProxyKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/proxy"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
 
 const kernelMode = getKernelMode();
@@ -57,6 +58,7 @@ createHoppApp("#app", {
     default: defaultInterceptor,
     interceptors: [
       { type: "service", service: NativeKernelInterceptorService },
+      { type: "service", service: ProxyKernelInterceptorService },
     ],
   },
   additionalInspectors: [

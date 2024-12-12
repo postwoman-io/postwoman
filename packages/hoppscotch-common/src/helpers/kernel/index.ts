@@ -12,11 +12,6 @@ import { ResponseBuilder } from "./response"
 export async function convertEffectiveHoppRESTRequestToRequest(
   hopp: EffectiveHoppRESTRequest
 ): Promise<Request> {
-  logger.info("Converting REST request", {
-    method: hopp.method,
-    url: hopp.effectiveFinalURL,
-  })
-
   try {
     const method = hopp.method.toUpperCase()
     const [headers, params, content] = await Promise.all([
@@ -26,7 +21,7 @@ export async function convertEffectiveHoppRESTRequestToRequest(
     ])
 
     if (content && ["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
-      throw new Error(`${method} requests cannot have a body`)
+      logger.error(`${method} requests cannot have a body`)
     }
 
     return new RequestBuilder()
@@ -50,8 +45,6 @@ export const convertResponseToHoppRESTResponse = (
   originalRequest: HoppRESTRequest,
   meta: ResponseMetadata
 ): HoppRESTResponse => {
-  logger.info("Converting response", response)
-
   const builder = new ResponseBuilder(originalRequest, meta)
 
   if (!response) {

@@ -89,7 +89,8 @@ export type {
   ContentType,
   AuthType,
   CertificateType,
-  RelayCapabilities
+  RelayCapabilities,
+  StatusCode
 } from '@relay/v/1'
 
 export type {

@@ -24,12 +24,7 @@ export class NativeKernelInterceptorService
   })
 
   public execute(req: Request) {
-    console.log("[NativeInterceptor] Got request:", req)
     const effectiveRequest = this.store.completeRequest(req)
-    console.log(
-      "[NativeInterceptor] Sending complete request:",
-      effectiveRequest
-    )
     return Relay.execute(effectiveRequest)
   }
 }
