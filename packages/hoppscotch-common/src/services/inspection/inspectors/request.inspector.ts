@@ -108,8 +108,8 @@ export class RequestInspectorService extends Service implements Inspector {
     const match = matcher(req)
     if (!match) return []
 
-    const capabilities = this.kernelInterceptor.capabilities
-    const supports = capabilities.value[requires.type].has(requires.name)
+    const capabilities = this.kernelInterceptor.current.value?.capabilities
+    const supports = capabilities[requires.type].has(requires.name)
 
     return !supports ? [createInspection(match)] : []
   }
