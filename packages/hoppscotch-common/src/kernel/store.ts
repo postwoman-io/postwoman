@@ -1,5 +1,5 @@
 import { StorageOptions, StoreCapability, StoreError } from "@hoppscotch/kernel"
-import * as E from 'fp-ts/Either'
+import * as E from "fp-ts/Either"
 
 export const Store = {
   capabilities(): StoreCapability {
@@ -19,29 +19,34 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.init()
   },
 
-  set(namespace: string, key: string, value: unknown, options?: StorageOptions) {
+  set(
+    namespace: string,
+    key: string,
+    value: unknown,
+    options?: StorageOptions
+  ) {
     if (!window.__KERNEL__) {
       throw new Error("Kernel is not initialized")
     }
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.set(namespace, key, value, options)
   },
 
-  get<T>(namespace: string, key: string): Promise<E.Either<StoreError, T | undefined>> {
+  get<T>(
+    namespace: string,
+    key: string
+  ): Promise<E.Either<StoreError, T | undefined>> {
     if (!window.__KERNEL__) {
       throw new Error("Kernel is not initialized")
     }
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.get(namespace, key)
   },
 
@@ -52,7 +57,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.remove(namespace, key)
   },
 
@@ -63,7 +67,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.clear(namespace)
   },
 
@@ -74,7 +77,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.has(namespace, key)
   },
 
@@ -85,7 +87,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.listNamespaces()
   },
 
@@ -96,7 +97,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.listKeys(namespace)
   },
 
@@ -107,7 +107,6 @@ export const Store = {
     if (!window.__KERNEL__?.store) {
       throw new Error("Kernel store is not initialized")
     }
-    console.log("Kernel found, executing namespace")
     return window.__KERNEL__.store.watch(namespace, key)
   },
 }

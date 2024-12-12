@@ -21,10 +21,16 @@
           />
         </div>
       </div>
-      <div data-tauri-drag-region class="col-span-1 flex items-center justify-between space-x-2">
+      <div
+        data-tauri-drag-region
+        class="col-span-1 flex items-center justify-between space-x-2"
+      >
         <AppSpotlightSearch />
       </div>
-      <div data-tauri-drag-region class="col-span-2 flex items-center justify-between space-x-2">
+      <div
+        data-tauri-drag-region
+        class="col-span-2 flex items-center justify-between space-x-2"
+      >
         <div class="flex">
           <HoppButtonSecondary
             v-if="showInstallButton"
