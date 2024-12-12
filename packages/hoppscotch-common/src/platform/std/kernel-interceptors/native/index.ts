@@ -17,6 +17,7 @@ export class NativeKernelInterceptorService
   public readonly id = "native"
   public readonly name = () => "Native"
   public readonly selectable = { type: "selectable" as const }
+  public readonly capabilities = Relay.capabilities()
   public readonly settingsEntry = markRaw({
     title: () => "Native",
     component: SettingsNative,

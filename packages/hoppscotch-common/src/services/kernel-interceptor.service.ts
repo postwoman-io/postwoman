@@ -2,8 +2,12 @@ import * as E from "fp-ts/Either"
 import { Service } from "dioc"
 import { Component, computed, reactive, watchEffect, markRaw } from "vue"
 import type { getI18n } from "~/modules/i18n"
-import { Request, Response, RelayError, RelayCapabilities } from "@hoppscotch/kernel"
-import { Relay } from "~/kernel/relay"
+import {
+  Request,
+  Response,
+  RelayError,
+  RelayCapabilities,
+} from "@hoppscotch/kernel"
 
 export type ExecutionResult<Err extends RelayError = RelayError> = {
   cancel: () => void
@@ -32,6 +36,7 @@ export type KernelInterceptor<Err extends RelayError = RelayError> = {
   }
   subtitle?: Component
   selectable: SelectableStatus
+  capabilities: RelayCapabilities
   execute: (request: Request) => ExecutionResult<Err>
 }
 
@@ -56,10 +61,6 @@ export class KernelInterceptorService extends Service {
   override onServiceInit(): void {
     this.setupInterceptorValidation()
   }
-
-  public readonly capabilities = computed<RelayCapabilities>(() =>
-    Relay.capabilities()
-  )
 
   private setupInterceptorValidation(): void {
     watchEffect(() => {

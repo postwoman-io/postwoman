@@ -1,7 +1,7 @@
 import { Service } from "dioc"
 import type { Request } from "@hoppscotch/kernel"
 import { Store } from "~/kernel/store"
-import * as E from 'fp-ts/Either'
+import * as E from "fp-ts/Either"
 
 const STORE_NAMESPACE = "interceptors.native.v1"
 const SETTINGS_KEY = "settings"
@@ -40,7 +40,10 @@ export class KernelInterceptorNativeStore extends Service {
   async onServiceInit(): Promise<void> {
     const initResult = await Store.init()
     if (E.isLeft(initResult)) {
-      console.error("[NativeStore] Failed to initialize store:", initResult.left)
+      console.error(
+        "[NativeStore] Failed to initialize store:",
+        initResult.left
+      )
       return
     }
 
@@ -54,16 +57,22 @@ export class KernelInterceptorNativeStore extends Service {
       await this.persistSettings()
     }
 
-    Store.watch(STORE_NAMESPACE, SETTINGS_KEY).on('change', async ({ value }) => {
-      if (value) {
-        const storedData = value as StoredData
-        this.domainSettings = new Map(Object.entries(storedData.domains))
+    Store.watch(STORE_NAMESPACE, SETTINGS_KEY).on(
+      "change",
+      async ({ value }) => {
+        if (value) {
+          const storedData = value as StoredData
+          this.domainSettings = new Map(Object.entries(storedData.domains))
+        }
       }
-    })
+    )
   }
 
   private async loadSettings(): Promise<void> {
-    const loadResult = await Store.get<StoredData>(STORE_NAMESPACE, SETTINGS_KEY)
+    const loadResult = await Store.get<StoredData>(
+      STORE_NAMESPACE,
+      SETTINGS_KEY
+    )
 
     if (E.isRight(loadResult) && loadResult.right) {
       const storedData = loadResult.right
@@ -75,10 +84,14 @@ export class KernelInterceptorNativeStore extends Service {
     const storedData: StoredData = {
       version: "v1",
       domains: Object.fromEntries(this.domainSettings),
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     }
 
-    const saveResult = await Store.set(STORE_NAMESPACE, SETTINGS_KEY, storedData)
+    const saveResult = await Store.set(
+      STORE_NAMESPACE,
+      SETTINGS_KEY,
+      storedData
+    )
 
     if (E.isLeft(saveResult)) {
       console.error("[NativeStore] Failed to save settings:", saveResult.left)
@@ -93,7 +106,7 @@ export class KernelInterceptorNativeStore extends Service {
     console.log("[Store] Security overrides:", overrides)
 
     const result = overrides.reduce(
-      (acc, override) => override ? { ...acc, ...override } : acc,
+      (acc, override) => (override ? { ...acc, ...override } : acc),
       { ...base }
     )
 
@@ -107,7 +120,7 @@ export class KernelInterceptorNativeStore extends Service {
     console.log("[Store] Merging proxy settings:", settings)
 
     const result = settings.reduce(
-      (acc, setting) => setting ? { ...acc, ...setting } : acc,
+      (acc, setting) => (setting ? { ...acc, ...setting } : acc),
       undefined as Required<Request>["proxy"] | undefined
     )
 
@@ -115,15 +128,18 @@ export class KernelInterceptorNativeStore extends Service {
     return result
   }
 
-  private getMergedSettings(domain: string): Pick<Request, "proxy" | "security"> {
+  private getMergedSettings(
+    domain: string
+  ): Pick<Request, "proxy" | "security"> {
     console.log("[Store] Getting merged settings for domain:", domain)
 
     const domainSettings = this.domainSettings.get(domain)
     console.log("[Store] Domain settings:", domainSettings)
 
-    const globalSettings = domain !== KernelInterceptorNativeStore.GLOBAL_DOMAIN
-      ? this.domainSettings.get(KernelInterceptorNativeStore.GLOBAL_DOMAIN)
-      : undefined
+    const globalSettings =
+      domain !== KernelInterceptorNativeStore.GLOBAL_DOMAIN
+        ? this.domainSettings.get(KernelInterceptorNativeStore.GLOBAL_DOMAIN)
+        : undefined
     console.log("[Store] Global settings:", globalSettings)
 
     const result = {
@@ -132,14 +148,16 @@ export class KernelInterceptorNativeStore extends Service {
         globalSettings?.security,
         domainSettings?.security
       ),
-      proxy: this.mergeProxy(globalSettings?.proxy, domainSettings?.proxy)
+      proxy: this.mergeProxy(globalSettings?.proxy, domainSettings?.proxy),
     }
 
     console.log("[Store] Final merged settings:", result)
     return result
   }
 
-  public completeRequest(request: Omit<Request, "proxy" | "security">): Request {
+  public completeRequest(
+    request: Omit<Request, "proxy" | "security">
+  ): Request {
     console.log("[Store] Completing request for URL:", request.url)
     const host = new URL(request.url).host
     console.log("[Store] Extracted host:", host)
@@ -149,7 +167,10 @@ export class KernelInterceptorNativeStore extends Service {
     return completedRequest
   }
 
-  public async saveDomainSettings(domain: string, settings: Partial<DomainSetting>): Promise<void> {
+  public async saveDomainSettings(
+    domain: string,
+    settings: Partial<DomainSetting>
+  ): Promise<void> {
     console.log("[Store] Saving settings for domain:", domain)
     console.log("[Store] New settings:", settings)
 
@@ -158,12 +179,14 @@ export class KernelInterceptorNativeStore extends Service {
 
     const updatedSettings: DomainSetting = {
       version: "v1",
-      security: settings.security !== undefined
-        ? this.mergeSecurity(current.security, settings.security)
-        : current.security,
-      proxy: settings.proxy !== undefined
-        ? this.mergeProxy(current.proxy, settings.proxy)
-        : current.proxy,
+      security:
+        settings.security !== undefined
+          ? this.mergeSecurity(current.security, settings.security)
+          : current.security,
+      proxy:
+        settings.proxy !== undefined
+          ? this.mergeProxy(current.proxy, settings.proxy)
+          : current.proxy,
     }
 
     console.log("[Store] Updated settings:", updatedSettings)
