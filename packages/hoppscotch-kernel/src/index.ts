@@ -87,6 +87,7 @@ export type {
   RelayError,
   RelayV1,
   Method,
+  Version,
   ContentType,
   AuthType,
   CertificateType,
