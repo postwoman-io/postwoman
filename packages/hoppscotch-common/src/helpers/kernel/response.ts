@@ -86,7 +86,7 @@ export async function transformResponseToGQLResponseEvent(
   }
 }
 
-async function transformResponseBody(
+export async function transformResponseBody(
   responseBody: RelayResponseBody
 ): Promise<ArrayBuffer> {
   // NOTE: This'll be hit 90% of the time as designed by the kernel,

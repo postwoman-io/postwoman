@@ -5,4 +5,5 @@ export {
 export {
   transformResponseToHoppRESTResponse,
   transformResponseToGQLResponseEvent,
+  transformResponseBody,
 } from "./response"

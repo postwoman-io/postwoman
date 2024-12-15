@@ -3603,7 +3603,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relay"
 version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/relay.git#820e0bad200882514688783e20b6ed186c0d2b73"
+source = "git+https://github.com/CuriousCorrelation/relay.git#822008b12b355a044cfa5283d90f67e8212bd4d7"
 dependencies = [
  "bytes",
  "curl",
@@ -3614,6 +3614,7 @@ dependencies = [
  "infer",
  "lazy_static",
  "log",
+ "mime",
  "openssl",
  "openssl-sys",
  "serde",
@@ -4645,7 +4646,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#609ea1f7ce935497b100db89f6eb7835221bfb98"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#4aad6794c5205013598666fcae5574329ba0a831"
 dependencies = [
  "relay",
  "serde",
