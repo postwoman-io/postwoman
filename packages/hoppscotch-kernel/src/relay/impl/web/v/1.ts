@@ -1,25 +1,27 @@
-import type { VersionedAPI } from '@type/versioning'
 import {
-  type RelayV1,
-  type RelayRequest,
-  type RelayRequestEvents,
-  type RelayEventEmitter,
-  type RelayResponse,
-  type RelayError,
-  type StatusCode,
   type FormData,
   type FormDataValue,
+  type RelayError,
+  type RelayEventEmitter,
+  type RelayRequest,
+  type RelayRequestEvents,
+  type RelayResponse,
   type RelayResponseBody,
+  type RelayV1,
+  type StatusCode,
+  body,
   MediaType,
 } from '@relay/v/1'
+import type { VersionedAPI } from '@type/versioning'
 
-import * as E from 'fp-ts/Either'
-import axios, { AxiosRequestConfig } from 'axios'
 import { AwsV4Signer } from 'aws4fetch'
+import axios, { AxiosRequestConfig } from 'axios'
+import * as E from 'fp-ts/Either'
 
 const isStatusCode = (status: number): status is StatusCode =>
   status >= 100 && status < 600
 
+// TODO: Use when encoding request in common.
 async function convert(formData: globalThis.FormData): Promise<FormData> {
   const converted = new Map<string, FormDataValue[]>();
 
@@ -61,29 +63,6 @@ function normalizeHeaders(headers: Record<string, any>): Record<string, string> 
         String(v)
       ])
   )
-}
-
-async function responseBody(data: any, headers: Record<string, any>): Promise<RelayResponseBody> {
-  const contentType = normalizeHeaders(headers)['content-type']?.[0] ?? MediaType.APPLICATION_OCTET
-
-  if (data instanceof FormData) {
-    return {
-      body: await convert(data),
-      mediaType: contentType.includes('multipart') ? MediaType.MULTIPART_FORM : MediaType.APPLICATION_FORM
-    }
-  }
-
-  if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
-    return {
-      body: new Uint8Array(data),
-      mediaType: contentType
-    }
-  }
-
-  return {
-    body: data,
-    mediaType: contentType
-  }
 }
 
 export const implementation: VersionedAPI<RelayV1> = {
@@ -257,6 +236,7 @@ export const implementation: VersionedAPI<RelayV1> = {
           }
 
           const axiosResponse = await axios(config)
+          console.log("[RELAY|WEB] result", axiosResponse)
           const endTime = Date.now()
 
           if (!isStatusCode(axiosResponse.status)) {
@@ -266,16 +246,16 @@ export const implementation: VersionedAPI<RelayV1> = {
             })
           }
 
-
-          const headers = normalizeHeaders(axiosResponse.headers)
+          const normalizedHeaders = normalizeHeaders(axiosResponse.headers)
+          const contentType = normalizedHeaders['content-type'] || normalizedHeaders['Content-Type'] || normalizedHeaders['CONTENT-TYPE']
 
           const response: RelayResponse = {
             id: request.id,
             status: axiosResponse.status,
             statusText: axiosResponse.statusText,
             version: request.version,
-            headers,
-            body: await responseBody(axiosResponse.data, headers),
+            headers: normalizedHeaders,
+            body: body.body(axiosResponse.data, contentType),
             meta: {
               timing: {
                 start: startTime,

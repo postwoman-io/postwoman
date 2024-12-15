@@ -110,8 +110,8 @@ export type ContentType =
     | { kind: "urlencoded"; content: Record<string, string>; mediaType: MediaType.APPLICATION_FORM }
     | { kind: "stream"; content: ReadableStream; mediaType: string }
 
-export interface RelayResponseBody<T = unknown> {
-    body: T
+export interface RelayResponseBody {
+    body: Uint8Array
     mediaType: MediaType | string
 }
 
@@ -478,6 +478,18 @@ export function findSuitableRelay(
         .map(e => e.left)
 
     return E.left(errors[0])
+}
+
+export const body = {
+    body: (
+        body: ArrayBuffer | Uint8Array,
+        contentType?: MediaType | string
+    ): RelayResponseBody => ({
+        body: new Uint8Array(body),
+        mediaType: typeof contentType === 'string'
+            ? Object.values(MediaType).find(t => contentType.includes(t)) ?? MediaType.APPLICATION_OCTET
+            : contentType ?? MediaType.APPLICATION_OCTET
+    }),
 }
 
 export const content = {

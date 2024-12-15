@@ -42,7 +42,8 @@ type ProxyResponse = {
 
 export class ProxyKernelInterceptorService
   extends Service
-  implements KernelInterceptor {
+  implements KernelInterceptor
+{
   public static readonly ID = "KERNEL_PROXY_INTERCEPTOR_SERVICE"
   private readonly store = this.bind(KernelInterceptorProxyStore)
 
@@ -51,27 +52,30 @@ export class ProxyKernelInterceptorService
   public readonly selectable = { type: "selectable" as const }
   public readonly capabilities = {
     method: new Set([
-      'GET',
-      'POST',
-      'PUT',
-      'DELETE',
-      'PATCH',
-      'HEAD',
-      'OPTIONS'
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+      "HEAD",
+      "OPTIONS",
     ]),
-    header: new Set(['stringvalue']),
-    content: new Set(['text']),
-    auth: new Set(['basic']),
+    header: new Set(["stringvalue"]),
+    content: new Set(["text"]),
+    auth: new Set(["basic"]),
     security: new Set([]),
     proxy: new Set([]),
-    advanced: new Set([])
+    advanced: new Set([]),
   } as const
   public readonly settingsEntry = markRaw({
     title: () => "Proxy",
     component: SettingsProxy,
   })
 
-  private constructProxyRequest(request: RelayRequest, accessToken: string): ProxyRequest {
+  private constructProxyRequest(
+    request: RelayRequest,
+    accessToken: string
+  ): ProxyRequest {
     let wantsBinary = false
     let requestData = ""
     if (request.content) {
@@ -79,19 +83,24 @@ export class ProxyKernelInterceptorService
         requestData = request.content.content
       } else if (request.content.kind === "json") {
         requestData = JSON.stringify(request.content.content)
-      } else if (request.content.kind === "multipart" || request.content.kind === "form") {
+      } else if (
+        request.content.kind === "multipart" ||
+        request.content.kind === "form"
+      ) {
         wantsBinary = true
         const formData = new FormData()
-        request.content.content.forEach((values: FormDataValue[], key: string) => {
-          values.forEach((value: FormDataValue) => {
-            if (value.kind === "text") {
-              formData.append(key, value.value)
-            } else {
-              const blob = new Blob([value.data], { type: value.contentType })
-              formData.append(key, blob, value.filename)
-            }
-          })
-        })
+        request.content.content.forEach(
+          (values: FormDataValue[], key: string) => {
+            values.forEach((value: FormDataValue) => {
+              if (value.kind === "text") {
+                formData.append(key, value.value)
+              } else {
+                const blob = new Blob([value.data], { type: value.contentType })
+                formData.append(key, blob, value.filename)
+              }
+            })
+          }
+        )
         requestData = formData.toString()
       }
     }
@@ -104,10 +113,13 @@ export class ProxyKernelInterceptorService
       headers: request.headers,
       params: request.params,
       data: requestData,
-      auth: request.auth?.kind === "basic" ? {
-        username: request.auth.username,
-        password: request.auth.password,
-      } : undefined,
+      auth:
+        request.auth?.kind === "basic"
+          ? {
+              username: request.auth.username,
+              password: request.auth.password,
+            }
+          : undefined,
     }
   }
 
@@ -121,7 +133,7 @@ export class ProxyKernelInterceptorService
     const content: ContentType = {
       kind: "json",
       content: proxyRequest,
-      mediaType: MediaType.APPLICATION_JSON
+      mediaType: MediaType.APPLICATION_JSON,
     }
 
     const proxyRelayRequest: RelayRequest = {
@@ -131,9 +143,11 @@ export class ProxyKernelInterceptorService
       version: "HTTP/1.1" as Version,
       headers: {
         "content-type": content.mediaType,
-        ...(content.kind === "multipart" ? {
-          "multipart-part-key": `proxyRequestData-${v4()}`,
-        } : {}),
+        ...(content.kind === "multipart"
+          ? {
+              "multipart-part-key": `proxyRequestData-${v4()}`,
+            }
+          : {}),
       },
       content,
     }
@@ -150,11 +164,10 @@ export class ProxyKernelInterceptorService
 
         const proxyResponse =
           res.right.body.mediaType === MediaType.TEXT_PLAIN
-            ? JSON.parse(
-              new TextDecoder().decode(new Uint8Array(res.right.body.body))
-            ) as ProxyResponse
-            : null;
-
+            ? (JSON.parse(
+                new TextDecoder().decode(new Uint8Array(res.right.body.body))
+              ) as ProxyResponse)
+            : null
 
         if (!proxyResponse?.success) {
           return E.left({
@@ -186,7 +199,7 @@ export class ProxyKernelInterceptorService
           body: {
             body: proxyResponse.data,
             mediaType: "text/plain",
-          }
+          },
         })
       }),
     }

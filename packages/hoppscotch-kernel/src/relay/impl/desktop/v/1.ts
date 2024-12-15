@@ -1,11 +1,12 @@
 import type { VersionedAPI } from '@type/versioning'
-import type {
-    RelayV1,
-    RelayRequest,
-    RelayRequestEvents,
-    RelayEventEmitter,
-    RelayResponse,
-    RelayError,
+import {
+    type RelayV1,
+    type RelayRequest,
+    type RelayRequestEvents,
+    type RelayEventEmitter,
+    type RelayResponse,
+    type RelayError,
+    body,
 } from '@relay/v/1'
 import * as E from 'fp-ts/Either'
 
@@ -155,7 +156,7 @@ export const implementation: VersionedAPI<RelayV1> = {
             const responsePromise = execute(pluginRequest)
                 .then((result: RequestResult): E.Either<RelayError, RelayResponse> => {
                     if (result.kind === 'success') {
-                        console.log("[RELAY] result", result)
+                        console.log("[RELAY|DESKTOP] result", result)
                         const response: RelayResponse = {
                             id: result.response.id,
                             status: result.response.status,
@@ -163,7 +164,7 @@ export const implementation: VersionedAPI<RelayV1> = {
                             version: result.response.version,
                             headers: result.response.headers,
                             cookies: result.response.cookies,
-                            body: result.response.body,
+                            body: body.body(result.response.body.body, result.response.body.mediaType),
                             meta: {
                                 timing: {
                                     start: result.response.meta.timing.start,

@@ -1,5 +1,5 @@
 import { ref } from "vue"
-import { listen } from '@tauri-apps/api/event'
+import { listen } from "@tauri-apps/api/event"
 
 import { createHoppApp } from "@hoppscotch/common"
 import { def as authDef } from "./platform/auth/auth.platform"
@@ -21,8 +21,8 @@ import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/
 import { ProxyKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/proxy"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
 
-const kernelMode = getKernelMode();
-const defaultInterceptor = kernelMode == "desktop" ? "native" : "browser";
+const kernelMode = getKernelMode()
+const defaultInterceptor = kernelMode == "desktop" ? "native" : "browser"
 const headerPaddingLeft = ref("0px")
 const headerPaddingTop = ref("0px")
 
@@ -33,7 +33,7 @@ createHoppApp("#app", {
     appHeader: {
       paddingLeft: headerPaddingLeft,
       paddingTop: headerPaddingTop,
-    }
+    },
   },
   auth: authDef,
   // NOTE: To be deprecated

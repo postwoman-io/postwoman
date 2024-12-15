@@ -1,4 +1,6 @@
 import { Component, computed, reactive, ref } from "vue"
+import { pipe } from "fp-ts/function"
+import * as O from "fp-ts/Option"
 import { getService } from "~/modules/dioc"
 import { getI18n } from "~/modules/i18n"
 import { useToast } from "~/composables/toast"
@@ -22,7 +24,7 @@ import {
 import { makeGQLHistoryEntry, addGraphqlHistoryEntry } from "~/newstore/history"
 import { GQLHeader, makeGQLRequest, HoppGQLAuth } from "@hoppscotch/data"
 import * as E from "fp-ts/Either"
-import { RelayError } from "@hoppscotch/kernel"
+import { MediaType, RelayError } from "@hoppscotch/kernel"
 
 const GQL_SCHEMA_POLL_INTERVAL = 7000
 
@@ -41,21 +43,21 @@ const GQL = {
 
 export type GQLResponseEvent =
   | {
-      type: "response"
-      time: number
-      operationName: string | undefined
-      operationType: OperationType
-      data: string
-      rawQuery?: RunQueryOptions
-    }
+    type: "response"
+    time: number
+    operationName: string | undefined
+    operationType: OperationType
+    data: string
+    rawQuery?: RunQueryOptions
+  }
   | {
-      type: "error"
-      error: {
-        type: string
-        message: string
-        component?: Component
-      }
+    type: "error"
+    error: {
+      type: string
+      message: string
+      component?: Component
     }
+  }
 
 export type ConnectionState =
   | "CONNECTING"
@@ -169,10 +171,11 @@ export const connect = async (
     )
   }
 
-  connection.state = "CONNECTING"
   const kernelService = getService(KernelInterceptorService)
   const toast = useToast()
   const t = getI18n()
+
+  connection.state = "CONNECTING"
 
   const poll = async () => {
     try {
@@ -191,14 +194,33 @@ export const connect = async (
       if (E.isLeft(result)) throw new Error(result.left.toString())
 
       const response = result.right
-      const responseData =
-        response.content?.kind === "json" ? response.content.content : null
+      console.log("response", response)
+      // NOTE: This pattern is repated often across codebase,
+      // maybe consider making this into a kernel part or library,
+      // similar to `relay.content` const object.
+      const perhapsJson = pipe(
+        response.body?.mediaType?.includes(MediaType.APPLICATION_JSON)
+          ? O.of(new Uint8Array(response.body.body).buffer)
+          : O.none,
+        O.chain((body) =>
+          O.tryCatch(() => {
+            const jsonString = new TextDecoder("utf-8").decode(body).replaceAll("\x00", "");
+            return JSON.parse(jsonString);
+          })
+        ),
+      );
 
-      if (!responseData) throw new Error("Invalid introspection response")
+      console.log("perhapsJson", perhapsJson)
 
-      connection.schema = buildClientSchema(
-        responseData.data
-      ) as unknown as GraphQLSchema
+      if (O.isNone(perhapsJson)) throw new Error("Invalid introspection response")
+
+      const json = perhapsJson.value
+
+      console.log("json", json)
+      const clientSchema = buildClientSchema(json.data)
+      console.log("clientSchema", clientSchema)
+
+      connection.schema = clientSchema as unknown as GraphQLSchema
       connection.error = null
 
       if (connection.state !== "CONNECTED") connection.state = "CONNECTED"
