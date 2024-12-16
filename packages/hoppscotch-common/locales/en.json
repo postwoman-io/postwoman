@@ -408,6 +408,42 @@
     "details": "Details"
   },
   "error": {
+    "network": {
+      "heading": "There seems to be a network error. Please try again.",
+      "description": "There seems to be a network error. Please try again."
+    },
+    "timeout": {
+      "heading": "Request timed out",
+      "description": "The request has timed out. Please try again later."
+    },
+    "certificate": {
+      "heading": "Certificate error",
+      "description": "There was an issue with the certificate: {message}"
+    },
+    "auth": {
+      "heading": "Authentication error",
+      "description": "Authentication failed: {message}"
+    },
+    "proxy": {
+      "heading": "Proxy error",
+      "description": "There was a proxy error: {message}"
+    },
+    "parse": {
+      "heading": "Parse error",
+      "description": "Error while parsing: {message}"
+    },
+    "version": {
+      "heading": "Version error",
+      "description": "Version mismatch: {message}"
+    },
+    "abort": {
+      "heading": "Request aborted",
+      "description": "The request was aborted: {message}"
+    },
+    "unknown": {
+      "heading": "Unknown error",
+      "description": "An unknown error occurred."
+    },
     "authproviders_load_error": "Unable to load auth providers",
     "browser_support_sse": "This browser doesn't seems to have Server Sent Events support.",
     "check_console_details": "Check console log for details.",
@@ -614,6 +650,16 @@
     },
     "body": {
       "binary": "Sending binary data via the current interceptor is not supported yet."
+    }
+  },
+  "interceptor": {
+    "native": {
+      "name": "Native",
+      "settings_title": "Native"
+    },
+    "proxy": {
+      "name": "Proxy",
+      "settings_title": "Proxy"
     }
   },
   "layout": {

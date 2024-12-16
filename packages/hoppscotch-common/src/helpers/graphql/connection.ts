@@ -43,21 +43,21 @@ const GQL = {
 
 export type GQLResponseEvent =
   | {
-    type: "response"
-    time: number
-    operationName: string | undefined
-    operationType: OperationType
-    data: string
-    rawQuery?: RunQueryOptions
-  }
-  | {
-    type: "error"
-    error: {
-      type: string
-      message: string
-      component?: Component
+      type: "response"
+      time: number
+      operationName: string | undefined
+      operationType: OperationType
+      data: string
+      rawQuery?: RunQueryOptions
     }
-  }
+  | {
+      type: "error"
+      error: {
+        type: string
+        message: string
+        component?: Component
+      }
+    }
 
 export type ConnectionState =
   | "CONNECTING"
@@ -204,15 +204,18 @@ export const connect = async (
           : O.none,
         O.chain((body) =>
           O.tryCatch(() => {
-            const jsonString = new TextDecoder("utf-8").decode(body).replaceAll("\x00", "");
-            return JSON.parse(jsonString);
+            const jsonString = new TextDecoder("utf-8")
+              .decode(body)
+              .replaceAll("\x00", "")
+            return JSON.parse(jsonString)
           })
-        ),
-      );
+        )
+      )
 
       console.log("perhapsJson", perhapsJson)
 
-      if (O.isNone(perhapsJson)) throw new Error("Invalid introspection response")
+      if (O.isNone(perhapsJson))
+        throw new Error("Invalid introspection response")
 
       const json = perhapsJson.value
 
