@@ -187,7 +187,7 @@ export const implementation: VersionedAPI<RelayV1> = {
                 })
 
             return {
-                cancel: () => { cancel(request.id) },
+                cancel: async () => { await cancel(request.id) },
                 emitter,
                 response: responsePromise
             }

@@ -49,7 +49,7 @@ export type KernelInterceptorError =
 export type ExecutionResult<
   Err extends KernelInterceptorError = KernelInterceptorError,
 > = {
-  cancel: () => void
+  cancel: () => Promise<void>
   response: Promise<E.Either<Err, RelayResponse>>
 }
 

@@ -6,11 +6,9 @@ import {
   type RelayRequest,
   type RelayRequestEvents,
   type RelayResponse,
-  type RelayResponseBody,
   type RelayV1,
   type StatusCode,
   body,
-  MediaType,
 } from '@relay/v/1'
 import type { VersionedAPI } from '@type/versioning'
 
@@ -298,7 +296,7 @@ export const implementation: VersionedAPI<RelayV1> = {
       })()
 
       return {
-        cancel: () => cancelTokenSource.cancel(),
+        cancel: async () => { cancelTokenSource.cancel() },
         emitter,
         response
       }
