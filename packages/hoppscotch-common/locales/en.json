@@ -409,40 +409,41 @@
   },
   "error": {
     "network": {
-      "heading": "There seems to be a network error. Please try again.",
-      "description": "There seems to be a network error. Please try again."
+      "heading": "Network Error",
+      "description": "Network connection failed. {message}: {cause}"
     },
     "timeout": {
-      "heading": "Request timed out",
-      "description": "The request has timed out. Please try again later."
+      "heading": "Timeout Error",
+      "description": "Request timed out during {phase}. {message}"
     },
     "certificate": {
-      "heading": "Certificate error",
-      "description": "There was an issue with the certificate: {message}"
+      "heading": "Certificate Error",
+      "description": "Invalid certificate. {message}: {cause}"
     },
     "auth": {
-      "heading": "Authentication error",
-      "description": "Authentication failed: {message}"
+      "heading": "Authentication Error",
+      "description": "Access denied. {message}: {cause}"
     },
     "proxy": {
-      "heading": "Proxy error",
-      "description": "There was a proxy error: {message}"
+      "heading": "Proxy Error",
+      "description": "Proxy connection failed. {message}: {cause}"
     },
     "parse": {
-      "heading": "Parse error",
-      "description": "Error while parsing: {message}"
+      "heading": "Parse Error",
+      "description": "Failed to parse response. {message}: {cause}"
     },
     "version": {
-      "heading": "Version error",
-      "description": "Version mismatch: {message}"
+      "heading": "Version Error",
+      "description": "Incompatible versions. {message}: {cause}"
     },
     "abort": {
-      "heading": "Request aborted",
-      "description": "The request was aborted: {message}"
+      "heading": "Request Aborted",
+      "description": "Operation cancelled. {message}: {cause}"
     },
     "unknown": {
-      "heading": "Unknown error",
-      "description": "An unknown error occurred."
+      "heading": "Unknown Error",
+      "description": "An unknown error occurred.",
+      "cause": "Unknown cause"
     },
     "authproviders_load_error": "Unable to load auth providers",
     "browser_support_sse": "This browser doesn't seems to have Server Sent Events support.",

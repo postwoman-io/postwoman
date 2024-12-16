@@ -20,7 +20,6 @@ import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import { getI18n } from "~/modules/i18n"
 import { v4 } from "uuid"
-import { decodeB64StringToArrayBuffer } from "~/helpers/utils/b64"
 
 type ProxyRequest = {
   url: string
@@ -230,31 +229,41 @@ export class ProxyKernelInterceptorService
             }
             return { humanMessage, error }
           }),
-          E.map((res) => {
-            const proxyResponse =
+          E.chain((res) => {
+            const proxyBody =
               res.body.mediaType === MediaType.TEXT_PLAIN
-                ? (JSON.parse(
-                    new TextDecoder().decode(new Uint8Array(res.body.body))
-                  ) as ProxyResponse)
+                ? new Uint8Array(res.body.body)
                 : null
+
+            // NOTE: This will become obsolete if we use native interceptor like error propogation.
+            const proxyResponse = proxyBody
+              ? (JSON.parse(
+                  new TextDecoder().decode(proxyBody)
+                ) as ProxyResponse)
+              : null
 
             if (!proxyResponse?.success) {
               return E.left({
-                kind: "network",
-                message: "Proxy request failed",
+                humanMessage: {
+                  heading: (t) => t("error.network.heading"),
+                  description: (t) =>
+                    t("error.network.description", {
+                      message: "Proxy request failed",
+                      cause: "Proxy server may be unresponsive"
+                    }),
+                },
+                error: {
+                  kind: "network",
+                  message: "Proxy request failed",
+                },
               })
             }
 
             if (proxyResponse.isBinary) {
-              const binaryData = decodeB64StringToArrayBuffer(
-                proxyResponse.data
-              )
-
               return E.right({
                 ...res,
-                content: {
-                  kind: "binary",
-                  content: new Uint8Array(binaryData),
+                body: {
+                  body: proxyBody,
                   mediaType:
                     proxyResponse.headers["content-type"] ||
                     "application/octet-stream",
@@ -268,7 +277,7 @@ export class ProxyKernelInterceptorService
               statusText: proxyResponse.statusText,
               headers: proxyResponse.headers,
               body: {
-                body: proxyResponse.data,
+                body: proxyBody,
                 mediaType: "text/plain",
               },
             })

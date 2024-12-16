@@ -16,7 +16,7 @@ import { stdSupportOptionItems } from "@hoppscotch/common/platform/std/ui/suppor
 import { browserIODef } from "@hoppscotch/common/platform/std/io"
 import { InfraPlatform } from "@platform/infra/infra.platform"
 
-import { getKernelMode } from "@hoppscotch/kernel"
+import { KernelMode, getKernelMode } from "@hoppscotch/kernel"
 import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/native"
 import { ProxyKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/proxy"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
@@ -25,6 +25,14 @@ const kernelMode = getKernelMode()
 const defaultInterceptor = kernelMode == "desktop" ? "native" : "browser"
 const headerPaddingLeft = ref("0px")
 const headerPaddingTop = ref("0px")
+
+const MODE_INTERCEPTORS = {
+  desktop: [NativeKernelInterceptorService, ProxyKernelInterceptorService],
+  web: [NativeKernelInterceptorService, ProxyKernelInterceptorService],
+} as const;
+
+const getInterceptors = (mode: KernelMode) =>
+  MODE_INTERCEPTORS[mode].map(service => ({ type: "service" as const, service }));
 
 createHoppApp("#app", {
   ui: {
@@ -56,10 +64,7 @@ createHoppApp("#app", {
   },
   kernelInterceptors: {
     default: defaultInterceptor,
-    interceptors: [
-      { type: "service", service: NativeKernelInterceptorService },
-      { type: "service", service: ProxyKernelInterceptorService },
-    ],
+    interceptors: getInterceptors(kernelMode),
   },
   additionalInspectors: [
     { type: "service", service: ExtensionInspectorService },
