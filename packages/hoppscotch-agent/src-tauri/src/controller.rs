@@ -8,7 +8,7 @@ use axum_extra::{
     headers::{authorization::Bearer, Authorization},
     TypedHeader,
 };
-use hoppscotch_relay::{RequestWithMetadata, ResponseWithMetadata};
+use relay::{Request, Response};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use x25519_dalek::{EphemeralSecret, PublicKey};
@@ -125,27 +125,26 @@ pub async fn run_request<T>(
     TypedHeader(auth_header): TypedHeader<Authorization<Bearer>>,
     headers: HeaderMap,
     body: Bytes,
-) -> AgentResult<EncryptedJson<ResponseWithMetadata>> {
+) -> AgentResult<EncryptedJson<Response>> {
     let nonce = headers
         .get("X-Hopp-Nonce")
         .ok_or(AgentError::Unauthorized)?
         .to_str()
         .map_err(|_| AgentError::Unauthorized)?;
 
-    let req: RequestWithMetadata = state
+    let req: Request = state
         .validate_access_and_get_data(auth_header.token(), nonce, &body)
         .ok_or(AgentError::Unauthorized)?;
 
-    let req_id = req.req_id;
+    let id = req.id;
 
     let reg_info = state
         .get_registration_info(auth_header.token())
         .ok_or(AgentError::Unauthorized)?;
 
     let cancel_token = tokio_util::sync::CancellationToken::new();
-    state.add_cancellation_token(req.req_id, cancel_token.clone());
+    state.add_cancellation_token(id.try_into().unwrap(), cancel_token.clone());
 
-    let cancel_token_clone = cancel_token.clone();
     // Execute the HTTP request in a blocking thread pool and handles cancellation.
     //
     // It:
@@ -161,18 +160,19 @@ pub async fn run_request<T>(
     // - `spawn_blocking` moves this operation to a thread pool designed for
     //   blocking tasks, so other async operations to continue unblocked.
     let result = tokio::select! {
-        res = tokio::task::spawn_blocking(move || hoppscotch_relay::run_request_task(&req, cancel_token_clone)) => {
+        res = tokio::task::spawn_blocking(move || relay::execute(req)) => {
             match res {
-                Ok(task_result) => Ok(task_result?),
+                Ok(task_result) => Ok(task_result.await?),
                 Err(_) => Err(AgentError::InternalServerError),
             }
         },
         _ = cancel_token.cancelled() => {
+            let _ = relay::cancel(id).await?;
             Err(AgentError::RequestCancelled)
         }
     };
 
-    state.remove_cancellation_token(req_id);
+    state.remove_cancellation_token(id.try_into().unwrap());
 
     result.map(|val| EncryptedJson {
         key_b16: reg_info.shared_secret_b16,

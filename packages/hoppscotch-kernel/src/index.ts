@@ -110,5 +110,6 @@ export type {
 
 export {
   content,
+  body,
   MediaType,
 } from '@relay/v/1'

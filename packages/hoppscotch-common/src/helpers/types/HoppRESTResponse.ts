@@ -41,14 +41,14 @@ export type HoppRESTFailureScript = {
   error: Error
 }
 
-export type HoppRESTFailureExtension = {
+export type HoppRESTErrorExtension = {
   type: "extension_error"
   error: string
   component: Component
   req: HoppRESTRequest
 }
 
-export type HoppRESTFailureInterceptor = {
+export type HoppRESTErrorInterceptor = {
   type: "interceptor_error"
   error: KernelInterceptorError
   req: HoppRESTRequest
