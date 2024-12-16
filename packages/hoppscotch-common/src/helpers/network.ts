@@ -1,17 +1,12 @@
-import { Observable, BehaviorSubject } from "rxjs"
-import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
-import { pipe } from "fp-ts/function"
-
-import { RelayResponse, RelayError } from "@hoppscotch/kernel"
-import { HoppRESTResponse } from "~/helpers/types/HoppRESTResponse"
-import { EffectiveHoppRESTRequest } from "~/helpers/utils/EffectiveURL"
+import { BehaviorSubject, Observable } from "rxjs"
+import { cloneDeep } from "lodash-es"
+import { HoppRESTResponse } from "./types/HoppRESTResponse"
+import { EffectiveHoppRESTRequest } from "./utils/EffectiveURL"
 import { getService } from "~/modules/dioc"
 import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
-import {
-  transformEffectiveHoppRESTRequestToRequest,
-  transformResponseToHoppRESTResponse,
-} from "~/helpers/kernel"
+import { RESTRequest, RESTResponse } from "~/helpers/kernel/rest"
+import { RelayError } from "@hoppscotch/kernel"
 
 export type NetworkStrategy = (
   req: EffectiveHoppRESTRequest
@@ -25,42 +20,56 @@ export function createRESTNetworkRequestStream(
     req: request,
   })
 
+  const req = cloneDeep(request)
+
+  const execResult = RESTRequest.toRequest(req).then((kernelReq) => {
+    if (!kernelReq) {
+      response.next({
+        type: "network_fail",
+        req,
+        error: new Error("Failed to create kernel request"),
+      })
+      response.complete()
+      return
+    }
+
+    return service.execute(kernelReq)
+  })
+
   const service = getService(KernelInterceptorService)
 
-  const makeRequest = async () => {
-    const relayRequest =
-      await transformEffectiveHoppRESTRequestToRequest(request)
-    const result = await service.execute(relayRequest).response
+  execResult.then((result) => {
+    if (!result) return
 
-    return pipe(
-      result,
-      E.map(async (kernelResponse: RelayResponse) => {
-        const response = await transformResponseToHoppRESTResponse(
-          kernelResponse,
-          request
-        )
-        return response
-      }),
-      E.mapLeft(async (error) => {
-        return {
-          type: "network_fail" as const,
-          error,
-          req: request,
+    result.response.then(async (res) => {
+      if (res._tag === "Right") {
+        const processedRes = await RESTResponse.toResponse(res.right, req)
+
+        if (processedRes.type === "success") {
+          response.next(processedRes)
+        } else {
+          response.next({
+            type: "network_fail",
+            req,
+            error: processedRes.error,
+          })
         }
-      })
-    )
-  }
-
-  makeRequest().then(async (result) => {
-    response.next(await (E.isRight(result) ? result.right : result.left))
-    response.complete()
+      } else {
+        response.next({
+          type: "interceptor_error",
+          req,
+          error: res.left,
+        })
+      }
+      response.complete()
+    })
   })
 
   return [
     response,
-    () => {
-      const current = service.current.value
-      if (current) current.execute(request).cancel()
+    async () => {
+      const result = await execResult
+      if (result) await result.cancel()
     },
   ]
 }

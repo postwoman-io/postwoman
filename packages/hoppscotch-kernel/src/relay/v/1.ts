@@ -452,7 +452,7 @@ export interface RelayV1 {
     execute(
         request: RelayRequest
     ): {
-        cancel: () => void
+        cancel: () => Promise<void>
         emitter: RelayEventEmitter<RelayRequestEvents>
         response: Promise<E.Either<RelayError, RelayResponse>>
     }

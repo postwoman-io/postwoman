@@ -17,14 +17,12 @@ import {
 } from "graphql"
 import { GQLTabService } from "~/services/tab/graphql"
 import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
-import {
-  transformHoppGQLRequestToRequest,
-  transformResponseToGQLResponseEvent,
-} from "~/helpers/kernel"
 import { makeGQLHistoryEntry, addGraphqlHistoryEntry } from "~/newstore/history"
 import { GQLHeader, makeGQLRequest, HoppGQLAuth } from "@hoppscotch/data"
 import * as E from "fp-ts/Either"
 import { MediaType, RelayError } from "@hoppscotch/kernel"
+import { GQLRequest } from "~/helpers/kernel/gql/request"
+import { GQLResponse } from "~/helpers/kernel/gql/response"
 
 const GQL_SCHEMA_POLL_INTERVAL = 7000
 
@@ -179,7 +177,7 @@ export const connect = async (
 
   const poll = async () => {
     try {
-      const kernelRequest = await transformHoppGQLRequestToRequest({
+      const kernelRequest = await GQLRequest.toRequest({
         v: 7,
         name: "Introspection Query",
         url,
@@ -278,7 +276,7 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
   })
 
   const result = await kernelService.execute(
-    await transformHoppGQLRequestToRequest(request)
+    await GQLRequest.toRequest(request)
   ).response
 
   if (E.isLeft(result)) {
@@ -286,10 +284,7 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     throw error
   }
 
-  const response = await transformResponseToGQLResponseEvent(
-    result.right,
-    options
-  )
+  const response = await GQLResponse.toResponse(result.right, options)
 
   if (response.type === "response") {
     gqlMessageEvent.value = response
