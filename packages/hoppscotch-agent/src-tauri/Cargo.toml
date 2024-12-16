@@ -31,7 +31,7 @@ chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8.5"
 log = "0.4.22"
 env_logger = "0.11.5"
-hoppscotch-relay = { path = "../../hoppscotch-relay" }
+relay = { git = "https://github.com/CuriousCorrelation/relay.git" }
 thiserror = "1.0.64"
 tauri-plugin-store = "2.1.0"
 x25519-dalek = { version = "2.0.1", features = ["getrandom"] }

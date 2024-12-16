@@ -249,7 +249,7 @@ export class ProxyKernelInterceptorService
                   description: (t) =>
                     t("error.network.description", {
                       message: "Proxy request failed",
-                      cause: "Proxy server may be unresponsive"
+                      cause: "Proxy server may be unresponsive",
                     }),
                 },
                 error: {

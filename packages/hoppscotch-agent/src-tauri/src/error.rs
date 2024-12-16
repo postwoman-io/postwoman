@@ -45,7 +45,7 @@ pub enum AgentError {
     #[error("Store error: {0}")]
     TauriPluginStore(#[from] tauri_plugin_store::Error),
     #[error("Relay error: {0}")]
-    Relay(#[from] hoppscotch_relay::RelayError),
+    Relay(#[from] relay::error::RelayError),
 }
 
 impl IntoResponse for AgentError {

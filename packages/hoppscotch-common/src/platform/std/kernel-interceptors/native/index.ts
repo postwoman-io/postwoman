@@ -18,7 +18,7 @@ export class NativeKernelInterceptorService
   extends Service
   implements KernelInterceptor
 {
-  public static readonly ID = "KERNEL_NATIVE_INTERCEPTOR_SERVICE"
+  public static readonly ID = "NATIVE_KERNEL_INTERCEPTOR_SERVICE"
 
   private readonly store = this.bind(KernelInterceptorNativeStore)
 
