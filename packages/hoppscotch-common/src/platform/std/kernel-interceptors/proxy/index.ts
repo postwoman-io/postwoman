@@ -1,19 +1,24 @@
 import { markRaw } from "vue"
-import { Service } from "dioc"
-import * as E from "fp-ts/Either"
-import {
-  RelayRequest,
-  RelayResponse,
+import type {
   FormDataValue,
-  MediaType,
+  RelayRequest,
+  ContentType,
   Method,
   Version,
-  ContentType,
 } from "@hoppscotch/kernel"
+import { MediaType } from "@hoppscotch/kernel"
+import { Service } from "dioc"
 import { Relay } from "~/kernel/relay"
-import { KernelInterceptor } from "~/services/kernel-interceptor.service"
-import { KernelInterceptorProxyStore } from "./store"
 import SettingsProxy from "~/components/settings/Proxy.vue"
+import { KernelInterceptorProxyStore } from "./store"
+import type {
+  KernelInterceptor,
+  ExecutionResult,
+  KernelInterceptorError,
+} from "~/services/kernel-interceptor.service"
+import * as E from "fp-ts/Either"
+import { pipe } from "fp-ts/function"
+import { getI18n } from "~/modules/i18n"
 import { v4 } from "uuid"
 import { decodeB64StringToArrayBuffer } from "~/helpers/utils/b64"
 
@@ -48,7 +53,8 @@ export class ProxyKernelInterceptorService
   private readonly store = this.bind(KernelInterceptorProxyStore)
 
   public readonly id = "proxy"
-  public readonly name = () => "Proxy"
+  public readonly name = (t: ReturnType<typeof getI18n>) =>
+    t("interceptor.proxy.name")
   public readonly selectable = { type: "selectable" as const }
   public readonly capabilities = {
     method: new Set([
@@ -68,7 +74,8 @@ export class ProxyKernelInterceptorService
     advanced: new Set([]),
   } as const
   public readonly settingsEntry = markRaw({
-    title: () => "Proxy",
+    title: (t: ReturnType<typeof getI18n>) =>
+      t("interceptor.proxy.settings_title"),
     component: SettingsProxy,
   })
 
@@ -123,7 +130,7 @@ export class ProxyKernelInterceptorService
     }
   }
 
-  public execute(req: RelayRequest) {
+  public execute(req: RelayRequest): ExecutionResult<KernelInterceptorError> {
     const settings = this.store.getSettings()
     const accessToken = settings.accessToken
     const proxyUrl = settings.proxyUrl
@@ -152,56 +159,127 @@ export class ProxyKernelInterceptorService
       content,
     }
 
-    const result = Relay.execute(proxyRelayRequest)
+    const relayExecution = Relay.execute(proxyRelayRequest)
+
+    const response = pipe(relayExecution.response, (promise) =>
+      promise.then((either) =>
+        pipe(
+          either,
+          E.mapLeft((error): KernelInterceptorError => {
+            const humanMessage = {
+              heading: (t: ReturnType<typeof getI18n>) => {
+                switch (error.kind) {
+                  case "network":
+                    return t("error.network.heading")
+                  case "timeout":
+                    return t("error.timeout.heading")
+                  case "certificate":
+                    return t("error.certificate.heading")
+                  case "auth":
+                    return t("error.auth.heading")
+                  case "proxy":
+                    return t("error.proxy.heading")
+                  case "parse":
+                    return t("error.parse.heading")
+                  case "version":
+                    return t("error.version.heading")
+                  case "abort":
+                    return t("error.aborted.heading")
+                  default:
+                    return t("error.unknown.heading")
+                }
+              },
+              description: (t: ReturnType<typeof getI18n>) => {
+                switch (error.kind) {
+                  case "network":
+                    return t("error.network.description", {
+                      message: error.message,
+                    })
+                  case "timeout":
+                    return t("error.timeout.description", {
+                      phase: error.phase ?? t("error.unknown.phase"),
+                    })
+                  case "certificate":
+                    return t("error.certificate.description", {
+                      message: error.message,
+                    })
+                  case "auth":
+                    return t("error.auth.description", {
+                      message: error.message,
+                    })
+                  case "proxy":
+                    return t("error.proxy.description", {
+                      message: error.message,
+                    })
+                  case "parse":
+                    return t("error.parse.description", {
+                      message: error.message,
+                    })
+                  case "version":
+                    return t("error.version.description", {
+                      message: error.message,
+                    })
+                  case "abort":
+                    return t("error.aborted.description", {
+                      message: error.message,
+                    })
+                  default:
+                    return t("error.unknown.description")
+                }
+              },
+            }
+            return { humanMessage, error }
+          }),
+          E.map((res) => {
+            const proxyResponse =
+              res.body.mediaType === MediaType.TEXT_PLAIN
+                ? (JSON.parse(
+                    new TextDecoder().decode(new Uint8Array(res.body.body))
+                  ) as ProxyResponse)
+                : null
+
+            if (!proxyResponse?.success) {
+              return E.left({
+                kind: "network",
+                message: "Proxy request failed",
+              })
+            }
+
+            if (proxyResponse.isBinary) {
+              const binaryData = decodeB64StringToArrayBuffer(
+                proxyResponse.data
+              )
+
+              return E.right({
+                ...res,
+                content: {
+                  kind: "binary",
+                  content: new Uint8Array(binaryData),
+                  mediaType:
+                    proxyResponse.headers["content-type"] ||
+                    "application/octet-stream",
+                },
+              })
+            }
+
+            return E.right({
+              ...res,
+              status: proxyResponse.status,
+              statusText: proxyResponse.statusText,
+              headers: proxyResponse.headers,
+              body: {
+                body: proxyResponse.data,
+                mediaType: "text/plain",
+              },
+            })
+          })
+        )
+      )
+    )
 
     return {
-      cancel: result.cancel,
-      emitter: result.emitter,
-      response: result.response.then(async (res: RelayResponse) => {
-        if (E.isLeft(res)) return res
-
-        console.log(res)
-
-        const proxyResponse =
-          res.right.body.mediaType === MediaType.TEXT_PLAIN
-            ? (JSON.parse(
-                new TextDecoder().decode(new Uint8Array(res.right.body.body))
-              ) as ProxyResponse)
-            : null
-
-        if (!proxyResponse?.success) {
-          return E.left({
-            kind: "network",
-            message: "Proxy request failed",
-          })
-        }
-
-        if (proxyResponse.isBinary) {
-          const binaryData = decodeB64StringToArrayBuffer(proxyResponse.data)
-
-          return E.right({
-            ...res.right,
-            content: {
-              kind: "binary",
-              content: new Uint8Array(binaryData),
-              mediaType:
-                proxyResponse.headers["content-type"] ||
-                "application/octet-stream",
-            },
-          })
-        }
-
-        return E.right({
-          ...res.right,
-          status: proxyResponse.status,
-          statusText: proxyResponse.statusText,
-          headers: proxyResponse.headers,
-          body: {
-            body: proxyResponse.data,
-            mediaType: "text/plain",
-          },
-        })
-      }),
+      cancel: relayExecution.cancel,
+      response,
     }
   }
 }

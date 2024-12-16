@@ -9,9 +9,10 @@ import {
   RelayCapabilities,
 } from "@hoppscotch/kernel"
 
-export type ExecutionResult<Err extends RelayError = RelayError> = {
-  cancel: () => void
-  response: Promise<E.Either<Err, RelayResponse>>
+export function isCancellationError(
+  error: KernelInterceptorError
+): error is "cancellation" {
+  return error === "cancellation"
 }
 
 export type SelectableStatus<Props = unknown> =
@@ -19,15 +20,42 @@ export type SelectableStatus<Props = unknown> =
   | {
       type: "unselectable"
       reason:
-        | { type: "text"; text: (t: ReturnType<typeof getI18n>) => string }
-        | { type: "component"; component: Component<Props>; props: Props }
-      action?: {
-        text: (t: ReturnType<typeof getI18n>) => string
-        handler: () => void
-      }
+        | {
+            type: "text"
+            text: (t: ReturnType<typeof getI18n>) => string
+            action?: {
+              text: (t: ReturnType<typeof getI18n>) => string
+              onActionClick: () => void
+            }
+          }
+        | {
+            type: "custom"
+            component: Component<Props>
+            props: Props
+          }
     }
 
-export type KernelInterceptor<Err extends RelayError = RelayError> = {
+export type KernelInterceptorError =
+  | "cancellation"
+  | {
+      humanMessage: {
+        heading: (t: ReturnType<typeof getI18n>) => string
+        description: (t: ReturnType<typeof getI18n>) => string
+      }
+      error: RelayError
+      component?: Component<RelayError>
+    }
+
+export type ExecutionResult<
+  Err extends KernelInterceptorError = KernelInterceptorError,
+> = {
+  cancel: () => void
+  response: Promise<E.Either<Err, RelayResponse>>
+}
+
+export type KernelInterceptor<
+  Err extends KernelInterceptorError = KernelInterceptorError,
+> = {
   id: string
   name: (t: ReturnType<typeof getI18n>) => string
   settingsEntry?: {
