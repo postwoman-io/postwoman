@@ -576,7 +576,7 @@ export const v1: VersionedAPI<RelayV1> = {
             relay: "default"
         }),
         execute: () => ({
-            cancel: () => {},
+            cancel: async () => {},
             emitter: {
                 on: () => () => {},
                 once: () => () => {},

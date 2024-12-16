@@ -70,30 +70,37 @@ export class NativeKernelInterceptorService
                   case "network":
                     return t("error.network.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "timeout":
                     return t("error.timeout.description", {
+                      message: error.message,
                       phase: error.phase ?? t("error.unknown.phase"),
                     })
                   case "certificate":
                     return t("error.certificate.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "auth":
                     return t("error.auth.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "proxy":
                     return t("error.proxy.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "parse":
                     return t("error.parse.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "version":
                     return t("error.version.description", {
                       message: error.message,
+                      cause: error.cause ?? t("error.unknown.cause"),
                     })
                   case "abort":
                     return t("error.aborted.description", {
