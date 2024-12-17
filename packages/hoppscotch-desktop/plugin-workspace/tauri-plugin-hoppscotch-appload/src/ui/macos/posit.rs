@@ -23,7 +23,6 @@ pub struct MacosWindow<R: Runtime> {
     ns_window: id,
 }
 
-
 impl<R: Runtime> MacosWindow<R> {
     pub fn new(window: WebviewWindow<R>, traffic_lights_inset: LogicalPosition<f64>) -> Self {
         let ns_window = window.ns_window().expect("Failed to get NS window handle") as id;
@@ -128,6 +127,7 @@ impl<R: Runtime> MacosWindow<R> {
             (windowDidEnterFullScreen:) => WindowDelegate::window_did_enter_full_screen::<R> as extern fn(&Object, Sel, id),
             (windowWillEnterFullScreen:) => WindowDelegate::window_will_enter_full_screen::<R> as extern fn(&Object, Sel, id),
             (windowDidExitFullScreen:) => WindowDelegate::window_did_exit_full_screen::<R> as extern fn(&Object, Sel, id),
+            (windowDidEndLiveResize:) => WindowDelegate::window_did_end_live_resize::<R> as extern fn(&Object, Sel, id),
             (windowWillExitFullScreen:) => WindowDelegate::window_will_exit_full_screen::<R> as extern fn(&Object, Sel, id),
             (windowDidFailToEnterFullScreen:) => WindowDelegate::window_did_fail_to_enter_full_screen as extern fn(&Object, Sel, id),
 
@@ -179,6 +179,7 @@ impl WindowButtons {
         for (i, button) in [self.close, self.minimize, self.zoom].iter().enumerate() {
             let mut frame = NSView::frame(*button);
             frame.origin.x = inset_x + (i as f64 * spacing);
+            frame.origin.y = 0.0;
             button.setFrameOrigin(frame.origin);
         }
     }
@@ -191,6 +192,7 @@ impl TitleBarContainer {
         let mut frame = NSView::frame(self.0);
         frame.size.height = height;
         frame.origin.y = window_height - height;
+        frame.origin.x = 0.0;
         let _: () = msg_send![self.0, setFrame: frame];
     }
 }
@@ -345,6 +347,16 @@ impl WindowDelegate {
         }
     }
 
+    extern "C" fn window_did_end_live_resize<R: Runtime>(this: &Object, _: Sel, _: id) {
+        unsafe {
+            Self::with_window_state::<R, _>(this, |state| {
+                let macos_window =
+                    MacosWindow::new(state.window.clone(), state.traffic_lights_inset);
+                macos_window.reposition_controls();
+            });
+        }
+    }
+
     extern "C" fn window_did_exit_full_screen<R: Runtime>(this: &Object, _: Sel, notification: id) {
         unsafe {
             Self::with_window_state::<R, _>(this, |state| {
@@ -411,7 +423,7 @@ impl WindowDelegate {
 }
 
 pub fn setup_window<R: Runtime>(window: WebviewWindow<R>) {
-    let macos_window = MacosWindow::new(window, LogicalPosition::new(20.0, 24.0));
+    let macos_window = MacosWindow::new(window, LogicalPosition::new(16.0, 16.0));
     macos_window.setup();
     macos_window.update_theme(HexColor::WHITE);
 }
