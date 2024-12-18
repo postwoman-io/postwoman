@@ -156,18 +156,9 @@ export class KernelInterceptorNativeStore extends Service {
     domain: string,
     settings: Partial<DomainSetting>
   ): Promise<void> {
-    const current = this.getMergedSettings(domain)
-
     const updatedSettings: DomainSetting = {
       version: "v1",
-      security:
-        settings.security !== undefined
-          ? this.mergeSecurity(current.security, settings.security)
-          : current.security,
-      proxy:
-        settings.proxy !== undefined
-          ? this.mergeProxy(current.proxy, settings.proxy)
-          : current.proxy,
+      ...settings,
     }
 
     this.domainSettings.set(domain, updatedSettings)

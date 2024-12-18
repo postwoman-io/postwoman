@@ -296,15 +296,9 @@ export class KernelInterceptorAgentStore extends Service {
     domain: string,
     settings: Partial<AgentDomainSetting>
   ): Promise<void> {
-    const current = this.getDomainSettings(domain)
     const updated: AgentDomainSetting = {
       version: "v1",
-      security: settings.security
-        ? { ...current.security, ...settings.security }
-        : current.security,
-      proxy: settings.proxy
-        ? { ...current.proxy, ...settings.proxy }
-        : current.proxy,
+      ...settings,
     }
 
     this.domainSettings.set(domain, updated)
