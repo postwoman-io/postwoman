@@ -234,7 +234,6 @@ export const implementation: VersionedAPI<RelayV1> = {
           }
 
           const axiosResponse = await axios(config)
-          console.log("[RELAY|WEB] result", axiosResponse)
           const endTime = Date.now()
 
           if (!isStatusCode(axiosResponse.status)) {

@@ -192,7 +192,6 @@ export const connect = async (
       if (E.isLeft(result)) throw new Error(result.left.toString())
 
       const response = result.right
-      console.log("response", response)
       // NOTE: This pattern is repated often across codebase,
       // maybe consider making this into a kernel part or library,
       // similar to `relay.content` const object.
@@ -210,16 +209,13 @@ export const connect = async (
         )
       )
 
-      console.log("perhapsJson", perhapsJson)
 
       if (O.isNone(perhapsJson))
         throw new Error("Invalid introspection response")
 
       const json = perhapsJson.value
 
-      console.log("json", json)
       const clientSchema = buildClientSchema(json.data)
-      console.log("clientSchema", clientSchema)
 
       connection.schema = clientSchema as unknown as GraphQLSchema
       connection.error = null

@@ -665,6 +665,10 @@
     "proxy": {
       "name": "Proxy",
       "settings_title": "Proxy"
+    },
+    "extension": {
+      "name": "Extension",
+      "settings_title": "Extension"
     }
   },
   "layout": {
@@ -870,7 +874,7 @@
     "general_description": " General settings used in the application",
     "interceptor": "Interceptor",
     "interceptor_description": "Middleware between application and APIs.",
-    "kernel_interceptor": "Kernel Interceptor",
+    "kernel_interceptor": "Interceptor",
     "kernel_interceptor_description": "Middleware between application and APIs.",
     "language": "Language",
     "light_mode": "Light",

@@ -156,7 +156,6 @@ export const implementation: VersionedAPI<RelayV1> = {
             const responsePromise = execute(pluginRequest)
                 .then((result: RequestResult): E.Either<RelayError, RelayResponse> => {
                     if (result.kind === 'success') {
-                        console.log("[RELAY|DESKTOP] result", result)
                         const response: RelayResponse = {
                             id: result.response.id,
                             status: result.response.status,
