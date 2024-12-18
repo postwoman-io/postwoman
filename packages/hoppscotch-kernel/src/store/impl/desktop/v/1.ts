@@ -63,14 +63,24 @@ class TauriStoreManager {
     async set(namespace: string, key: string, value: StoredData): Promise<void> {
         if (!this.store) throw new Error('Store not initialized');
 
+        const validated = StoredDataSchema.parse(value);
         this.data[namespace] = this.data[namespace] || {};
-        this.data[namespace][key] = value;
+        this.data[namespace][key] = validated;
         await this.store.set('data', this.data);
         await this.store.save();
     }
 
+    async getRaw(namespace: string, key: string): Promise<StoredData | undefined> {
+        const rawValue = this.data[namespace]?.[key];
+        if (!rawValue) return undefined;
+
+        const validated = StoredDataSchema.parse(rawValue);
+        return validated;
+    }
+
     async get<T>(namespace: string, key: string): Promise<T | undefined> {
-        return this.data[namespace]?.[key]?.data as T | undefined;
+        const storedData = await this.getRaw(namespace, key);
+        return storedData?.data as T | undefined;
     }
 
     async has(namespace: string, key: string): Promise<boolean> {
@@ -188,11 +198,15 @@ export const implementation: VersionedAPI<StoreV1> = {
         async set(namespace: string, key: string, value: unknown, options?: StorageOptions): Promise<E.Either<StoreError, void>> {
             try {
                 const manager = TauriStoreManager.new();
+                const existingData = await manager.getRaw(namespace, key);
+                const createdAt = existingData?.metadata.createdAt || new Date().toISOString()
+                const updatedAt = new Date().toISOString()
+
                 const storedData: StoredData = {
                     schemaVersion: 1,
                     metadata: {
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
+                        createdAt,
+                        updatedAt,
                         namespace,
                         encrypted: options?.encrypt,
                         compressed: options?.compress,
@@ -201,8 +215,7 @@ export const implementation: VersionedAPI<StoreV1> = {
                     data: value,
                 };
 
-                const validatedData = StoredDataSchema.parse(storedData);
-                await manager.set(namespace, key, validatedData);
+                await manager.set(namespace, key, storedData);
                 return E.right(undefined);
             } catch (error) {
                 return E.left({
