@@ -37,13 +37,18 @@ class BrowserStoreManager {
         this.notifyListeners(namespace, key, validated.data);
     }
 
-    async get<T>(namespace: string, key: string): Promise<T | undefined> {
+    async getRaw(namespace: string, key: string): Promise<StoredData | undefined> {
         const rawValue = localStorage.getItem(this.getFullKey(namespace, key));
         if (!rawValue) return undefined;
 
         const parsed = JSON.parse(rawValue);
         const validated = StoredDataSchema.parse(parsed);
-        return validated.data as T;
+        return validated;
+    }
+
+    async get<T>(namespace: string, key: string): Promise<T | undefined> {
+        const storedData = await this.getRaw(namespace, key);
+        return storedData?.data as T;
     }
 
     async has(namespace: string, key: string): Promise<boolean> {
@@ -137,11 +142,15 @@ export const implementation: VersionedAPI<StoreV1> = {
         async set(namespace, key, value, options) {
             try {
                 const manager = BrowserStoreManager.new();
+                const existingData = await manager.getRaw(namespace, key);
+                const createdAt = existingData?.metadata.createdAt || new Date().toISOString()
+                const updatedAt = new Date().toISOString()
+
                 const storedData: StoredData = {
                     schemaVersion: 1,
                     metadata: {
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
+                        createdAt,
+                        updatedAt,
                         namespace,
                         encrypted: options?.encrypt,
                         compressed: options?.compress,
@@ -149,6 +158,7 @@ export const implementation: VersionedAPI<StoreV1> = {
                     },
                     data: value,
                 };
+
                 await manager.set(namespace, key, storedData);
                 return E.right(undefined);
             } catch (e) {

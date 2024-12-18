@@ -423,7 +423,7 @@ impl WindowDelegate {
 }
 
 pub fn setup_window<R: Runtime>(window: WebviewWindow<R>) {
-    let macos_window = MacosWindow::new(window, LogicalPosition::new(16.0, 16.0));
+    let macos_window = MacosWindow::new(window, LogicalPosition::new(15.0, 16.0));
     macos_window.setup();
     macos_window.update_theme(HexColor::WHITE);
 }
