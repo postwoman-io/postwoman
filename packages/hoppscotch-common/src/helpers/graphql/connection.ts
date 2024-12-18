@@ -209,7 +209,6 @@ export const connect = async (
         )
       )
 
-
       if (O.isNone(perhapsJson))
         throw new Error("Invalid introspection response")
 
