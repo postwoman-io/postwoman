@@ -13,6 +13,7 @@ import type {
 import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import { getI18n } from "~/modules/i18n"
+import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
 
 export class NativeKernelInterceptorService
   extends Service
@@ -33,8 +34,12 @@ export class NativeKernelInterceptorService
     component: SettingsNative,
   })
 
-  public execute(req: RelayRequest): ExecutionResult<KernelInterceptorError> {
-    const effectiveRequest = this.store.completeRequest(req)
+  public execute(
+    request: RelayRequest
+  ): ExecutionResult<KernelInterceptorError> {
+    const effectiveRequest = this.store.completeRequest(
+      preProcessRelayRequest(request)
+    )
     const relayExecution = Relay.execute(effectiveRequest)
 
     const response = pipe(relayExecution.response, (promise) =>

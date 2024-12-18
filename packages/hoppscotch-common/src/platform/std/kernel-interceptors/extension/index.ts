@@ -13,6 +13,7 @@ import type {
 import * as E from "fp-ts/Either"
 import { getI18n } from "~/modules/i18n"
 import { until } from "@vueuse/core"
+import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
 
 export class ExtensionKernelInterceptorService
   extends Service
@@ -102,12 +103,14 @@ export class ExtensionKernelInterceptorService
     }
   }
 
-  public execute(req: RelayRequest): ExecutionResult<KernelInterceptorError> {
+  public execute(
+    request: RelayRequest
+  ): ExecutionResult<KernelInterceptorError> {
     const extensionExecution = {
       cancel: async () => {
         window.__POSTWOMAN_EXTENSION_HOOK__?.cancelRequest()
       },
-      response: this.executeExtensionRequest(req),
+      response: this.executeExtensionRequest(preProcessRelayRequest(request)),
     }
 
     return extensionExecution
