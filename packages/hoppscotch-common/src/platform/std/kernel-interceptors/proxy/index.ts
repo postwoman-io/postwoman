@@ -20,6 +20,7 @@ import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import { getI18n } from "~/modules/i18n"
 import { v4 } from "uuid"
+import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
 
 type ProxyRequest = {
   url: string
@@ -129,12 +130,17 @@ export class ProxyKernelInterceptorService
     }
   }
 
-  public execute(req: RelayRequest): ExecutionResult<KernelInterceptorError> {
+  public execute(
+    request: RelayRequest
+  ): ExecutionResult<KernelInterceptorError> {
     const settings = this.store.getSettings()
     const accessToken = settings.accessToken
     const proxyUrl = settings.proxyUrl
 
-    const proxyRequest = this.constructProxyRequest(req, accessToken)
+    const proxyRequest = this.constructProxyRequest(
+      preProcessRelayRequest(request),
+      accessToken
+    )
 
     const content: ContentType = {
       kind: "json",

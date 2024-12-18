@@ -4,7 +4,7 @@ import { body } from "@hoppscotch/kernel"
 import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import axios, { CancelTokenSource } from "axios"
-
+import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
 import {
   RelayRequest,
   RelayResponse,
@@ -124,7 +124,7 @@ export class AgentKernelInterceptorService
       }
 
       const [nonceB16, encryptedReq] = await this.store.encryptRequest(
-        request,
+        preProcessRelayRequest(request),
         reqID
       )
 
