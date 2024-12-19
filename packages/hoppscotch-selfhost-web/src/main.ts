@@ -21,6 +21,7 @@ import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/
 import { AgentKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/agent"
 import { ProxyKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/proxy"
 import { ExtensionKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/extension"
+import { BrowserKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/browser"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
 
 const kernelMode = getKernelMode()
@@ -29,8 +30,15 @@ const headerPaddingLeft = ref("0px")
 const headerPaddingTop = ref("0px")
 
 const MODE_INTERCEPTORS = {
-  desktop: [NativeKernelInterceptorService, ProxyKernelInterceptorService],
-  web: [NativeKernelInterceptorService, ProxyKernelInterceptorService, AgentKernelInterceptorService, ExtensionKernelInterceptorService],
+  desktop: [
+    NativeKernelInterceptorService,
+    ProxyKernelInterceptorService],
+  web: [
+    BrowserKernelInterceptorService,
+    ProxyKernelInterceptorService,
+    AgentKernelInterceptorService,
+    ExtensionKernelInterceptorService
+  ],
 } as const;
 
 const getInterceptors = (mode: KernelMode) =>
