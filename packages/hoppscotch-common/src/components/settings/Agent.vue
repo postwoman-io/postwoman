@@ -82,110 +82,108 @@
       </div>
     </div>
 
-    <div>
-      <div class="flex items-center space-x-2">
-        <h2 class="font-semibold flex-1">{{ selectedDomainDisplay }}</h2>
+    <div class="flex items-center space-x-2 py-4">
+      <h2 class="font-semibold flex-1">{{ selectedDomainDisplay }}</h2>
+      <HoppButtonSecondary
+        v-tippy="{
+          theme: 'tooltip',
+          content: t('settings.manage_domains_overrides'),
+        }"
+        :icon="IconSettings"
+        outline
+        class="rounded"
+        @click="showDomainModal = true"
+      />
+    </div>
+
+    <div class="flex flex-col space-y-4">
+      <div class="flex items-center">
+        <HoppSmartToggle
+          :on="domainSettings[selectedDomain]?.security?.validateCertificates"
+          @change="toggleValidateCertificates"
+        />
+        {{ t("settings.validate_certificates") }}
+      </div>
+
+      <div class="flex items-center">
+        <HoppSmartToggle
+          :on="domainSettings[selectedDomain]?.security?.verifyHost"
+          @change="toggleVerifyHost"
+        />
+        {{ t("settings.verify_host") }}
+      </div>
+
+      <div class="flex items-center">
+        <HoppSmartToggle
+          :on="domainSettings[selectedDomain]?.security?.verifyPeer"
+          @change="toggleVerifyPeer"
+        />
+        {{ t("settings.verify_peer") }}
+      </div>
+
+      <div class="flex space-x-4">
         <HoppButtonSecondary
-          v-tippy="{
-            theme: 'tooltip',
-            content: t('settings.manage_domains_overrides'),
-          }"
-          :icon="IconSettings"
+          :icon="IconFileBadge"
+          :label="t('settings.ca_certificates')"
           outline
-          class="rounded"
-          @click="showDomainModal = true"
+          @click="showCACertModal = true"
+        />
+        <HoppButtonSecondary
+          :icon="IconFileKey"
+          :label="t('settings.client_certificates')"
+          outline
+          @click="showCertModal = true"
         />
       </div>
 
-      <div class="flex flex-col space-y-4">
-        <div class="flex items-center">
-          <HoppSmartToggle
-            :on="domainSettings[selectedDomain]?.security?.validateCertificates"
-            @change="toggleValidateCertificates"
-          />
-          {{ t("settings.validate_certificates") }}
-        </div>
-
-        <div class="flex items-center">
-          <HoppSmartToggle
-            :on="domainSettings[selectedDomain]?.security?.verifyHost"
-            @change="toggleVerifyHost"
-          />
-          {{ t("settings.verify_host") }}
-        </div>
-
-        <div class="flex items-center">
-          <HoppSmartToggle
-            :on="domainSettings[selectedDomain]?.security?.verifyPeer"
-            @change="toggleVerifyPeer"
-          />
-          {{ t("settings.verify_peer") }}
-        </div>
-
-        <div class="flex space-x-4">
-          <HoppButtonSecondary
-            :icon="IconFileBadge"
-            :label="t('settings.ca_certificates')"
-            outline
-            @click="showCACertModal = true"
-          />
-          <HoppButtonSecondary
-            :icon="IconFileKey"
-            :label="t('settings.client_certificates')"
-            outline
-            @click="showCertModal = true"
-          />
-        </div>
-
-        <div class="flex items-center">
-          <HoppSmartToggle
-            :on="!!domainSettings[selectedDomain]?.proxy"
-            @change="toggleProxy"
-          />
-          {{ t("settings.proxy") }}
-        </div>
-        <p class="my-1 text-secondaryLight">
-          {{ t("settings.proxy_capabilities") }}
-        </p>
-        <div class="flex flex-col space-y-2">
+      <div class="flex items-center">
+        <HoppSmartToggle
+          :on="!!domainSettings[selectedDomain]?.proxy"
+          @change="toggleProxy"
+        />
+        {{ t("settings.proxy") }}
+      </div>
+      <p class="my-1 text-secondaryLight">
+        {{ t("settings.proxy_capabilities") }}
+      </p>
+      <div
+        v-if="domainSettings[selectedDomain]?.proxy"
+        class="flex flex-col space-y-2"
+      >
+        <HoppSmartInput
+          :model-value="domainSettings[selectedDomain].proxy.url"
+          :placeholder="' '"
+          :label="t('settings.proxy_url')"
+          input-styles="floating-input !border-0"
+          @update:model-value="updateProxyUrl"
+        />
+        <div class="flex">
           <HoppSmartInput
-            v-if="domainSettings[selectedDomain]?.proxy"
-            :model-value="domainSettings[selectedDomain].proxy.url"
+            :model-value="domainSettings[selectedDomain].proxy.username"
             :placeholder="' '"
-            :label="t('settings.proxy_url')"
+            :label="t('authorization.username')"
             input-styles="floating-input !border-0"
-            @update:model-value="updateProxyUrl"
+            @update:model-value="updateProxyUsername"
           />
-          <div class="flex">
-            <HoppSmartInput
-              v-if="domainSettings[selectedDomain]?.proxy"
-              :model-value="domainSettings[selectedDomain].proxy.username"
-              :placeholder="' '"
-              :label="t('authorization.username')"
-              input-styles="floating-input !border-0"
-              @update:model-value="updateProxyUsername"
-            />
-            <HoppSmartInput
-              v-if="domainSettings[selectedDomain]?.proxy"
-              :model-value="domainSettings[selectedDomain].proxy.password"
-              :placeholder="' '"
-              :label="t('authorization.password')"
-              input-styles="floating-input !border-0"
-              :type="showProxyPassword ? 'text' : 'password'"
-              @update:model-value="updateProxyPassword"
-            >
-              <template #button>
-                <HoppButtonSecondary
-                  v-tippy="{ theme: 'tooltip' }"
-                  :title="
-                    showProxyPassword ? t('hide.password') : t('show.password')
-                  "
-                  :icon="showProxyPassword ? IconEye : IconEyeOff"
-                  @click="showProxyPassword = !showProxyPassword"
-                />
-              </template>
-            </HoppSmartInput>
-          </div>
+          <HoppSmartInput
+            :model-value="domainSettings[selectedDomain].proxy.password"
+            :placeholder="' '"
+            :label="t('authorization.password')"
+            input-styles="floating-input !border-0"
+            :type="showProxyPassword ? 'text' : 'password'"
+            @update:model-value="updateProxyPassword"
+          >
+            <template #button>
+              <HoppButtonSecondary
+                v-tippy="{ theme: 'tooltip' }"
+                :title="
+                  showProxyPassword ? t('hide.password') : t('show.password')
+                "
+                :icon="showProxyPassword ? IconEye : IconEyeOff"
+                @click="showProxyPassword = !showProxyPassword"
+              />
+            </template>
+          </HoppSmartInput>
         </div>
       </div>
     </div>
@@ -219,9 +217,9 @@
               :class="{ 'bg-primaryLight': domain === selectedDomain }"
               @click="selectDomain(domain)"
             >
-              <span class="py-2.5">{{
-                domain === "*" ? t("settings.global_defaults") : domain
-              }}</span>
+              <span class="py-2.5">
+                {{ domain === "*" ? t("settings.global_defaults") : domain }}
+              </span>
               <HoppButtonSecondary
                 v-if="domain !== '*'"
                 v-tippy="{
@@ -254,9 +252,7 @@
             class="mx-4 border border-divider rounded"
           >
             <div class="flex px-2 items-center justify-between">
-              <div class="flex space-x-2">
-                <div class="truncate">{{ selectedDomain }}</div>
-              </div>
+              <div class="truncate">{{ selectedDomain }}</div>
               <div class="flex items-center space-x-1">
                 <div class="text-secondaryLight mr-2">
                   {{
@@ -278,17 +274,15 @@
           </div>
 
           <HoppSmartTabs v-model="certType">
-            <HoppSmartTab id="pem" label="PEM">
+            <HoppSmartTab id="pem" :label="t('PEM')">
               <div class="p-4 space-y-4">
                 <div class="flex flex-col space-y-2">
                   <label>{{ t("settings.certificate") }}</label>
                   <HoppButtonSecondary
                     :icon="certFiles.pem_cert ? IconFile : IconPlus"
-                    :loading="false"
                     :label="
                       certFiles.pem_cert?.name || t('settings.select_file')
                     "
-                    filled
                     outline
                     @click="pickPEMCertificate"
                   />
@@ -297,26 +291,22 @@
                   <label>{{ t("settings.key") }}</label>
                   <HoppButtonSecondary
                     :icon="certFiles.pem_key ? IconFile : IconPlus"
-                    :loading="false"
                     :label="
                       certFiles.pem_key?.name || t('settings.select_file')
                     "
-                    filled
                     outline
                     @click="pickPEMKey"
                   />
                 </div>
               </div>
             </HoppSmartTab>
-            <HoppSmartTab id="pfx" label="PFX">
-              <div class="p-4 space-y-6">
+            <HoppSmartTab id="pfx" :label="t('PFX')">
+              <div class="p-4 space-y-4">
                 <div class="flex flex-col space-y-2">
                   <label>{{ t("settings.certificate") }}</label>
                   <HoppButtonSecondary
                     :icon="certFiles.pfx ? IconFile : IconPlus"
-                    :loading="false"
                     :label="certFiles.pfx?.name || t('settings.select_file')"
-                    filled
                     outline
                     @click="pickPFXCertificate"
                   />
@@ -324,7 +314,7 @@
                 <div class="border border-divider rounded">
                   <HoppSmartInput
                     v-model="pfxPassword"
-                    :type="'password'"
+                    type="password"
                     :label="t('settings.password')"
                     input-styles="floating-input !border-0"
                     :placeholder="' '"
@@ -377,7 +367,7 @@
                   v-tippy="{ theme: 'tooltip' }"
                   :icon="IconTrash"
                   :title="t('action.remove')"
-                  @click="removeCACertificate(index)"
+                  @click="removeCACertFromStore(index)"
                 />
               </div>
             </li>
@@ -385,12 +375,10 @@
 
           <div class="flex flex-col space-y-2 mx-4">
             <HoppButtonSecondary
-              :icon="caCertFile ? IconFile : IconPlus"
-              :loading="false"
-              :label="caCertFile?.name || t('settings.add_cert_file')"
-              filled
+              :icon="certFiles.ca.length ? IconFile : IconPlus"
+              :label="certFiles.ca[0]?.name || t('settings.add_cert_file')"
               outline
-              @click="pickCACertFile"
+              @click="pickCACertificate"
             />
           </div>
         </div>
@@ -399,7 +387,7 @@
         <div class="flex justify-end space-x-2">
           <HoppButtonPrimary
             :label="t('action.save')"
-            :disabled="!caCertFile"
+            :disabled="!certFiles.ca.length"
             @click="saveCACertificate"
           />
           <HoppButtonSecondary
@@ -414,10 +402,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue"
-import { useToast } from "@composables/toast"
 import { useService } from "dioc/vue"
 import { useI18n } from "@composables/i18n"
-import { refAutoReset, useFileDialog } from "@vueuse/core"
+import { useToast } from "@composables/toast"
+import { useCertificatePicker } from "@composables/picker"
 import { KernelInterceptorAgentStore } from "~/platform/std/kernel-interceptors/agent/store"
 
 import IconTrash from "~icons/lucide/trash"
@@ -439,124 +427,36 @@ const store = useService(KernelInterceptorAgentStore)
 const hasInitiatedRegistration = ref(false)
 const maskedAuthKey = ref("")
 const hasCheckedAgent = ref(false)
+const registrationOTP = ref(store.authKey.value ? null : "")
+const isRegistering = ref(false)
+
 const selectedDomain = ref("*")
 const domainSettings = reactive<Record<string, any>>({})
 const showDomainModal = ref(false)
 const showProxyPassword = ref(false)
 const newDomain = ref("")
 const domains = ref<string[]>(store.getDomains())
-const registrationOTP = ref(store.authKey.value ? null : "")
-const isRegistering = ref(false)
+
 const showCertModal = ref(false)
-const certType = ref<"pem" | "pfx">("pem")
-const pfxPassword = ref("")
-const certFiles = reactive({
-  pem_cert: null as File | null,
-  pem_key: null as File | null,
-  pfx: null as File | null,
-})
-
 const showCACertModal = ref(false)
-const caCertFile = ref<File | null>(null)
-const iconClear = refAutoReset<typeof IconRotateCCW | typeof IconCheck>(
-  IconRotateCCW,
-  1000
-)
 
-function useCertificatePickers() {
-  const pemCertPicker = useFileDialog({
-    accept: ".pem,.crt",
-    reset: true,
-    multiple: false,
-  })
-
-  const pemKeyPicker = useFileDialog({
-    accept: ".pem,.key",
-    reset: true,
-    multiple: false,
-  })
-
-  const pfxPicker = useFileDialog({
-    accept: ".pfx,.p12",
-    reset: true,
-    multiple: false,
-  })
-
-  const caCertPicker = useFileDialog({
-    accept: ".pem,.crt",
-    reset: true,
-    multiple: false,
-  })
-
-  function pickPEMCertificate() {
-    pemCertPicker.onChange((files) => {
-      const selectedFile = files?.item(0)
-      if (selectedFile) {
-        certFiles.pem_cert = selectedFile
-        certFiles.pfx = null
-      }
-      pemCertPicker.reset()
-    })
-    pemCertPicker.open()
-  }
-
-  function pickPEMKey() {
-    pemKeyPicker.onChange((files) => {
-      const selectedFile = files?.item(0)
-      if (selectedFile) {
-        certFiles.pem_key = selectedFile
-        certFiles.pfx = null
-      }
-      pemKeyPicker.reset()
-    })
-    pemKeyPicker.open()
-  }
-
-  function pickPFXCertificate() {
-    pfxPicker.onChange((files) => {
-      const selectedFile = files?.item(0)
-      if (selectedFile) {
-        certFiles.pfx = selectedFile
-        certFiles.pem_cert = null
-        certFiles.pem_key = null
-      }
-      pfxPicker.reset()
-    })
-    pfxPicker.open()
-  }
-
-  function pickCACertFile() {
-    caCertPicker.onChange((files) => {
-      const selectedFile = files?.item(0)
-      if (selectedFile) {
-        caCertFile.value = selectedFile
-      }
-      caCertPicker.reset()
-    })
-    caCertPicker.open()
-  }
-
-  return {
-    pickPEMCertificate,
-    pickPEMKey,
-    pickPFXCertificate,
-    pickCACertFile,
-  }
-}
-
-const { pickPEMCertificate, pickPEMKey, pickPFXCertificate, pickCACertFile } =
-  useCertificatePickers()
+const {
+  certFiles,
+  certType,
+  pfxPassword,
+  pickPEMCertificate,
+  pickPEMKey,
+  pickPFXCertificate,
+  pickCACertificate,
+  removeCACertificate,
+  reset: resetCertModal,
+  isValidCertConfig,
+} = useCertificatePicker()
 
 const selectedDomainDisplay = computed(() =>
   selectedDomain.value === "*"
     ? t("settings.global_defaults")
     : selectedDomain.value
-)
-
-const isValidCertConfig = computed(() =>
-  certType.value === "pem"
-    ? certFiles.pem_cert && certFiles.pem_key
-    : certFiles.pfx && pfxPassword.value
 )
 
 async function hashAuthKey(key: string): Promise<string> {
@@ -777,19 +677,12 @@ async function saveClientCertificate() {
   }
 }
 
-function resetCertModal() {
-  certFiles.pem_cert = null
-  certFiles.pem_key = null
-  certFiles.pfx = null
-  pfxPassword.value = ""
-  certType.value = "pem"
-}
-
 async function saveCACertificate() {
   try {
-    if (!caCertFile.value) return
+    if (certFiles.ca.length === 0) return
 
-    const certData = new Uint8Array(await caCertFile.value.arrayBuffer())
+    const lastCert = certFiles.ca[certFiles.ca.length - 1]
+    const certData = new Uint8Array(await lastCert.arrayBuffer())
     const currentCerts =
       domainSettings[selectedDomain.value]?.security?.certificates?.ca || []
 
@@ -803,13 +696,13 @@ async function saveCACertificate() {
     })
 
     showCACertModal.value = false
-    caCertFile.value = null
+    certFiles.ca = []
   } catch (e) {
     console.error("Failed to save CA certificate:", e)
   }
 }
 
-function removeCACertificate(index: number) {
+function removeCACertFromStore(index: number) {
   const currentCerts =
     domainSettings[selectedDomain.value]?.security?.certificates?.ca || []
   const newCerts = [...currentCerts]
