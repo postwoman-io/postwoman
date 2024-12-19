@@ -1,6 +1,8 @@
+import * as O from "fp-ts/Option"
+import { pipe } from "fp-ts/function"
 import { RelayResponse } from "@hoppscotch/kernel"
 import { RunQueryOptions } from "~/helpers/graphql/connection"
-import { parseJSON } from "~/helpers/kernel/common"
+import { parseBodyAsJSON } from "~/helpers/kernel/common"
 import { OperationType } from "@urql/core"
 
 export type HoppGQLSuccessResponse = {
@@ -59,25 +61,29 @@ export const GQLResponse = {
     response: RelayResponse,
     options: RunQueryOptions
   ): Promise<HoppGQLSuccessResponse | GQLTransformError> {
-    const parsedJSON = parseJSON(response.body)
-    if (!parsedJSON) {
-      return createTransformError("Invalid JSON response")
-    }
+    const parsedJSON = pipe(
+      response.body,
+      parseBodyAsJSON<unknown>,
+      O.fold(
+        () => createTransformError("Invalid JSON response"),
+        (json) => {
+          const validBody = validateResponse(json)
+          return validBody
+            ? {
+              type: "response" as const,
+              time: response.meta?.timing
+                ? response.meta.timing.end - response.meta.timing.start
+                : 0,
+              operationName: options.operationName,
+              operationType: determineOperationType(options.query),
+              data: JSON.stringify(validBody, null, 2),
+              rawQuery: options,
+            }
+            : createTransformError("Invalid GraphQL response structure")
+        }
+      )
+    )
 
-    const validBody = validateResponse(parsedJSON)
-    if (!validBody) {
-      return createTransformError("Invalid GraphQL response structure")
-    }
-
-    return {
-      type: "response" as const,
-      time: response.meta?.timing
-        ? response.meta.timing.end - response.meta.timing.start
-        : 0,
-      operationName: options.operationName,
-      operationType: determineOperationType(options.query),
-      data: JSON.stringify(validBody, null, 2),
-      rawQuery: options,
-    }
+    return parsedJSON
   },
 }

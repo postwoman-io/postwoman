@@ -44,7 +44,7 @@ function setupInterceptorSync(service: KernelInterceptorService): void {
 
 function syncServiceToSettings(service: KernelInterceptorService): void {
   watch(
-    () => service.current.value?.interceptorID,
+    () => service.current.value?.id,
     (id) => {
       applySetting(
         "CURRENT_KERNEL_INTERCEPTOR_ID",
