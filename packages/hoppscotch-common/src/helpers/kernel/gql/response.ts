@@ -70,15 +70,15 @@ export const GQLResponse = {
           const validBody = validateResponse(json)
           return validBody
             ? {
-              type: "response" as const,
-              time: response.meta?.timing
-                ? response.meta.timing.end - response.meta.timing.start
-                : 0,
-              operationName: options.operationName,
-              operationType: determineOperationType(options.query),
-              data: JSON.stringify(validBody, null, 2),
-              rawQuery: options,
-            }
+                type: "response" as const,
+                time: response.meta?.timing
+                  ? response.meta.timing.end - response.meta.timing.start
+                  : 0,
+                operationName: options.operationName,
+                operationType: determineOperationType(options.query),
+                data: JSON.stringify(validBody, null, 2),
+                rawQuery: options,
+              }
             : createTransformError("Invalid GraphQL response structure")
         }
       )

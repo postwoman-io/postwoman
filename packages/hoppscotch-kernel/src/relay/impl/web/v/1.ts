@@ -14,54 +14,20 @@ import type { VersionedAPI } from '@type/versioning'
 
 import { AwsV4Signer } from 'aws4fetch'
 import axios, { AxiosRequestConfig } from 'axios'
+
 import * as E from 'fp-ts/Either'
+import * as R from 'fp-ts/Record'
+import { pipe } from 'fp-ts/function'
 
 const isStatusCode = (status: number): status is StatusCode =>
   status >= 100 && status < 600
 
-// TODO: Use when encoding request in common.
-async function convert(formData: globalThis.FormData): Promise<FormData> {
-  const converted = new Map<string, FormDataValue[]>();
-
-  // SAFETY: `.entries` exists but Typescript doesn't know about it
-  // mainly because of
-  // ```ts
-  //  "lib": ["esnext", "DOM"],
-  //  ````
-  // @ts-ignore
-  for (const [key, value] of formData.entries()) {
-    if (!converted.has(key)) {
-      converted.set(key, []);
-    }
-
-    if (value instanceof File) {
-      converted.get(key)!.push({
-        kind: "file",
-        filename: value.name,
-        contentType: value.type || "application/octet-stream",
-        data: new Uint8Array(await value.arrayBuffer())
-      });
-    } else {
-      converted.get(key)!.push({
-        kind: "text",
-        value: value.toString()
-      });
-    }
-  }
-
-  return converted;
-}
-
-function normalizeHeaders(headers: Record<string, any>): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(headers)
-      .filter(([_, v]) => v !== undefined)
-      .map(([k, v]) => [
-        k,
-        String(v)
-      ])
+const normalizeHeaders = (headers: Record<string, any>): Record<string, string> =>
+  pipe(
+    headers,
+    R.filterWithIndex((_, v) => v !== undefined),
+    R.map(String)
   )
-}
 
 export const implementation: VersionedAPI<RelayV1> = {
   version: { major: 1, minor: 0, patch: 0 },

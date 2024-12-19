@@ -1,5 +1,11 @@
-import { Method, RelayRequest } from "@hoppscotch/kernel"
+import * as TE from "fp-ts/TaskEither"
+import * as T from "fp-ts/Task"
+import * as O from "fp-ts/Option"
+import { pipe } from "fp-ts/function"
+
+import { Method, RelayRequest, ContentType, AuthType } from "@hoppscotch/kernel"
 import { EffectiveHoppRESTRequest } from "~/helpers/utils/EffectiveURL"
+
 import {
   filterActive,
   transformAuth,
@@ -8,8 +14,37 @@ import {
 
 export const RESTRequest = {
   async toRequest(request: EffectiveHoppRESTRequest): Promise<RelayRequest> {
-    const auth = await transformAuth(request.auth)
-    const content = await transformContent(request.body)
+    const perhapsAuth: O.Option<AuthType> = await pipe(
+      transformAuth(request.auth),
+      TE.fold(
+        (_error) => T.of(O.none),
+        (result) => T.of(result)
+      )
+    )()
+
+    const auth = pipe(
+      perhapsAuth,
+      O.fold(
+        () => undefined,
+        (c) => c
+      )
+    )
+
+    const perhapsContent: O.Option<ContentType> = await pipe(
+      transformContent(request.body),
+      TE.fold(
+        (_error) => T.of(O.none),
+        (result) => T.of(result)
+      )
+    )()
+
+    const content = pipe(
+      perhapsContent,
+      O.fold(
+        () => undefined,
+        (c) => c
+      )
+    )
 
     const headers = filterActive(request.effectiveFinalHeaders)
     const params = filterActive(request.effectiveFinalParams)

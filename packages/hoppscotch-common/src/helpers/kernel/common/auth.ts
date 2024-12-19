@@ -1,195 +1,268 @@
 import { HoppRESTRequest, HoppRESTAuthOAuth2 } from "@hoppscotch/data"
 import { AuthType } from "@hoppscotch/kernel"
+import * as E from "fp-ts/Either"
+import * as O from "fp-ts/Option"
+import * as TE from "fp-ts/TaskEither"
+import { flow, pipe } from "fp-ts/function"
 
 type HoppAuth = HoppRESTRequest["auth"]
 type OAuth2GrantType = HoppRESTAuthOAuth2["grantTypeInfo"]
 
-const isBasicAuth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "basic" } => auth.authType === "basic"
+const isAuthActive = (auth: HoppAuth): boolean =>
+  auth.authActive && auth.authType !== "none" && auth.authType !== "inherit"
 
-const isBearerAuth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "bearer" } => auth.authType === "bearer"
-
-const isApiKeyAuth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "api-key" } => auth.authType === "api-key"
-
-const isAwsAuth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "aws-signature" } =>
-  auth.authType === "aws-signature"
-
-const isDigestAuth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "digest" } => auth.authType === "digest"
-
-const isOAuth2Auth = (
-  auth: HoppAuth
-): auth is HoppAuth & { authType: "oauth-2" } => auth.authType === "oauth-2"
-
-const isAuthCodeGrant = (
-  grant: OAuth2GrantType
-): grant is Extract<OAuth2GrantType, { grantType: "AUTHORIZATION_CODE" }> =>
-  grant.grantType === "AUTHORIZATION_CODE"
-
-const isClientCredentialsGrant = (
-  grant: OAuth2GrantType
-): grant is Extract<OAuth2GrantType, { grantType: "CLIENT_CREDENTIALS" }> =>
-  grant.grantType === "CLIENT_CREDENTIALS"
-
-const isPasswordGrant = (
-  grant: OAuth2GrantType
-): grant is Extract<OAuth2GrantType, { grantType: "PASSWORD" }> =>
-  grant.grantType === "PASSWORD"
-
-const isImplicitGrant = (
-  grant: OAuth2GrantType
-): grant is Extract<OAuth2GrantType, { grantType: "IMPLICIT" }> =>
-  grant.grantType === "IMPLICIT"
-
-const processBasic = (auth: HoppAuth & { authType: "basic" }): AuthType => ({
-  kind: "basic",
-  username: auth.username,
-  password: auth.password,
-})
-
-const processBearer = (auth: HoppAuth & { authType: "bearer" }): AuthType => ({
-  kind: "bearer",
-  token: auth.token,
-})
-
-const processApiKey = (auth: HoppAuth & { authType: "api-key" }): AuthType => ({
-  kind: "apikey",
-  key: auth.key,
-  value: auth.value,
-  in: auth.addTo === "HEADERS" ? "header" : "query",
-})
-
-const processAWS = (
-  auth: HoppAuth & { authType: "aws-signature" }
-): AuthType => ({
-  kind: "aws",
-  accessKey: auth.accessKey,
-  secretKey: auth.secretKey,
-  region: auth.region,
-  service: auth.serviceName,
-  sessionToken: auth.serviceToken,
-  in: auth.addTo === "HEADERS" ? "header" : "query",
-})
-
-const processDigest = (auth: HoppAuth & { authType: "digest" }): AuthType => ({
-  kind: "digest",
-  username: auth.username,
-  password: auth.password,
-  realm: auth.realm,
-  nonce: auth.nonce,
-  algorithm: auth.algorithm === "MD5" ? "MD5" : "SHA-256",
-  qop: auth.qop,
-  nc: auth.nc,
-  cnonce: auth.cnonce,
-  opaque: auth.opaque,
-})
-
-const processOAuth2Grant = (grant: OAuth2GrantType): AuthType["grantType"] => {
-  if (isAuthCodeGrant(grant)) {
-    return {
-      kind: "authorization_code",
-      authEndpoint: grant.authEndpoint,
-      tokenEndpoint: grant.tokenEndpoint,
-      clientId: grant.clientID,
-      clientSecret: grant.clientSecret,
-    }
-  }
-
-  if (isClientCredentialsGrant(grant)) {
-    return {
-      kind: "client_credentials",
-      tokenEndpoint: grant.authEndpoint,
-      clientId: grant.clientID,
-      clientSecret: grant.clientSecret,
-    }
-  }
-
-  if (isPasswordGrant(grant)) {
-    return {
-      kind: "password",
-      tokenEndpoint: grant.authEndpoint,
-      username: grant.username,
-      password: grant.password,
-    }
-  }
-
-  if (isImplicitGrant(grant)) {
-    return {
-      kind: "implicit",
-      authEndpoint: grant.authEndpoint,
-      clientId: grant.clientID,
-    }
-  }
-
-  throw new Error("Invalid grant type")
-}
-
-const processOAuth2 = (auth: HoppAuth & { authType: "oauth-2" }): AuthType => ({
-  kind: "oauth2",
-  accessToken: auth.grantTypeInfo.token,
-  refreshToken:
-    "refreshToken" in auth.grantTypeInfo
-      ? auth.grantTypeInfo.refreshToken
-      : undefined,
-  grantType: processOAuth2Grant(auth.grantTypeInfo),
-})
-
-const AuthProcessors = {
-  basic: {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isBasicAuth(auth)) throw new Error("Invalid basic auth")
-      return processBasic(auth)
-    },
-  },
-  bearer: {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isBearerAuth(auth)) throw new Error("Invalid bearer auth")
-      return processBearer(auth)
-    },
-  },
-  "api-key": {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isApiKeyAuth(auth)) throw new Error("Invalid API key auth")
-      return processApiKey(auth)
-    },
-  },
-  "aws-signature": {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isAwsAuth(auth)) throw new Error("Invalid AWS auth")
-      return processAWS(auth)
-    },
-  },
-  digest: {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isDigestAuth(auth)) throw new Error("Invalid digest auth")
-      return processDigest(auth)
-    },
-  },
-  "oauth-2": {
-    process: (auth: HoppAuth): AuthType => {
-      if (!isOAuth2Auth(auth)) throw new Error("Invalid OAuth2 auth")
-      return processOAuth2(auth)
-    },
+const Guards = {
+  basic: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "basic" } =>
+        auth.authType === "basic"
+    )
+  ),
+  bearer: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "bearer" } =>
+        auth.authType === "bearer"
+    )
+  ),
+  apiKey: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "api-key" } =>
+        auth.authType === "api-key"
+    )
+  ),
+  aws: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "aws-signature" } =>
+        auth.authType === "aws-signature"
+    )
+  ),
+  digest: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "digest" } =>
+        auth.authType === "digest"
+    )
+  ),
+  oauth2: flow(
+    O.fromPredicate(
+      (auth: HoppAuth): auth is HoppAuth & { authType: "oauth-2" } =>
+        auth.authType === "oauth-2"
+    )
+  ),
+  grants: {
+    authCode: flow(
+      O.fromPredicate(
+        (
+          g: OAuth2GrantType
+        ): g is Extract<OAuth2GrantType, { grantType: "AUTHORIZATION_CODE" }> =>
+          g.grantType === "AUTHORIZATION_CODE"
+      )
+    ),
+    clientCreds: flow(
+      O.fromPredicate(
+        (
+          g: OAuth2GrantType
+        ): g is Extract<OAuth2GrantType, { grantType: "CLIENT_CREDENTIALS" }> =>
+          g.grantType === "CLIENT_CREDENTIALS"
+      )
+    ),
+    password: flow(
+      O.fromPredicate(
+        (
+          g: OAuth2GrantType
+        ): g is Extract<OAuth2GrantType, { grantType: "PASSWORD" }> =>
+          g.grantType === "PASSWORD"
+      )
+    ),
+    implicit: flow(
+      O.fromPredicate(
+        (
+          g: OAuth2GrantType
+        ): g is Extract<OAuth2GrantType, { grantType: "IMPLICIT" }> =>
+          g.grantType === "IMPLICIT"
+      )
+    ),
   },
 }
 
-export const transformAuth = async (auth: HoppAuth): Promise<AuthType> => {
-  if (
-    !auth.authActive ||
-    auth.authType === "none" ||
-    auth.authType === "inherit"
-  ) {
-    return { kind: "none" }
-  }
+type AuthProcessor<T extends HoppAuth = HoppAuth> = (
+  auth: T
+) => E.Either<Error, AuthType>
 
-  const processor = AuthProcessors[auth.authType]
-  return processor ? processor.process(auth) : { kind: "none" }
+const Processors: {
+  basic: AuthProcessor
+  bearer: AuthProcessor
+  apiKey: AuthProcessor
+  aws: AuthProcessor
+  digest: AuthProcessor
+  oauth2: {
+    processGrant: (
+      grant: OAuth2GrantType
+    ) => E.Either<Error, AuthType["grantType"]>
+    process: AuthProcessor
+  }
+} = {
+  basic: flow(
+    Guards.basic,
+    O.map((a) => ({
+      kind: "basic" as const,
+      username: a.username,
+      password: a.password,
+    })),
+    E.fromOption(() => new Error("Invalid basic auth"))
+  ),
+
+  bearer: flow(
+    Guards.bearer,
+    O.map((a) => ({
+      kind: "bearer" as const,
+      token: a.token,
+    })),
+    E.fromOption(() => new Error("Invalid bearer auth"))
+  ),
+
+  apiKey: flow(
+    Guards.apiKey,
+    O.map((a) => ({
+      kind: "apikey" as const,
+      key: a.key,
+      value: a.value,
+      in: a.addTo === "HEADERS" ? "header" : "query",
+    })),
+    E.fromOption(() => new Error("Invalid API key auth"))
+  ),
+
+  aws: flow(
+    Guards.aws,
+    O.map((a) => ({
+      kind: "aws" as const,
+      accessKey: a.accessKey,
+      secretKey: a.secretKey,
+      region: a.region,
+      service: a.serviceName,
+      sessionToken: a.serviceToken,
+      in: a.addTo === "HEADERS" ? "header" : "query",
+    })),
+    E.fromOption(() => new Error("Invalid AWS auth"))
+  ),
+
+  digest: flow(
+    Guards.digest,
+    O.map((a) => ({
+      kind: "digest" as const,
+      username: a.username,
+      password: a.password,
+      realm: a.realm,
+      nonce: a.nonce,
+      algorithm: a.algorithm === "MD5" ? "MD5" : "SHA-256",
+      qop: a.qop,
+      nc: a.nc,
+      cnonce: a.cnonce,
+      opaque: a.opaque,
+    })),
+    E.fromOption(() => new Error("Invalid digest auth"))
+  ),
+
+  oauth2: {
+    processGrant: (
+      grant: OAuth2GrantType
+    ): E.Either<Error, AuthType["grantType"]> =>
+      pipe(
+        grant,
+        (g) =>
+          pipe(
+            Guards.grants.authCode(g),
+            O.map((g) => ({
+              kind: "authorization_code" as const,
+              authEndpoint: g.authEndpoint,
+              tokenEndpoint: g.tokenEndpoint,
+              clientId: g.clientID,
+              clientSecret: g.clientSecret,
+            }))
+          ) ??
+          pipe(
+            Guards.grants.clientCreds(g),
+            O.map((g) => ({
+              kind: "client_credentials" as const,
+              tokenEndpoint: g.authEndpoint,
+              clientId: g.clientID,
+              clientSecret: g.clientSecret,
+            }))
+          ) ??
+          pipe(
+            Guards.grants.password(g),
+            O.map((g) => ({
+              kind: "password" as const,
+              tokenEndpoint: g.authEndpoint,
+              username: g.username,
+              password: g.password,
+            }))
+          ) ??
+          pipe(
+            Guards.grants.implicit(g),
+            O.map((g) => ({
+              kind: "implicit" as const,
+              authEndpoint: g.authEndpoint,
+              clientId: g.clientID,
+            }))
+          ) ??
+          O.none,
+        E.fromOption(() => new Error("Invalid grant type"))
+      ),
+
+    process: flow(
+      Guards.oauth2,
+      E.fromOption(() => new Error("Invalid OAuth2 auth")),
+      E.chain((a) =>
+        pipe(
+          Processors.oauth2.processGrant(a.grantTypeInfo),
+          E.map((grantType) => ({
+            kind: "oauth2" as const,
+            accessToken: a.grantTypeInfo.token,
+            refreshToken:
+              "refreshToken" in a.grantTypeInfo
+                ? a.grantTypeInfo.refreshToken
+                : undefined,
+            grantType,
+          }))
+        )
+      )
+    ),
+  },
 }
+
+const getProcessor = (
+  auth: HoppAuth
+): O.Option<(auth: HoppAuth) => E.Either<Error, AuthType>> =>
+  pipe(
+    O.fromNullable(auth.authType),
+    O.chain((type) => {
+      switch (type) {
+        case "basic":
+          return O.some(Processors.basic)
+        case "bearer":
+          return O.some(Processors.bearer)
+        case "api-key":
+          return O.some(Processors.apiKey)
+        case "aws-signature":
+          return O.some(Processors.aws)
+        case "digest":
+          return O.some(Processors.digest)
+        case "oauth-2":
+          return O.some(Processors.oauth2.process)
+        default:
+          return O.none
+      }
+    })
+  )
+
+const defaultAuth: AuthType = { kind: "none" }
+
+export const transformAuth = (auth: HoppAuth): TE.TaskEither<Error, AuthType> =>
+  pipe(
+    auth,
+    O.fromPredicate(isAuthActive),
+    O.chain(getProcessor),
+    O.map((processor) => processor(auth)),
+    O.getOrElse(() => E.right(defaultAuth)),
+    TE.fromEither
+  )
