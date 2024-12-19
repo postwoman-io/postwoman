@@ -68,6 +68,7 @@ const initClientCredentialsOAuthFlow = async (
   }
 
   const jsonResponse = decodeResponseAsJSON(res.right)
+
   if (E.isLeft(jsonResponse)) return E.left("AUTH_TOKEN_REQUEST_FAILED")
 
   const withAccessTokenSchema = z.object({
