@@ -1,19 +1,20 @@
 import { markRaw } from "vue"
-import type { RelayRequest } from "@hoppscotch/kernel"
-import { Service } from "dioc"
+import * as E from "fp-ts/Either"
+import { pipe } from "fp-ts/function"
+import { getI18n } from "~/modules/i18n"
+import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import type { RelayCapabilities, RelayRequest } from "@hoppscotch/kernel"
 import { Relay } from "~/kernel/relay"
-import InterceptorsErrorPlaceholder from "~/components/interceptors/ErrorPlaceholder.vue"
-import SettingsNative from "~/components/settings/Native.vue"
-import { KernelInterceptorNativeStore } from "./store"
+import { Service } from "dioc"
 import type {
   KernelInterceptor,
   ExecutionResult,
   KernelInterceptorError,
 } from "~/services/kernel-interceptor.service"
-import * as E from "fp-ts/Either"
-import { pipe } from "fp-ts/function"
-import { getI18n } from "~/modules/i18n"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { CookieJarService } from "~/services/cookie-jar.service"
+import InterceptorsErrorPlaceholder from "~/components/interceptors/ErrorPlaceholder.vue"
+import SettingsNative from "~/components/settings/Native.vue"
+import { KernelInterceptorNativeStore } from "./store"
 
 export class NativeKernelInterceptorService
   extends Service
@@ -22,12 +23,44 @@ export class NativeKernelInterceptorService
   public static readonly ID = "NATIVE_KERNEL_INTERCEPTOR_SERVICE"
 
   private readonly store = this.bind(KernelInterceptorNativeStore)
+  private readonly cookieJar = this.bind(CookieJarService)
 
   public readonly id = "native"
   public readonly name = (t: ReturnType<typeof getI18n>) =>
     t("interceptor.native.name")
   public readonly selectable = { type: "selectable" as const }
-  public readonly capabilities = Relay.capabilities()
+  public readonly capabilities: RelayCapabilities = {
+    method: new Set([
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+      "HEAD",
+      "OPTIONS",
+    ]),
+    header: new Set(["stringvalue", "arrayvalue", "multivalue"]),
+    content: new Set([
+      "text",
+      "json",
+      "xml",
+      "form",
+      "binary",
+      "multipart",
+      "urlencoded",
+      "compression",
+    ]),
+    auth: new Set(["basic", "bearer", "apikey"]),
+    security: new Set([
+      "clientcertificates",
+      "cacertificates",
+      "certificatevalidation",
+      "hostverification",
+      "peerverification",
+    ]),
+    proxy: new Set(["http", "https", "authentication", "certificates"]),
+    advanced: new Set(["redirects", "cookies"]),
+  } as const
   public readonly settingsEntry = markRaw({
     title: (t: ReturnType<typeof getI18n>) =>
       t("interceptor.native.settings_title"),
@@ -40,6 +73,16 @@ export class NativeKernelInterceptorService
     const effectiveRequest = this.store.completeRequest(
       preProcessRelayRequest(request)
     )
+    const relevantCookies = this.cookieJar.getCookiesForURL(
+      new URL(effectiveRequest.url!)
+    )
+
+    if (relevantCookies.length > 0) {
+      effectiveRequest.headers!["Cookie"] = relevantCookies
+        .map((cookie) => `${cookie.name!}=${cookie.value!}`)
+        .join(";")
+    }
+
     const relayExecution = Relay.execute(effectiveRequest)
 
     const response = pipe(relayExecution.response, (promise) =>

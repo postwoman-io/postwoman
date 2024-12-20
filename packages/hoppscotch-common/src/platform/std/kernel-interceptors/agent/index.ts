@@ -21,6 +21,7 @@ import { UIExtensionService } from "~/services/ui-extension.service"
 import AgentRootUIExtension from "~/components/interceptors/agent/RootExt.vue"
 import SettingsAgent from "~/components/settings/Agent.vue"
 import InterceptorsErrorPlaceholder from "~/components/interceptors/ErrorPlaceholder.vue"
+import { CookieJarService } from "~/services/cookie-jar.service"
 
 export class AgentKernelInterceptorService
   extends Service
@@ -29,7 +30,7 @@ export class AgentKernelInterceptorService
   public static readonly ID = "AGENT_KERNEL_INTERCEPTOR_SERVICE"
 
   private store = this.bind(KernelInterceptorAgentStore)
-  private uiExtensionService = this.bind(UIExtensionService)
+  private readonly cookieJar = this.bind(CookieJarService)
 
   public readonly id = "agent"
   public readonly name = (t: ReturnType<typeof getI18n>) =>
@@ -66,17 +67,13 @@ export class AgentKernelInterceptorService
       "peerverification",
     ]),
     proxy: new Set(["http", "https", "authentication", "certificates"]),
-    advanced: new Set(["redirects"]),
+    advanced: new Set(["redirects", "cookies"]),
   } as const
   public readonly settingsEntry = markRaw({
     title: (t: ReturnType<typeof getI18n>) =>
       t("interceptor.agent.settings_title"),
     component: SettingsAgent,
   })
-
-  override onServiceInit() {
-    this.uiExtensionService.addRootUIExtension(AgentRootUIExtension)
-  }
 
   public execute(request: RelayRequest): ExecutionResult {
     const reqID = Date.now()
@@ -123,8 +120,21 @@ export class AgentKernelInterceptorService
         throw new Error("Agent not running")
       }
 
+      const effectiveRequest = this.store.completeRequest(
+        preProcessRelayRequest(request)
+      )
+      const relevantCookies = this.cookieJar.getCookiesForURL(
+        new URL(effectiveRequest.url!)
+      )
+
+      if (relevantCookies.length > 0) {
+        effectiveRequest.headers!["Cookie"] = relevantCookies
+          .map((cookie) => `${cookie.name!}=${cookie.value!}`)
+          .join(";")
+      }
+
       const [nonceB16, encryptedReq] = await this.store.encryptRequest(
-        preProcessRelayRequest(request),
+        effectiveRequest,
         reqID
       )
 
