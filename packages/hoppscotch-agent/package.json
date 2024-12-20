@@ -16,6 +16,7 @@
     "@vueuse/core": "^11.1.0",
     "axios": "^1.7.7",
     "fp-ts": "^2.16.9",
+    "lodash-es": "4.17.21",
     "vue": "3.3.9"
   },
   "devDependencies": {
@@ -29,6 +30,7 @@
     "typescript": "^5.6.3",
     "unplugin-icons": "^0.19.3",
     "vite": "^5.4.8",
+    "@types/lodash-es": "4.17.12",
     "vue-tsc": "^2.1.6"
   }
 }

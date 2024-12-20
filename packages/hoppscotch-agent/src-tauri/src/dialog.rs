@@ -10,13 +10,13 @@ pub fn panic(msg: &str) {
         .show_alert()
         .unwrap_or_default();
 
-    log::error!("{}: {}", FATAL_ERROR, msg);
+    tracing::error!("{}: {}", FATAL_ERROR, msg);
 
     panic!("{}: {}", FATAL_ERROR, msg);
 }
 
 pub fn info(msg: &str) {
-    log::info!("{}", msg);
+    tracing::info!("{}", msg);
 
     MessageDialog::new()
         .set_type(MessageType::Info)
@@ -27,7 +27,7 @@ pub fn info(msg: &str) {
 }
 
 pub fn warn(msg: &str) {
-    log::warn!("{}", msg);
+    tracing::warn!("{}", msg);
 
     MessageDialog::new()
         .set_type(MessageType::Warning)
@@ -38,7 +38,7 @@ pub fn warn(msg: &str) {
 }
 
 pub fn error(msg: &str) {
-    log::error!("{}", msg);
+    tracing::error!("{}", msg);
 
     MessageDialog::new()
         .set_type(MessageType::Error)
