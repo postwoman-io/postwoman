@@ -3,8 +3,7 @@ import { ref } from "vue"
 import * as E from "fp-ts/Either"
 import axios from "axios"
 import { Store } from "~/kernel/store"
-import { PersistenceService } from "~/services/persistence"
-import { RelayRequest, RelayResponse } from "@hoppscotch/kernel"
+import type { RelayRequest, RelayResponse } from "@hoppscotch/kernel"
 import { x25519 } from "@noble/curves/ed25519"
 import { base16 } from "@scure/base"
 
@@ -12,59 +11,42 @@ const STORE_NAMESPACE = "interceptors.agent.v1"
 
 const STORE_KEYS = {
   SETTINGS: "settings",
-  AUTH_KEY: "auth_key",
-  SHARED_SECRET: "shared_secret",
-  PROXY: "proxy_info",
-  VALIDATE_SSL: "validate_ssl",
-  CA_STORE: "ca_store",
-  CLIENT_CERTS: "client_certs",
 } as const
+
+type DomainSetting = {
+  version: "v1"
+  security?: Required<RelayRequest>["security"]
+  proxy?: Required<RelayRequest>["proxy"]
+}
 
 interface StoredData {
   version: string
-  domains: Record<string, AgentDomainSetting>
+  auth: {
+    key: string | null
+    sharedSecret: string | null
+  }
+  domains: Record<string, DomainSetting>
   lastUpdated: string
 }
 
-type AgentDomainSetting = {
-  version: "v1"
-  security?: {
-    validateCertificates: boolean
-    verifyHost: boolean
-    verifyPeer: boolean
-  }
-  proxy?: {
-    url: string
-    auth?: {
-      username: string
-      password: string
-    }
-    certificates?: {
-      ca?: Uint8Array[]
-      client?: {
-        kind: "pem" | "pfx"
-        cert: Uint8Array
-        key?: Uint8Array
-        password?: string
-      }
-    }
-  }
+const defaultDomainConfig: Pick<RelayRequest, "proxy" | "security"> = {
+  security: {
+    validateCertificates: true,
+    verifyHost: true,
+    verifyPeer: true,
+  },
+  proxy: undefined,
 }
 
 export class KernelInterceptorAgentStore extends Service {
   public static readonly ID = "AGENT_INTERCEPTOR_STORE"
   private static readonly GLOBAL_DOMAIN = "*"
-  private static readonly DEFAULT_GLOBAL_SETTINGS: AgentDomainSetting = {
+  private static readonly DEFAULT_GLOBAL_SETTINGS: DomainSetting = {
+    ...defaultDomainConfig,
     version: "v1",
-    security: {
-      validateCertificates: true,
-      verifyHost: true,
-      verifyPeer: true,
-    },
   }
 
-  private persistenceService = this.bind(PersistenceService)
-  private domainSettings = new Map<string, AgentDomainSetting>()
+  private domainSettings = new Map<string, DomainSetting>()
 
   public isAgentRunning = ref(false)
   public authKey = ref<string | null>(null)
@@ -77,21 +59,21 @@ export class KernelInterceptorAgentStore extends Service {
       return
     }
 
-    await this.loadSettings()
-    await this.initializeAuth()
-
+    await this.loadStore()
     this.setupWatchers()
   }
 
-  private async loadSettings(): Promise<void> {
+  private async loadStore(): Promise<void> {
     const loadResult = await Store.get<StoredData>(
       STORE_NAMESPACE,
       STORE_KEYS.SETTINGS
     )
 
     if (E.isRight(loadResult) && loadResult.right) {
-      const storedData = loadResult.right
-      this.domainSettings = new Map(Object.entries(storedData.domains))
+      const store = loadResult.right
+      this.domainSettings = new Map(Object.entries(store.domains))
+      this.authKey.value = store.auth.key
+      this.sharedSecretB16.value = store.auth.sharedSecret
     }
 
     if (!this.domainSettings.has(KernelInterceptorAgentStore.GLOBAL_DOMAIN)) {
@@ -99,20 +81,8 @@ export class KernelInterceptorAgentStore extends Service {
         KernelInterceptorAgentStore.GLOBAL_DOMAIN,
         KernelInterceptorAgentStore.DEFAULT_GLOBAL_SETTINGS
       )
-      await this.persistSettings()
+      await this.persistStore()
     }
-  }
-
-  private async initializeAuth() {
-    const persistedAuthKey = this.persistenceService.getLocalConfig(
-      STORE_KEYS.AUTH_KEY
-    )
-    if (persistedAuthKey) this.authKey.value = persistedAuthKey
-
-    const sharedSecret = this.persistenceService.getLocalConfig(
-      STORE_KEYS.SHARED_SECRET
-    )
-    if (sharedSecret) this.sharedSecretB16.value = sharedSecret
   }
 
   private setupWatchers() {
@@ -120,16 +90,22 @@ export class KernelInterceptorAgentStore extends Service {
       "change",
       async ({ value }) => {
         if (value) {
-          const storedData = value as StoredData
-          this.domainSettings = new Map(Object.entries(storedData.domains))
+          const store = value as StoredData
+          this.domainSettings = new Map(Object.entries(store.domains))
+          this.authKey.value = store.auth.key
+          this.sharedSecretB16.value = store.auth.sharedSecret
         }
       }
     )
   }
 
-  private async persistSettings(): Promise<void> {
-    const storedData: StoredData = {
+  private async persistStore(): Promise<void> {
+    const store: StoredData = {
       version: "v1",
+      auth: {
+        key: this.authKey.value,
+        sharedSecret: this.sharedSecretB16.value,
+      },
       domains: Object.fromEntries(this.domainSettings),
       lastUpdated: new Date().toISOString(),
     }
@@ -137,11 +113,57 @@ export class KernelInterceptorAgentStore extends Service {
     const saveResult = await Store.set(
       STORE_NAMESPACE,
       STORE_KEYS.SETTINGS,
-      storedData
+      store
     )
     if (E.isLeft(saveResult)) {
-      console.error("[AgentStore] Failed to save settings:", saveResult.left)
+      console.error("[AgentStore] Failed to save store:", saveResult.left)
     }
+  }
+
+  private mergeSecurity(
+    ...settings: (Required<RelayRequest>["security"] | undefined)[]
+  ): Required<RelayRequest>["security"] | undefined {
+    return settings.reduce(
+      (acc, setting) => (setting ? { ...acc, ...setting } : acc),
+      undefined as Required<RelayRequest>["security"] | undefined
+    )
+  }
+
+  private mergeProxy(
+    ...settings: (Required<RelayRequest>["proxy"] | undefined)[]
+  ): Required<RelayRequest>["proxy"] | undefined {
+    return settings.reduce(
+      (acc, setting) => (setting ? { ...acc, ...setting } : acc),
+      undefined as Required<RelayRequest>["proxy"] | undefined
+    )
+  }
+
+  private getMergedSettings(
+    domain: string
+  ): Pick<RelayRequest, "proxy" | "security"> {
+    const domainSettings = this.domainSettings.get(domain)
+    const globalSettings =
+      domain !== KernelInterceptorAgentStore.GLOBAL_DOMAIN
+        ? this.domainSettings.get(KernelInterceptorAgentStore.GLOBAL_DOMAIN)
+        : undefined
+
+    const result = {
+      security: this.mergeSecurity(
+        globalSettings?.security,
+        domainSettings?.security
+      ),
+      proxy: this.mergeProxy(globalSettings?.proxy, domainSettings?.proxy),
+    }
+
+    return result
+  }
+
+  public completeRequest(
+    request: Omit<RelayRequest, "proxy" | "security">
+  ): RelayRequest {
+    const host = new URL(request.url).host
+    const settings = this.getMergedSettings(host)
+    return { ...request, ...settings }
   }
 
   public async checkAgentStatus(): Promise<void> {
@@ -166,9 +188,7 @@ export class KernelInterceptorAgentStore extends Service {
 
     const response = await axios.post(
       "http://localhost:9119/receive-registration",
-      {
-        registration: otp,
-      }
+      { registration: otp }
     )
 
     if (response.data.message !== "Registration received and stored") {
@@ -203,12 +223,7 @@ export class KernelInterceptorAgentStore extends Service {
 
     this.authKey.value = newAuthKey
     this.sharedSecretB16.value = sharedSecretB16
-
-    this.persistenceService.setLocalConfig(STORE_KEYS.AUTH_KEY, newAuthKey)
-    this.persistenceService.setLocalConfig(
-      STORE_KEYS.SHARED_SECRET,
-      sharedSecretB16
-    )
+    await this.persistStore()
   }
 
   public async encryptRequest(
@@ -264,8 +279,7 @@ export class KernelInterceptorAgentStore extends Service {
       encryptedResponse
     )
 
-    const decryptedText = new TextDecoder().decode(decryptedBytes)
-    return JSON.parse(decryptedText)
+    return JSON.parse(new TextDecoder().decode(decryptedBytes))
   }
 
   public async cancelRequest(reqId: number): Promise<void> {
@@ -284,37 +298,38 @@ export class KernelInterceptorAgentStore extends Service {
     }
   }
 
-  public getDomainSettings(domain: string): AgentDomainSetting {
+  public getDomainSettings(domain: string): DomainSetting {
     return (
       this.domainSettings.get(domain) ?? {
-        ...KernelInterceptorAgentStore.DEFAULT_GLOBAL_SETTINGS,
+        ...defaultDomainConfig,
+        version: "v1",
       }
     )
   }
 
   public async saveDomainSettings(
     domain: string,
-    settings: Partial<AgentDomainSetting>
+    settings: Partial<DomainSetting>
   ): Promise<void> {
-    const updated: AgentDomainSetting = {
-      version: "v1",
+    const updatedSettings: DomainSetting = {
       ...settings,
+      version: "v1",
     }
 
-    this.domainSettings.set(domain, updated)
-    await this.persistSettings()
+    this.domainSettings.set(domain, updatedSettings)
+    await this.persistStore()
   }
 
   public async clearDomainSettings(domain: string): Promise<void> {
     this.domainSettings.delete(domain)
-    await this.persistSettings()
+    await this.persistStore()
   }
 
   public getDomains(): string[] {
     return Array.from(this.domainSettings.keys())
   }
 
-  public getAllDomainSettings(): Map<string, AgentDomainSetting> {
+  public getAllDomainSettings(): Map<string, DomainSetting> {
     return new Map(this.domainSettings)
   }
 }
