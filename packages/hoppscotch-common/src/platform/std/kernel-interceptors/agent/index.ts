@@ -25,8 +25,7 @@ import { CookieJarService } from "~/services/cookie-jar.service"
 
 export class AgentKernelInterceptorService
   extends Service
-  implements KernelInterceptor
-{
+  implements KernelInterceptor {
   public static readonly ID = "AGENT_KERNEL_INTERCEPTOR_SERVICE"
 
   private store = this.bind(KernelInterceptorAgentStore)
@@ -133,13 +132,14 @@ export class AgentKernelInterceptorService
           .join(";")
       }
 
+      console.log("[AGENT]: effectiveRequest", effectiveRequest);
       const [nonceB16, encryptedReq] = await this.store.encryptRequest(
         effectiveRequest,
         reqID
       )
 
       const response = await axios.post(
-        "http://localhost:9119/request",
+        "http://localhost:9119/execute",
         encryptedReq,
         {
           headers: {

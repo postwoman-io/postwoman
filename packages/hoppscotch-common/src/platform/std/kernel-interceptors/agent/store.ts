@@ -226,6 +226,34 @@ export class KernelInterceptorAgentStore extends Service {
     await this.persistStore()
   }
 
+  public async fetchRegistrationInfo(): Promise<{ registered_at: Date, auth_key_hash: string }> {
+    try {
+      const response = await axios.get(
+        "http://localhost:9119/registration",
+        {
+          headers: {
+            Authorization: `Bearer ${this.authKey.value}`,
+          },
+          responseType: 'arraybuffer'
+        }
+      )
+
+      const nonceB16 = response.headers["x-hopp-nonce"]
+      if (!nonceB16) {
+        throw new Error("No nonce received from server")
+      }
+
+      return await this.decryptResponse(nonceB16, response.data)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          this.authKey.value = null
+        }
+      }
+      throw error
+    }
+  }
+
   public async encryptRequest(
     request: RelayRequest,
     reqID: number
@@ -285,7 +313,7 @@ export class KernelInterceptorAgentStore extends Service {
   public async cancelRequest(reqId: number): Promise<void> {
     try {
       await axios.post(
-        `http://localhost:9119/cancel-request/${reqId}`,
+        `http://localhost:9119/cancel/${reqId}`,
         {},
         {
           headers: {

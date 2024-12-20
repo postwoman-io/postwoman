@@ -182,7 +182,7 @@ pub fn init_webview() {
     )
     .not()
     {
-        log::warn!("Declined to setup WebView.");
+        tracing::warn!("Declined to setup WebView.");
 
         std::process::exit(1);
     }
@@ -196,7 +196,7 @@ pub fn init_webview() {
         ));
 
         if let Err(e) = open_install_website() {
-            log::warn!("Failed to launch WebView website:\n{}", e);
+            tracing::warn!("Failed to launch WebView website:\n{}", e);
         }
 
         std::process::exit(1);
