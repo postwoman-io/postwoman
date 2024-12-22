@@ -226,17 +226,17 @@ export class KernelInterceptorAgentStore extends Service {
     await this.persistStore()
   }
 
-  public async fetchRegistrationInfo(): Promise<{ registered_at: Date, auth_key_hash: string }> {
+  public async fetchRegistrationInfo(): Promise<{
+    registered_at: Date
+    auth_key_hash: string
+  }> {
     try {
-      const response = await axios.get(
-        "http://localhost:9119/registration",
-        {
-          headers: {
-            Authorization: `Bearer ${this.authKey.value}`,
-          },
-          responseType: 'arraybuffer'
-        }
-      )
+      const response = await axios.get("http://localhost:9119/registration", {
+        headers: {
+          Authorization: `Bearer ${this.authKey.value}`,
+        },
+        responseType: "arraybuffer",
+      })
 
       const nonceB16 = response.headers["x-hopp-nonce"]
       if (!nonceB16) {

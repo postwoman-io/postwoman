@@ -32,7 +32,7 @@ in {
     jq
     nodejs_22
     nodePackages_latest.typescript-language-server
-    nodePackages_latest.vue-language-server
+    nodePackages_latest."@volar/vue-language-server"
     nodePackages_latest.prisma
     prisma-engines
     cargo-edit
@@ -178,29 +178,6 @@ in {
         "rust-src"
         "rustc-codegen-cranelift-preview"
       ];
-    };
-  };
-
-  services.postgres = {
-    enable = true;
-    package = pkgs.postgresql_16;
-    initialDatabases = [{ name = "hoppscotch"; }];
-    initialScript = ''
-      CREATE USER postgres WITH PASSWORD 'testpass' SUPERUSER;
-    '';
-    settings = {
-      max_connections = 100;
-      shared_buffers = "128MB";
-      effective_cache_size = "512MB";
-      maintenance_work_mem = "128MB";
-      checkpoint_completion_target = 0.9;
-      wal_buffers = "16MB";
-      default_statistics_target = 100;
-      random_page_cost = 1.1;
-      effective_io_concurrency = 200;
-      work_mem = "16MB";
-      min_wal_size = "1GB";
-      max_wal_size = "4GB";
     };
   };
 }

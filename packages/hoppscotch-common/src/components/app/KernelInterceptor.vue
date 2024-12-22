@@ -35,24 +35,25 @@
               {{ kernelInterceptor.selectable.reason.text(t) }}
             </p>
             <button
-              v-if="kernelInterceptor.selectable.action"
+              v-if="kernelInterceptor.selectable.reason.action"
               class="text-tiny text-accent hover:text-accentDark"
-              @click="kernelInterceptor.selectable.action.handler"
+              @click="kernelInterceptor.selectable.reason.action.onActionClick"
             >
-              {{ kernelInterceptor.selectable.action.text(t) }}
+              {{ kernelInterceptor.selectable.reason.action.text(t) }}
             </button>
           </template>
 
           <component
             :is="kernelInterceptor.selectable.reason.component"
-            v-else-if="kernelInterceptor.selectable.reason.type === 'component'"
-            v-bind="kernelInterceptor.selectable.reason.props"
+            v-else-if="kernelInterceptor.selectable.reason.type === 'custom'"
+            v-bind="kernelInterceptor.selectable.reason.props ?? {}"
           />
         </div>
 
         <component
           :is="kernelInterceptor.subtitle"
           v-if="kernelInterceptor.subtitle"
+          class="ml-8"
         />
       </div>
     </div>
@@ -87,6 +88,10 @@ const kernelInterceptors = computed(
 )
 
 const setKernelInterceptor = (id: string) => {
+  if (!kernelInterceptors.value.some((ki) => ki.id === id)) {
+    console.warn("Attempted to set an unknown interceptor:", id)
+    return
+  }
   kernelInterceptorService.setActive(id)
 }
 </script>
