@@ -1,6 +1,7 @@
 import { Service } from "dioc"
 import { Store } from "~/kernel/store"
 import * as E from "fp-ts/Either"
+import * as O from "fp-ts/Option"
 
 const STORE_NAMESPACE = "interceptors.extension.v1"
 const SETTINGS_KEY = "settings"
@@ -56,6 +57,14 @@ export class KernelInterceptorExtensionStore extends Service {
         }
       }
     )
+  }
+
+  public getExtensionVersion(): O.Option<ExtensionVersion> {
+    return O.fromNullable(this.settings.extensionVersion)
+  }
+
+  public getExtensionStatus(): ExtensionStatus {
+    return this.settings.status
   }
 
   private setupExtensionStatusListener(): void {

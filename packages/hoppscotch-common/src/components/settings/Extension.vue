@@ -12,26 +12,24 @@
       {{ t("settings.extension_ver_not_reported") }}
     </span>
   </div>
-  <div class="flex gap-2 py-4 w-fit">
+  <div class="flex gap-2 py-2 w-fit">
     <HoppSmartItem
       to="https://chrome.google.com/webstore/detail/hoppscotch-browser-extens/amknoiejhlmhancpahfcfcfhllgkpbld"
       blank
       :icon="IconChrome"
       label="Chrome"
-      :info-icon="hasChromeExtInstalled ? IconCheckCircle : null"
+      :info-icon="hasChromeExtInstalled ? IconCheckCircle : undefined"
       :active-info-icon="hasChromeExtInstalled"
       outline
-      class="w-28"
     />
     <HoppSmartItem
       to="https://addons.mozilla.org/en-US/firefox/addon/hoppscotch"
       blank
       :icon="IconFirefox"
       label="Firefox"
-      :info-icon="hasFirefoxExtInstalled ? IconCheckCircle : null"
+      :info-icon="hasFirefoxExtInstalled ? IconCheckCircle : undefined"
       :active-info-icon="hasFirefoxExtInstalled"
       outline
-      class="w-28"
     />
   </div>
 </template>

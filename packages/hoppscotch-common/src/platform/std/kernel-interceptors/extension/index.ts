@@ -1,9 +1,9 @@
-import { markRaw } from "vue"
+import { computed, markRaw } from "vue"
 import { Service } from "dioc"
 import type { RelayRequest, RelayResponse } from "@hoppscotch/kernel"
 import { body } from "@hoppscotch/kernel"
 import SettingsExtension from "~/components/settings/Extension.vue"
-import InterceptorsExtensionSubtitle from "~/components/interceptors/ExtensionSubtitle.vue"
+import SettingsExtensionSubtitle from "~/components/settings/ExtensionSubtitle.vue"
 import { KernelInterceptorExtensionStore } from "./store"
 import type {
   KernelInterceptor,
@@ -50,7 +50,13 @@ export class ExtensionKernelInterceptorService
     component: SettingsExtension,
   })
 
-  public readonly subtitle = markRaw(InterceptorsExtensionSubtitle)
+  public readonly subtitle = markRaw(SettingsExtensionSubtitle)
+  public readonly extensionStatus = computed(
+    () => this.store.getSettings().status
+  )
+  public readonly extensionVersion = computed(
+    () => this.store.getSettings().extensionVersion
+  )
 
   private async executeExtensionRequest(
     request: RelayRequest

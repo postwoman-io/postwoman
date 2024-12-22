@@ -1,81 +1,5 @@
 <template>
   <div class="flex flex-col">
-    <div class="flex flex-col">
-      <div
-        v-if="
-          !store.authKey.value &&
-          (!store.isAgentRunning.value || !hasCheckedAgent)
-        "
-        class="flex items-center space-x-2 py-2"
-      >
-        <div class="relative flex-1">
-          <span>{{ t("settings.agent_not_running") }}</span>
-        </div>
-        <HoppButtonSecondary
-          v-tippy="{ theme: 'tooltip' }"
-          :title="t('action.retry')"
-          :icon="IconRefresh"
-          outline
-          class="rounded"
-          @click="handleAgentCheck"
-        />
-      </div>
-      <div
-        v-else-if="!store.authKey.value && !hasInitiatedRegistration"
-        class="flex items-center space-x-2 py-2"
-      >
-        <div class="relative flex-1 text-accent">
-          <span>{{ t("settings.agent_running") }}</span>
-        </div>
-        <HoppButtonSecondary
-          v-tippy="{ theme: 'tooltip' }"
-          :title="t('action.register')"
-          :icon="IconPlus"
-          outline
-          class="rounded"
-          @click="initiateRegistration"
-        />
-      </div>
-      <div v-else-if="!store.authKey.value" class="flex items-center space-x-2 py-4">
-        <HoppSmartInput
-          v-model="registrationOTP"
-          :autofocus="false"
-          :placeholder="' '"
-          :disabled="isRegistering"
-          :label="t('settings.enter_otp')"
-          input-styles="input floating-input"
-          class="flex-1"
-        />
-        <HoppButtonSecondary
-          v-tippy="{ theme: 'tooltip' }"
-          :title="t('action.confirm')"
-          :icon="IconCheck"
-          :loading="isRegistering"
-          outline
-          class="rounded"
-          @click="register"
-        />
-      </div>
-      <div v-else class="flex items-center space-x-2 py-4">
-        <div class="relative flex-1">
-          <label
-            class="text-secondaryLight text-tiny absolute -top-2 left-2 px-1 bg-primary"
-          >{{ t("settings.agent_registered") }}</label>
-          <div
-            class="w-full p-2 border border-dividerLight rounded bg-primary text-secondaryDark cursor-text select-all"
-          >{{ maskedAuthKey }}</div>
-        </div>
-        <HoppButtonSecondary
-          v-tippy="{ theme: 'tooltip' }"
-          :title="t('settings.agent_reset_registration')"
-          :icon="iconClear"
-          outline
-          class="rounded"
-          @click="resetRegistration"
-        />
-      </div>
-    </div>
-
     <div class="flex items-center space-x-2 py-4">
       <h2 class="font-semibold flex-1">{{ selectedDomainDisplay }}</h2>
       <HoppButtonSecondary
@@ -131,11 +55,19 @@
       </div>
 
       <div class="flex items-center">
-        <HoppSmartToggle :on="!!domainSettings[selectedDomain]?.proxy" @change="toggleProxy" />
+        <HoppSmartToggle
+          :on="!!domainSettings[selectedDomain]?.proxy"
+          @change="toggleProxy"
+        />
         {{ t("settings.proxy") }}
       </div>
-      <p class="my-1 text-secondaryLight">{{ t("settings.proxy_capabilities") }}</p>
-      <div v-if="domainSettings[selectedDomain]?.proxy" class="flex flex-col space-y-2">
+      <p class="my-1 text-secondaryLight">
+        {{ t("settings.proxy_capabilities") }}
+      </p>
+      <div
+        v-if="domainSettings[selectedDomain]?.proxy"
+        class="flex flex-col space-y-2"
+      >
         <HoppSmartInput
           :model-value="domainSettings[selectedDomain].proxy.url"
           :placeholder="' '"
@@ -182,7 +114,11 @@
       <template #body>
         <div class="space-y-4 p-4">
           <div class="flex space-x-2">
-            <HoppSmartInput v-model="newDomain" :placeholder="'example.com'" class="flex-1" />
+            <HoppSmartInput
+              v-model="newDomain"
+              :placeholder="'example.com'"
+              class="flex-1"
+            />
             <HoppButtonSecondary
               v-tippy="{ theme: 'tooltip', content: t('settings.add_domain') }"
               :icon="IconPlus"
@@ -199,7 +135,9 @@
               :class="{ 'bg-primaryLight': domain === selectedDomain }"
               @click="selectDomain(domain)"
             >
-              <span class="py-2.5">{{ domain === "*" ? t("settings.global_defaults") : domain }}</span>
+              <span class="py-2.5">{{
+                domain === "*" ? t("settings.global_defaults") : domain
+              }}</span>
               <HoppButtonSecondary
                 v-if="domain !== '*'"
                 v-tippy="{
@@ -236,10 +174,10 @@
               <div class="flex items-center space-x-1">
                 <div class="text-secondaryLight mr-2">
                   {{
-                  domainSettings[selectedDomain]?.security?.certificates
-                  ?.client?.kind === "pem"
-                  ? "PEM"
-                  : "PFX/PKCS12"
+                    domainSettings[selectedDomain]?.security?.certificates
+                      ?.client?.kind === "pem"
+                      ? "PEM"
+                      : "PFX/PKCS12"
                   }}
                 </div>
                 <HoppButtonSecondary
@@ -312,7 +250,10 @@
             :disabled="!isValidCertConfig"
             @click="saveClientCertificate"
           />
-          <HoppButtonSecondary :label="t('action.cancel')" @click="showCertModal = false" />
+          <HoppButtonSecondary
+            :label="t('action.cancel')"
+            @click="showCertModal = false"
+          />
         </div>
       </template>
     </HoppSmartModal>
@@ -367,7 +308,10 @@
             :disabled="!certFiles.ca.length"
             @click="saveCACertificate"
           />
-          <HoppButtonSecondary :label="t('action.cancel')" @click="showCACertModal = false" />
+          <HoppButtonSecondary
+            :label="t('action.cancel')"
+            @click="showCACertModal = false"
+          />
         </div>
       </template>
     </HoppSmartModal>
@@ -376,7 +320,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue"
-import { refAutoReset } from "@vueuse/core"
 import { useService } from "dioc/vue"
 import { useI18n } from "@composables/i18n"
 import { useToast } from "@composables/toast"
@@ -391,17 +334,10 @@ import IconEyeOff from "~icons/lucide/eye-off"
 import IconSettings from "~icons/lucide/settings"
 import IconFileKey from "~icons/lucide/file-key"
 import IconFileBadge from "~icons/lucide/file-badge"
-import IconRotateCCW from "~icons/lucide/rotate-ccw"
-import IconCheck from "~icons/lucide/check"
-import IconRefresh from "~icons/lucide/refresh-cw"
 
 const t = useI18n()
 const toast = useToast()
 const store = useService(KernelInterceptorAgentStore)
-const iconClear = refAutoReset<typeof IconRotateCCW | typeof IconCheck>(
-  IconRotateCCW,
-  1000
-)
 
 const hasInitiatedRegistration = ref(false)
 const maskedAuthKey = ref("")
@@ -437,61 +373,6 @@ const selectedDomainDisplay = computed(() =>
     ? t("settings.global_defaults")
     : selectedDomain.value
 )
-
-async function handleAgentCheck() {
-  try {
-    await store.checkAgentStatus()
-    hasCheckedAgent.value = true
-    if (!store.isAgentRunning.value) {
-      toast.error(t("settings.agent_not_running"))
-    }
-  } catch (e) {
-    hasCheckedAgent.value = false
-    toast.error(t("settings.agent_check_failed"))
-  }
-}
-
-async function initiateRegistration() {
-  try {
-    await store.initiateRegistration()
-    hasInitiatedRegistration.value = true
-  } catch (e) {
-    toast.error(t("settings.registration_failed"))
-  }
-}
-
-async function checkAgentStatus() {
-  try {
-    await store.checkAgentStatus()
-    if (!store.isAgentRunning.value) {
-      toast.error(t("settings.agent_not_running"))
-    }
-  } catch (e) {
-    toast.error(t("settings.agent_check_failed"))
-  }
-}
-
-async function register() {
-  if (!registrationOTP.value) return
-  isRegistering.value = true
-  try {
-    await store.verifyRegistration(registrationOTP.value)
-    await updateMaskedAuthKey()
-    toast.success(t("settings.agent_registration_successful"))
-    registrationOTP.value = ""
-  } catch (e) {
-    toast.error(t("settings.registration_failed"))
-  } finally {
-    isRegistering.value = false
-  }
-}
-
-function resetRegistration() {
-  store.authKey.value = null
-  maskedAuthKey.value = ""
-  registrationOTP.value = ""
-  hasInitiatedRegistration.value = false
-}
 
 function addDomain() {
   if (newDomain.value) {

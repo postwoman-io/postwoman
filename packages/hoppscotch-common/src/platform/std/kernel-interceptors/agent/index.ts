@@ -17,15 +17,15 @@ import {
   ExecutionResult,
 } from "~/services/kernel-interceptor.service"
 import { KernelInterceptorAgentStore } from "./store"
-import { UIExtensionService } from "~/services/ui-extension.service"
-import AgentRootUIExtension from "~/components/interceptors/agent/RootExt.vue"
 import SettingsAgent from "~/components/settings/Agent.vue"
+import SettingsAgentSubtitle from "~/components/settings/AgentSubtitle.vue"
 import InterceptorsErrorPlaceholder from "~/components/interceptors/ErrorPlaceholder.vue"
 import { CookieJarService } from "~/services/cookie-jar.service"
 
 export class AgentKernelInterceptorService
   extends Service
-  implements KernelInterceptor {
+  implements KernelInterceptor
+{
   public static readonly ID = "AGENT_KERNEL_INTERCEPTOR_SERVICE"
 
   private store = this.bind(KernelInterceptorAgentStore)
@@ -34,8 +34,13 @@ export class AgentKernelInterceptorService
   public readonly id = "agent"
   public readonly name = (t: ReturnType<typeof getI18n>) =>
     t("interceptor.agent.name")
+  public readonly settingsEntry = markRaw({
+    title: (t: ReturnType<typeof getI18n>) =>
+      t("interceptor.agent.settings_title"),
+    component: SettingsAgent,
+  })
+  public readonly subtitle = markRaw(SettingsAgentSubtitle)
   public selectable = { type: "selectable" as const }
-  public readonly selectorSubtitle = markRaw(AgentRootUIExtension)
   public readonly capabilities: RelayCapabilities = {
     method: new Set([
       "GET",
@@ -68,11 +73,6 @@ export class AgentKernelInterceptorService
     proxy: new Set(["http", "https", "authentication", "certificates"]),
     advanced: new Set(["redirects", "cookies"]),
   } as const
-  public readonly settingsEntry = markRaw({
-    title: (t: ReturnType<typeof getI18n>) =>
-      t("interceptor.agent.settings_title"),
-    component: SettingsAgent,
-  })
 
   public execute(request: RelayRequest): ExecutionResult {
     const reqID = Date.now()
@@ -132,7 +132,7 @@ export class AgentKernelInterceptorService
           .join(";")
       }
 
-      console.log("[AGENT]: effectiveRequest", effectiveRequest);
+      console.log("[AGENT]: effectiveRequest", effectiveRequest)
       const [nonceB16, encryptedReq] = await this.store.encryptRequest(
         effectiveRequest,
         reqID

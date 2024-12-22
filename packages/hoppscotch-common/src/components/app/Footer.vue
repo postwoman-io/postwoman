@@ -17,7 +17,7 @@
             :icon="IconShieldCheck"
           />
           <template #content>
-            <AppInterceptor />
+            <AppKernelInterceptor />
           </template>
         </tippy>
         <HoppButtonSecondary
