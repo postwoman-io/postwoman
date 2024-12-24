@@ -1,14 +1,13 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import Icons from 'unplugin-icons/vite';
-import IconResolver from 'unplugin-icons/resolver';
-import Components from 'unplugin-vue-components/vite';
-import path from 'path';
+import { defineConfig } from "vite"
+import vue from "@vitejs/plugin-vue"
+import Icons from 'unplugin-icons/vite'
+import IconResolver from 'unplugin-icons/resolver'
+import Components from 'unplugin-vue-components/vite'
+import path from 'path'
 
 // @ts-expect-error process is a nodejs global
-const host = process.env.TAURI_DEV_HOST;
+const host = process.env.TAURI_DEV_HOST
 
-// https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [
     vue(),
@@ -20,8 +19,8 @@ export default defineConfig(async () => ({
         }),
         (compName: string) => {
           if (compName.startsWith('Hopp'))
-            return { name: compName, from: '@hoppscotch/ui' };
-          else return undefined;
+            return { name: compName, from: '@hoppscotch/ui' }
+          return undefined
         },
       ],
       types: [
@@ -30,6 +29,8 @@ export default defineConfig(async () => ({
           names: ['Tippy'],
         },
       ],
+      include: [/\.vue$/, /\.vue\?vue/],
+      dirs: ['src/components'],
     }),
     Icons({
       compiler: 'vue3',
@@ -45,10 +46,7 @@ export default defineConfig(async () => ({
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
     strictPort: true,
@@ -61,8 +59,7 @@ export default defineConfig(async () => ({
       }
       : undefined,
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
   },
-}));
+}))
