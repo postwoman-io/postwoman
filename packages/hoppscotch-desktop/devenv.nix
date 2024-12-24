@@ -31,7 +31,7 @@ in {
     # FE and Node stuff
     nodejs_22
     nodePackages_latest.typescript-language-server
-    nodePackages_latest.vls
+    nodePackages_latest.vue-language-server
     nodePackages_latest.prisma
     prisma-engines
     # Cargo

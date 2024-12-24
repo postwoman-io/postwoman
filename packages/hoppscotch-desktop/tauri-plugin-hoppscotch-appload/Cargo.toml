@@ -1,0 +1,25 @@
+[package]
+name = "tauri-plugin-hoppscotch-appload"
+version = "0.1.0"
+authors = [ "You" ]
+description = ""
+edition = "2021"
+rust-version = "1.77.2"
+exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
+links = "tauri-plugin-hoppscotch-appload"
+
+[dependencies]
+tauri = { version = "2.0.6", features = ["unstable"] }
+serde = "1.0"
+serde_json = { version = "1", features = [] }
+thiserror = { version = "2.0.3", features = [] }
+url = { version = "2.5.3", features = ["serde"] }
+reqwest = { version = "0.12.9", features = [] }
+zip = { version = "2.2.0", features = [] }
+tokio = { version = "1.41.1", features = [] }
+mime-infer = { version = "3.0.0", features = [] }
+regex = { version = "1.11.1", features = [] }
+tracing = "0.1.40"
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.1", features = ["build"] }

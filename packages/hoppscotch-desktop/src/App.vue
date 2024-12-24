@@ -1,160 +1,142 @@
+<template>
+  <div class="flex h-screen overflow-hidden bg-primary text-secondary">
+    <!-- Sidebar -->
+    <div
+      :class="isOpen ? '' : '-translate-x-full ease-in'"
+      class="fixed md:static md:translate-x-0 md:inset-0 inset-y-0 left-0 z-30 transition duration-300 flex overflow-y-auto bg-primary border-r border-divider"
+    >
+      <!-- Backdrop for mobile -->
+      <div
+        :class="isOpen ? 'block' : 'hidden'"
+        @click="isOpen = false"
+        class="fixed inset-0 z-20 transition-opacity bg-primary opacity-50 lg:hidden"
+      ></div>
+
+      <div :class="isExpanded ? 'w-56' : 'w-16'">
+        <!-- Logo section -->
+        <div class="flex items-center justify-start px-4 my-4">
+          <div class="flex items-center">
+            <img src="/logo.svg" alt="hoppscotch-logo" class="h-7 w-7" />
+            <span v-if="isExpanded" class="ml-4 font-semibold text-accentContrast">HOPPSCOTCH</span>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="my-5">
+          <HoppSmartItem :icon="IconHome" label="Home" :class="!isExpanded && 'justify-center'" />
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Header -->
+      <header
+        class="flex items-center justify-between border-b border-divider px-6 py-4 bg-primary shadow-lg"
+      >
+        <div class="flex items-center">
+          <HoppButtonSecondary
+            v-tippy="{ theme: 'tooltip' }"
+            :title="'Open Navigation'"
+            :icon="IconMenu"
+            class="transform md:hidden mr-2"
+            @click="isOpen = true"
+          />
+          <HoppButtonSecondary
+            v-tippy="{ theme: 'tooltip' }"
+            :title="isExpanded ? 'Collapse Sidebar' : 'Expand Sidebar'"
+            :icon="isExpanded ? IconSidebarClose : IconSidebarOpen"
+            class="transform hidden md:block"
+            @click="isExpanded = !isExpanded"
+          />
+        </div>
+      </header>
+
+      <!-- App content -->
+      <main class="flex-1 overflow-y-auto bg-primary">
+        <div class="container mx-auto p-6">
+          <div class="flex flex-1 flex-col items-center justify-center min-h-[80vh]">
+            <div
+              class="p-6 bg-primaryLight rounded-lg border border-primaryDark shadow max-w-lg w-full"
+            >
+              <form @submit.prevent="handleSubmit" class="flex flex-col space-y-4">
+                <div class="relative">
+                  <input
+                    v-model="appUrl"
+                    type="url"
+                    :disabled="isLoading"
+                    placeholder=" "
+                    class="floating-input peer w-full px-4 py-2 bg-primaryDark border border-divider rounded text-secondaryDark font-medium transition focus:border-dividerDark disabled:opacity-75"
+                  />
+                  <label
+                    class="absolute left-2 text-secondaryLight peer-focus:text-secondaryDark bg-primaryDark px-1 transition-all"
+                  >Enter app URL</label>
+                </div>
+
+                <HoppButtonPrimary
+                  :loading="isLoading"
+                  type="submit"
+                  :label="isLoading ? 'Loading...' : 'Load App'"
+                  class="w-full !bg-accent"
+                />
+
+                <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { ref } from "vue"
+import { download, load } from "tauri-plugin-hoppscotch-appload-api"
+import IconMenu from "~icons/lucide/menu"
+import IconHome from "~icons/lucide/home"
+import IconSidebarOpen from "~icons/lucide/sidebar-open"
+import IconSidebarClose from "~icons/lucide/sidebar-close"
 
-const greetMsg = ref("");
-const name = ref("");
+const isOpen = ref(false)
+const isExpanded = ref(true)
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
+const appUrl = ref("")
+const error = ref("")
+const isLoading = ref(false)
+
+async function handleSubmit() {
+  if (!appUrl.value) {
+    error.value = "Please enter an app URL"
+    return
+  }
+
+  isLoading.value = true
+  error.value = ""
+
+  try {
+    const urlString = appUrl.value.startsWith("http")
+      ? appUrl.value
+      : `http://${appUrl.value}`
+    const url = new URL(urlString)
+    const name = url.hostname
+
+    const downloadResponse = await download({ url: urlString, name })
+    console.info(downloadResponse)
+    const loadResponse = await load({ name, inline: true })
+    console.info(loadResponse)
+  } catch (e) {
+    console.error(e)
+    error.value = e instanceof Error ? e.message : "Failed to load app"
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
-<template>
-  <main class="container">
-    <h1>Welcome to Hoppscotch</h1>
-
-    <div class="row">
-      <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
-    </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
-</template>
-
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-
-</style>
 <style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+.floating-input:focus-within ~ label,
+.floating-input:not(:placeholder-shown) ~ label {
+  @apply transform -translate-y-5 scale-75 z-0 px-1 py-0;
 }
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
 </style>
