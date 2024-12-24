@@ -31,6 +31,7 @@
     "@hoppscotch/kernel": "workspace:^",
     "@hoppscotch/ui": "0.2.1",
     "@import-meta-env/unplugin": "0.6.0",
+    "@tauri-apps/api": "2.1.1",
     "axios": "1.7.7",
     "buffer": "6.0.3",
     "fp-ts": "2.16.9",

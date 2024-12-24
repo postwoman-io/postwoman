@@ -113,7 +113,9 @@ export const tokenRequest = async ({
 }
 
 export const handleOAuthRedirect = async () => {
-  const queryParams = Object.fromEntries(new URLSearchParams(window.location.search))
+  const queryParams = Object.fromEntries(
+    new URLSearchParams(window.location.search)
+  )
 
   if (queryParams.error) return E.left("AUTH_SERVER_RETURNED_ERROR")
   if (!queryParams.code) return E.left("NO_AUTH_CODE")
@@ -164,7 +166,9 @@ export const handleOAuthRedirect = async () => {
     access_token: z.string(),
   })
 
-  const parsedTokenResponse = withAccessTokenSchema.safeParse(result.right.content.content)
+  const parsedTokenResponse = withAccessTokenSchema.safeParse(
+    result.right.content.content
+  )
 
   return parsedTokenResponse.success
     ? E.right(parsedTokenResponse.data)
