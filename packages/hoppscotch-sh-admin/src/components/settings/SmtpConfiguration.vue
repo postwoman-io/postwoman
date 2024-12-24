@@ -111,8 +111,7 @@
 import { useVModel } from '@vueuse/core';
 import { computed, reactive, watch } from 'vue';
 import { useI18n } from '~/composables/i18n';
-import { hasInputValidationFailed } from '~/composables/useConfigHandler';
-import { ServerConfigs } from '~/helpers/configs';
+import { hasInputValidationFailed, ServerConfigs } from '~/helpers/configs';
 import IconEye from '~icons/lucide/eye';
 import IconEyeOff from '~icons/lucide/eye-off';
 import IconHelpCircle from '~icons/lucide/help-circle';
