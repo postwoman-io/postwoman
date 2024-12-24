@@ -3,23 +3,27 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing;
 
-use super::{Result, StorageError, StorageLayout};
+use super::{Registry, Result, ServerEntry, StorageError, StorageLayout};
 use crate::bundle::VerifiedBundle;
-use crate::BundleMetadata;
 
 pub struct StorageManager {
     layout: Arc<StorageLayout>,
+    registry: Arc<RwLock<Registry>>,
     locks: Arc<RwLock<Vec<PathBuf>>>,
 }
 
 impl StorageManager {
-    pub fn new(root: PathBuf) -> Self {
+    pub async fn new(root: PathBuf) -> Result<Self> {
         tracing::info!(root = ?root, "Initializing StorageManager with root directory");
         let layout = StorageLayout::new(root);
-        Self {
+
+        let registry = Registry::load(&layout).await?;
+
+        Ok(Self {
             layout: Arc::new(layout),
+            registry: Arc::new(RwLock::new(registry)),
             locks: Arc::new(RwLock::new(Vec::new())),
-        }
+        })
     }
 
     pub async fn init(&self) -> Result<()> {
@@ -28,7 +32,7 @@ impl StorageManager {
             self.layout.bundles_dir(),
             self.layout.cache_dir(),
             self.layout.temp_dir(),
-            self.layout.keys_dir(),
+            self.layout.key_dir(),
         ];
 
         for dir in &dirs {
@@ -40,20 +44,22 @@ impl StorageManager {
         Ok(())
     }
 
-    pub async fn store_bundle(&self, name: &str, verified: &VerifiedBundle) -> Result<()> {
+    pub async fn store_bundle(
+        &self,
+        name: &str,
+        server_url: &str,
+        version: &str,
+        verified: &VerifiedBundle,
+    ) -> Result<()> {
         tracing::info!(bundle_name = name, "Storing bundle");
 
         let bundle_path = self.layout.bundle_path(name);
-        let meta_path = self.layout.bundle_meta_path(name);
         let temp_path = self.layout.temp_dir().join(format!("{}.tmp", name));
 
-        for path in [&bundle_path, &meta_path, &temp_path] {
+        for path in [&bundle_path, &temp_path] {
             if let Some(parent) = path.parent() {
                 tracing::debug!(path = ?parent, "Ensuring directory exists");
-                tokio::fs::create_dir_all(parent).await.map_err(|e| {
-                    tracing::error!(path = ?parent, error = %e, "Failed to create directory");
-                    StorageError::Io(e)
-                })?;
+                tokio::fs::create_dir_all(parent).await?;
             }
         }
 
@@ -73,68 +79,64 @@ impl StorageManager {
 
         tracing::debug!(
             bundle_name = name,
-            meta_path = ?meta_path,
-            "Serializing and writing bundle metadata"
-        );
-        let meta_json = serde_json::to_vec_pretty(&verified.metadata).map_err(|e| {
-            tracing::error!(bundle_name = name, error = %e, "Failed to serialize metadata");
-            StorageError::InvalidPath(e.to_string())
-        })?;
-
-        tokio::fs::write(&meta_path, meta_json).await?;
-
-        tracing::debug!(
-            bundle_name = name,
             temp_path = ?temp_path,
             bundle_path = ?bundle_path,
             "Renaming temporary file to final bundle path"
         );
         tokio::fs::rename(temp_path, bundle_path).await?;
 
+        let mut registry = self.registry.write().await;
+        registry.update_server_entry(
+            server_url,
+            ServerEntry {
+                bundle_name: name.to_string(),
+                version: version.to_string(),
+                created_at: chrono::Utc::now(),
+                last_accessed: chrono::Utc::now(),
+            },
+        )?;
+
+        registry.save(&self.layout).await?;
+
         tracing::info!(bundle_name = name, "Bundle stored successfully");
         Ok(())
     }
 
-    pub async fn load_bundle(&self, name: &str) -> Result<(Vec<u8>, BundleMetadata)> {
+    pub async fn get_bundle_entry(&self, server_url: &str) -> Result<Option<ServerEntry>> {
+        let registry = self.registry.read().await;
+        Ok(registry.get_bundle_for_server(server_url).cloned())
+    }
+
+    pub async fn load_bundle(&self, name: &str) -> Result<Vec<u8>> {
         tracing::info!(bundle_name = name, "Loading bundle");
 
         let bundle_path = self.layout.bundle_path(name);
-        let meta_path = self.layout.bundle_meta_path(name);
 
-        if !bundle_path.exists() || !meta_path.exists() {
-            tracing::warn!(bundle_name = name, "Bundle or metadata file not found");
+        if !bundle_path.exists() {
+            tracing::warn!(bundle_name = name, "Bundle not found");
             return Err(StorageError::BundleNotFound(name.to_string()));
         }
 
         tracing::debug!(bundle_name = name, bundle_path = ?bundle_path, "Reading bundle content");
         let content = tokio::fs::read(&bundle_path).await?;
 
-        tracing::debug!(bundle_name = name, meta_path = ?meta_path, "Reading and deserializing metadata");
-        let metadata: BundleMetadata = serde_json::from_slice(&tokio::fs::read(&meta_path).await?)
-            .map_err(|e| {
-                tracing::error!(bundle_name = name, error = %e, "Failed to deserialize metadata");
-                StorageError::InvalidPath(e.to_string())
-            })?;
-
         tracing::info!(bundle_name = name, "Bundle loaded successfully");
-        Ok((content, metadata))
+        Ok(content)
     }
 
-    pub async fn delete_bundle(&self, name: &str) -> Result<()> {
+    pub async fn delete_bundle(&self, name: &str, server_url: &str) -> Result<()> {
         tracing::info!(bundle_name = name, "Deleting bundle");
 
         let bundle_path = self.layout.bundle_path(name);
-        let meta_path = self.layout.bundle_meta_path(name);
 
         if bundle_path.exists() {
             tracing::debug!(bundle_name = name, bundle_path = ?bundle_path, "Removing bundle file");
             tokio::fs::remove_file(bundle_path).await?;
         }
 
-        if meta_path.exists() {
-            tracing::debug!(bundle_name = name, meta_path = ?meta_path, "Removing metadata file");
-            tokio::fs::remove_file(meta_path).await?;
-        }
+        let mut registry = self.registry.write().await;
+        registry.remove_server_entry(server_url)?;
+        registry.save(&self.layout).await?;
 
         tracing::info!(bundle_name = name, "Bundle deleted successfully");
         Ok(())

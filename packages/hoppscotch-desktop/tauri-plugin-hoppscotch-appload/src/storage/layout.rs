@@ -17,10 +17,6 @@ impl StorageLayout {
         self.bundles_dir().join(format!("{}.zip", name))
     }
 
-    pub fn bundle_meta_path(&self, name: &str) -> PathBuf {
-        self.bundles_dir().join(format!("{}.meta.json", name))
-    }
-
     pub fn cache_dir(&self) -> PathBuf {
         self.root.join("cache")
     }
@@ -29,7 +25,11 @@ impl StorageLayout {
         self.root.join("temp")
     }
 
-    pub fn keys_dir(&self) -> PathBuf {
-        self.root.join("keys")
+    pub fn key_dir(&self) -> PathBuf {
+        self.root.join("key")
+    }
+
+    pub fn registry_path(&self) -> PathBuf {
+        self.root.join("registry.json")
     }
 }

@@ -17,6 +17,18 @@ pub enum StorageError {
     #[error("Lock error: {0}")]
     LockError(String),
 
+    #[error("Registry error: {0}")]
+    Registry(String),
+
+    #[error("Version mismatch: local {local}, remote {remote}")]
+    VersionMismatch { local: String, remote: String },
+
+    #[error("Invalid URL format: {0}")]
+    InvalidUrl(#[from] url::ParseError),
+
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+
     #[error("Other error: {0}")]
     OtherError(String),
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use blake3::Hash;
 use chrono::{DateTime, Utc};
 use ed25519_dalek::Signature;
@@ -12,7 +14,7 @@ pub struct BundleMetadata {
     pub signature: Signature,
     pub manifest: Manifest,
     #[serde(default)]
-    pub properties: std::collections::HashMap<String, String>,
+    pub properties: HashMap<String, String>,
 }
 
 mod signature_serde {
@@ -128,21 +130,21 @@ pub struct PublicKeyInfo {
 #[serde(rename_all = "camelCase")]
 pub struct DownloadOptions {
     pub server_url: Url,
-    pub bundle_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadResponse {
     pub success: bool,
-    pub path: String,
+    pub bundle_name: String,
     pub server_url: Url,
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoadOptions {
-    pub name: String,
+    pub bundle_name: String,
     #[serde(default)]
     pub inline: bool,
     #[serde(default)]

@@ -67,17 +67,27 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             );
             config.storage.root_dir = app_config_dir;
 
-            tracing::debug!("Initializing storage manager.");
-            let storage = Arc::new(storage::StorageManager::new(
-                config.storage.root_dir.clone(),
-            ));
-
-            tracing::debug!("Setting up async runtime.");
             let rt = tokio::runtime::Runtime::new()
                 .map_err(|e| {
                     tracing::error!(error = %e, "Failed to create Tokio runtime.");
                     Error::Config(e.to_string())
                 })?;
+
+            let storage = rt.block_on(async {
+                let storage = storage::StorageManager::new(config.storage.root_dir.clone())
+                    .await
+                    .map_err(|e| {
+                        tracing::error!(error = %e, "Failed to initialize storage manager");
+                        Error::Config(e.to_string())
+                    })?;
+
+                storage.init().await.map_err(|e| {
+                    tracing::error!(error = %e, "Failed to initialize storage directories");
+                    Error::Config(e.to_string())
+                })?;
+
+                Ok::<_, Error>(Arc::new(storage))
+            })?;
 
             tracing::debug!("Initializing cache manager.");
             let cache = Arc::new(cache::CacheManager::new(

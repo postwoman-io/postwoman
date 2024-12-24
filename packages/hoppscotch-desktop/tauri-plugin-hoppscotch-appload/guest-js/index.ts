@@ -8,11 +8,6 @@ export interface DownloadOptions {
    * URL of the bundle server
    */
   serverUrl: string
-  /**
-   * Optional name to save the bundle as. If not provided,
-   * will be derived from the server URL
-   */
-  bundleName?: string
 }
 
 /**
@@ -24,13 +19,17 @@ export interface DownloadResponse {
    */
   success: boolean
   /**
-   * Path where the bundle was saved
+   * Generated bundle name where the bundle was saved
    */
-  path: string
+  bundleName: string
   /**
    * Server URL that was used for the download
    */
   serverUrl: string
+  /**
+   * Version of the downloaded bundle
+   */
+  version: string
 }
 
 /**
@@ -64,9 +63,9 @@ export interface WindowOptions {
  */
 export interface LoadOptions {
   /**
-   * Name of the app to load
+   * Name of the bundle to load
    */
-  name: string
+  bundleName: string
   /**
    * Whether to load in current window
    */
@@ -92,24 +91,22 @@ export interface LoadResponse {
 }
 
 /**
- * Downloads an app bundle from a trusted server
+ * Downloads or updates an app bundle from a server
  * @param options Download configuration options
- * @returns Promise resolving to download status and location
- * @throws Error if the server is not trusted or verification fails
+ * @returns Promise resolving to download status and bundle name
+ * @throws Error if verification fails or download fails
  * @example
  * ```typescript
  * import { download } from '@tauri-apps/plugin-hoppscotch-appload'
  *
- * // Download an app bundle from a trusted server
+ * // Download an app bundle from a server
  * try {
  *   const result = await download({
- *     serverUrl: 'https://bundles.example.com',
- *     bundleName: 'my-app'
+ *     serverUrl: 'https://bundles.example.com'
  *   })
- *   console.log(`Bundle downloaded to ${result.path}`)
+ *   console.log(`Bundle downloaded as ${result.bundleName} version ${result.version}`)
  * } catch (err) {
  *   console.error('Download failed:', err)
- *   // Handle untrusted server or other errors
  * }
  * ```
  */
@@ -127,9 +124,9 @@ export async function download(options: DownloadOptions): Promise<DownloadRespon
  * ```typescript
  * import { load } from '@tauri-apps/plugin-hoppscotch-appload'
  *
- * // Load an app in a new window
+ * // Load an app in a new window using the bundle name from download response
  * const result = await load({
- *   name: 'my-app',
+ *   bundleName: downloadResponse.bundleName,
  *   window: {
  *     title: 'My App',
  *     width: 1024,

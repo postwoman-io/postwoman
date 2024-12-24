@@ -16,15 +16,16 @@
     "@hoppscotch/ui": "0.2.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
+    "@tauri-apps/plugin-store": "2.1.0",
     "@vueuse/core": "11.1.0",
     "tauri-plugin-hoppscotch-appload-api": "file:tauri-plugin-hoppscotch-appload",
     "vue": "^3.3.4",
-    "vue-tippy": "6.5.0"
+    "vue-router": "4.4.5"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "1.2.10",
     "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "^5.0.5",
-    "@iconify-json/lucide": "1.2.10",
     "autoprefixer": "10.4.20",
     "postcss": "8.4.49",
     "sass": "1.80.3",
