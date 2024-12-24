@@ -87,7 +87,7 @@ export class ResponseBuilder {
 
     return {
       type:
-        response.status >= 200 && response.status < 300 ? "success" : "fail",
+        "success",
       ...responseData,
     }
   }

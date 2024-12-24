@@ -72,6 +72,8 @@ export type {
 export type {
   Request,
   Response,
+  FormData,
+  FormDataValue,
   RelayError,
   RelayV1,
   Method,

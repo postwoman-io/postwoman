@@ -1,5 +1,4 @@
-import { HoppRESTFormDataEntry } from "./type"
-import { ContentType } from "@hoppscotch/kernel"
+import { ContentType, FormData, FormDataValue } from "@hoppscotch/kernel"
 import { logger } from "./logger"
 
 abstract class ContentHandler {
@@ -55,50 +54,34 @@ class TextContentHandler extends ContentHandler {
 }
 
 class FormContentHandler extends ContentHandler {
-  appendBlobToForm(
-    form: FormData,
-    key: string,
-    blob: Blob,
-    contentType?: string
-  ) {
-    if (!(blob instanceof Blob)) return form
-    form.append(
-      key,
-      contentType ? new Blob([blob], { type: contentType }) : blob
-    )
-    return form
-  }
+  async convert(formData: FormData): Promise<ContentType> {
+    const converted = new Map<string, FormDataValue[]>();
 
-  appendEntryToForm(
-    form: FormData,
-    { key, value, isFile, contentType }: HoppRESTFormDataEntry
-  ) {
-    if (!value) return form
-    if (isFile && Array.isArray(value)) {
-      return value.reduce(
-        (f, blob) => this.appendBlobToForm(f, key, blob, contentType),
-        form
-      )
+    for (const [key, value] of formData.entries()) {
+      if (!converted.has(key)) {
+        converted.set(key, []);
+      }
+
+      if (value instanceof File) {
+        converted.get(key)!.push({
+          kind: "file",
+          filename: value.name,
+          contentType: value.type || "application/octet-stream",
+          data: new Uint8Array(await value.arrayBuffer())
+        });
+      } else {
+        converted.get(key)!.push({
+          kind: "text",
+          value: value.toString()
+        });
+      }
     }
-    if (!isFile) form.append(key, value)
-    return form
-  }
 
-  async convert(
-    entries: ReadonlyArray<HoppRESTFormDataEntry>
-  ): Promise<ContentType> {
-    const formData = new FormData()
-    entries
-      .filter(
-        (entry): entry is HoppRESTFormDataEntry & { active: true } =>
-          entry.active
-      )
-      .reduce(this.appendEntryToForm, formData)
     return {
       kind: "form",
-      content: formData,
-      mediaType: "application/x-www-form-urlencoded",
-    }
+      content: converted,
+      mediaType: "multipart/form-data" as const,
+    };
   }
 }
 

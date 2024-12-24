@@ -3594,7 +3594,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relay"
 version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/relay.git#c729d9a41ae3c9d651174df17c55a498b42eb0bb"
+source = "git+https://github.com/CuriousCorrelation/relay.git#947cb7603224e0310adbaeaecd80e5514c442d50"
 dependencies = [
  "curl",
  "dashmap",
@@ -3607,6 +3607,7 @@ dependencies = [
  "openssl",
  "openssl-sys",
  "serde",
+ "serde_bytes",
  "serde_json",
  "strum",
  "thiserror 1.0.69",
@@ -3906,6 +3907,15 @@ dependencies = [
  "erased-serde",
  "serde",
  "typeid",
+]
+
+[[package]]
+name = "serde_bytes"
+version = "0.11.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "387cc504cb06bb40a96c8e04e951fe01854cf6bc921053c954e4a606d9675c6a"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -4631,7 +4641,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#7a4f215b433d5d3ea783cc1b764d8d3da0dbcb33"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#7410754d52317ad4ef0c7ef923564e89f6882eaf"
 dependencies = [
  "relay",
  "serde",

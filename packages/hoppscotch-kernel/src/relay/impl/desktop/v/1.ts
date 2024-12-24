@@ -152,6 +152,7 @@ export const implementation: VersionedAPI<RelayV1> = {
                 proxy: request.proxy,
             } as PluginRequest
 
+            console.log("[KERNEL|DESKTOP] pluginRequest", pluginRequest)
             const responsePromise = execute(pluginRequest)
                 .then((result: RequestResult): E.Either<RelayError, Response> => {
                     if (result.kind === 'success') {
