@@ -261,9 +261,8 @@ export function runRESTRequest$(
       variables: finalEnvsWithNonEmptyValues,
     })
 
-    const [stream, cancelRun] = createRESTNetworkRequestStream(
-      await effectiveRequest
-    )
+    const [stream, cancelRun] =
+      await createRESTNetworkRequestStream(effectiveRequest)
     cancelFunc = cancelRun
 
     const subscription = stream

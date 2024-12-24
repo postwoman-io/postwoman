@@ -68,3 +68,14 @@ export type {
   OpenExternalLinkResponse,
   IoV1,
 } from '@io/v/1'
+
+export type {
+  Request,
+  Response,
+  InterceptorError,
+  InterceptorV1,
+  Method,
+  ContentType,
+  AuthType,
+  CertificateType,
+} from '@interceptor/v/1'
