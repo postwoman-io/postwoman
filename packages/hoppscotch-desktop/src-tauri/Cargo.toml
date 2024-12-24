@@ -27,4 +27,5 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tauri-plugin-store = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
-tauri-plugin-hoppscotch-appload = { path = "../tauri-plugin-hoppscotch-appload" }
+tauri-plugin-hoppscotch-appload = { git = "https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload" }
+tauri-plugin-hoppscotch-relay = { git = "https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay" }

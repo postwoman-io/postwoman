@@ -3,75 +3,85 @@ import {
   Interceptor,
   InterceptorError,
   NetworkResponse,
-  RequestRunResult,
-} from "../../../services/interceptor.service"
-import axios, { AxiosRequestConfig, CancelToken } from "axios"
-import { preProcessRequest } from "./helpers"
+} from "~/services/interceptor.service"
+import { BrowserInterceptor } from "~/kernel/browser"
+import {
+  Response,
+  InterceptorError as KernelInterceptorError,
+} from "@hoppscotch/kernel"
+import { AxiosRequestConfig } from "axios"
 
-async function runRequest(
-  req: AxiosRequestConfig,
-  cancelToken: CancelToken
-): RequestRunResult["response"] {
-  const timeStart = Date.now()
-
-  try {
-    const res = await axios({
-      ...req,
-      cancelToken,
-      responseType: "arraybuffer",
-    })
-
-    const timeEnd = Date.now()
-
-    return E.right(<NetworkResponse>{
-      ...res,
-      config: {
-        timeData: {
-          startTime: timeStart,
-          endTime: timeEnd,
-        },
-      },
-    })
-  } catch (e) {
-    const timeEnd = Date.now()
-
-    if (axios.isAxiosError(e) && e.response) {
-      return E.right(<NetworkResponse>{
-        ...e.response,
-        config: {
-          timeData: {
-            startTime: timeStart,
-            endTime: timeEnd,
-          },
-        },
-      })
-    } else if (axios.isCancel(e)) {
-      return E.left("cancellation")
-    }
-    return E.left(<InterceptorError>{
-      humanMessage: {
-        heading: (t) => t("error.network_fail"),
-        description: (t) => t("helpers.network_fail"),
-      },
-      error: e,
-    })
+function toKernelRequest(req: AxiosRequestConfig) {
+  return {
+    url: req.url ?? "",
+    method: req.method?.toUpperCase() ?? "GET",
+    headers: req.headers,
+    params: req.params,
+    content: req.data
+      ? {
+          kind: "binary",
+          content: new Uint8Array(req.data),
+          mediaType: req.headers?.["Content-Type"],
+        }
+      : undefined,
+    options: {
+      timeout: req.timeout,
+      maxRedirects: req.maxRedirects,
+    },
   }
+}
+
+function toServiceResponse(
+  res: E.Either<KernelInterceptorError, Response>
+): Promise<E.Either<InterceptorError, NetworkResponse>> {
+  return Promise.resolve(
+    E.match(
+      (error: KernelInterceptorError) => {
+        if ("kind" in error && error.kind === "abort") {
+          return E.left(<InterceptorError>"cancellation")
+        }
+        return E.left(<InterceptorError>{
+          humanMessage: {
+            heading: () => "Request Failed",
+            description: () => error.message,
+          },
+          error,
+        })
+      },
+      (response: Response) =>
+        E.right(<NetworkResponse>{
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+          data:
+            response.content.kind === "binary"
+              ? response.content.content
+              : null,
+          config: {
+            timeData: {
+              startTime: response.meta.timing.start,
+              endTime: response.meta.timing.end,
+            },
+          },
+        })
+    )(res)
+  )
 }
 
 export const browserInterceptor: Interceptor = {
   interceptorID: "browser",
   name: (t) => t("state.none"),
   selectable: { type: "selectable" },
+
   runRequest(req) {
-    const cancelToken = axios.CancelToken.source()
-
-    const processedReq = preProcessRequest(req)
-
-    const promise = runRequest(processedReq, cancelToken.token)
+    const kernelReq = toKernelRequest(req)
+    const { cancel, response } = BrowserInterceptor.execute(kernelReq)
 
     return {
-      cancel: () => cancelToken.cancel(),
-      response: promise,
+      cancel,
+      response: response
+        .then(toServiceResponse)
+        .then((x: NetworkResponse) => x),
     }
   },
 }

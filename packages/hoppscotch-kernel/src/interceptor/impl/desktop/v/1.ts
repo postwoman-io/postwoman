@@ -14,7 +14,7 @@ import {
     cancel,
     type Request as PluginRequest,
     type RequestResult
-} from 'tauri-plugin-hoppscotch-relay-api'
+} from '@hoppscotch/plugin-relay'
 
 export const implementation: VersionedAPI<InterceptorV1> = {
     version: { major: 1, minor: 0, patch: 0 },
@@ -68,9 +68,9 @@ export const implementation: VersionedAPI<InterceptorV1> = {
 
         execute(request: Request) {
             const emitter: EventEmitter<RequestEvents> = {
-                on: () => () => { },
-                once: () => () => { },
-                off: () => { }
+                on: () => () => {},
+                once: () => () => {},
+                off: () => {}
             }
 
             // SAFETY: Type assertion is safe because:

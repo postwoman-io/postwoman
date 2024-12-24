@@ -13,6 +13,6 @@
     "dialog:default",
     "fs:allow-write-text-file",
     "hoppscotch-appload:default",
-    "store:default"
+    "hoppscotch-relay:default"
   ]
 }

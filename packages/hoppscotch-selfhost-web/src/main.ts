@@ -14,8 +14,14 @@ import { stdSupportOptionItems } from "@hoppscotch/common/platform/std/ui/suppor
 import { browserIODef } from "@hoppscotch/common/platform/std/io"
 import { InfraPlatform } from "@platform/infra/infra.platform"
 
+
 import { getKernelMode } from "@hoppscotch/kernel"
+import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/native"
+import { BrowserKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/browser"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
+
+const defaultInterceptor = getKernelMode() == "desktop" ? "native" : "browser";
+
 createHoppApp("#app", {
   ui: {
     additionalFooterMenuItems: stdFooterItems,
@@ -31,6 +37,7 @@ createHoppApp("#app", {
     settings: settingsDef,
     history: historyDef,
   },
+  // NOTE: To be deprecated
   interceptors: {
     default: "browser",
     interceptors: [
@@ -38,6 +45,13 @@ createHoppApp("#app", {
       { type: "standalone", interceptor: proxyInterceptor },
       { type: "service", service: ExtensionInterceptorService },
       { type: "service", service: AgentInterceptorService },
+    ],
+  },
+  kernelInterceptors: {
+    default: defaultInterceptor,
+    interceptors: [
+      { type: "service", service: NativeKernelInterceptorService },
+      { type: "service", service: BrowserKernelInterceptorService },
     ],
   },
   additionalInspectors: [

@@ -10,6 +10,7 @@ import { HistoryPlatformDef } from "./history"
 import { InfraPlatformDef } from "./infra"
 import { InspectorsPlatformDef } from "./inspectors"
 import { InterceptorsPlatformDef } from "./interceptors"
+import { KernelInterceptorsPlatformDef } from "./kernel-interceptors"
 import { IOPlatformDef } from "./io"
 import { LimitsPlatformDef } from "./limits"
 import { SettingsPlatformDef } from "./settings"
@@ -24,7 +25,7 @@ export type PlatformDef = {
   auth: AuthPlatformDef
   analytics?: AnalyticsPlatformDef
   io: IOPlatformDef
-  kernelIO: KernelIO,
+  kernelIO: KernelIO
   sync: {
     environments: EnvironmentsPlatformDef
     collections: CollectionsPlatformDef
@@ -32,6 +33,7 @@ export type PlatformDef = {
     history: HistoryPlatformDef
   }
   interceptors: InterceptorsPlatformDef
+  kernelInterceptors: KernelInterceptorsPlatformDef
   additionalInspectors?: InspectorsPlatformDef
   spotlight?: SpotlightPlatformDef
   platformFeatureFlags: {

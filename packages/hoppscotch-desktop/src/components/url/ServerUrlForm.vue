@@ -29,7 +29,7 @@
 import { ref } from "vue"
 import { useUrlHistory } from "~/composables/useUrlHistory"
 import { useToast } from "~/composables/toast"
-import { download, load } from "tauri-plugin-hoppscotch-appload-api"
+import { download, load } from "@hoppscotch/plugin-appload"
 import FormHeader from "./FormHeader.vue"
 import ServerUrlInput from "./ServerUrlInput.vue"
 import RecentUrlList from "./RecentUrlList.vue"

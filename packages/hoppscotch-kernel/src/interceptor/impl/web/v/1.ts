@@ -79,13 +79,13 @@ const contentTypeConversions = {
 }
 
 const headerProcessor = {
-  normalize(headers: Record<string, any>): Record<string, string | string[]> {
+  normalize(headers: Record<string, any>): Record<string, string[]> {
     return Object.fromEntries(
       Object.entries(headers)
         .filter(([_, value]) => value !== undefined)
         .map(([key, value]) => [
           key,
-          Array.isArray(value) ? value.map(String) : String(value)
+          Array.isArray(value) ? value.map(String) : [String(value)]
         ])
     )
   }
@@ -100,14 +100,17 @@ const authProcessor = {
         config.auth = { username: auth.username, password: auth.password }
         break
       case 'bearer':
-        config.headers = {
+        config.headers = headerProcessor.normalize({
           ...config.headers,
           'Authorization': `Bearer ${auth.token}`
-        }
+        })
         break
       case 'apikey':
         if (auth.in === 'header') {
-          config.headers = { ...config.headers, [auth.name]: auth.key }
+          config.headers = headerProcessor.normalize({
+            ...config.headers,
+            [auth.name]: auth.key
+          })
         } else {
           config.params = { ...config.params, [auth.name]: auth.key }
         }
@@ -231,7 +234,7 @@ export const implementation: VersionedAPI<InterceptorV1> = {
           const config: AxiosRequestConfig = {
             url: request.url,
             method: request.method,
-            headers: request.headers,
+            headers: request.headers ? headerProcessor.normalize(request.headers) : undefined,
             params: request.params,
             data: await contentTypeConversions.toAxiosData(request.content),
             cancelToken: cancelTokenSource.token,
@@ -250,13 +253,13 @@ export const implementation: VersionedAPI<InterceptorV1> = {
           emit('stateChange', { state: 'done' })
 
           const responseObj: Response = {
-            id: request.id, // Include request ID in response
+            id: request.id,
             status: response.status,
             statusText: response.statusText,
             headers: headerProcessor.normalize(response.headers),
             content: await contentTypeConversions.fromAxiosResponse(
               response.data,
-              response.headers['content-type']
+              response.headers['content-type']?.[0]
             ),
             meta: responseProcessor.createMetadata(startTime, endTime, response)
           }

@@ -17,7 +17,12 @@ export type ContentType =
     | { kind: "text"; content: string; mediaType?: string }
     | { kind: "json"; content: unknown }
     | { kind: "form"; content: FormData }
-    | { kind: "binary"; content: Uint8Array; mediaType?: string }
+    | {
+        kind: 'binary';
+        content: Uint8Array;
+        mediaType?: string;
+        filename?: string;
+    }
     | { kind: "multipart"; content: FormData }
     | { kind: "urlencoded"; content: Record<string, string> }
     | { kind: "stream"; content: ReadableStream }
@@ -65,7 +70,7 @@ export interface Request {
     id: number
     url: string
     method: Method
-    headers?: Record<string, string | string[]>
+    headers?: Record<string, string[]>
     params?: Record<string, string>
     content?: ContentType
     auth?: AuthType
@@ -238,7 +243,7 @@ export interface Response {
     id: number
     status: number
     statusText: string
-    headers: Record<string, string | string[]>
+    headers: Record<string, string[]>
     content: ContentType
 
     meta: {
@@ -382,11 +387,11 @@ export const v1: VersionedAPI<InterceptorV1> = {
             interceptor: "default"
         }),
         execute: () => ({
-            cancel: () => { },
+            cancel: () => {},
             emitter: {
-                on: () => () => { },
-                once: () => () => { },
-                off: () => { }
+                on: () => () => {},
+                once: () => () => {},
+                off: () => {}
             },
             response: Promise.resolve(
                 E.left({

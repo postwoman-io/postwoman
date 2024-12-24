@@ -6,7 +6,7 @@ import {
     type DownloadResponse,
     type LoadOptions,
     type LoadResponse,
-} from "tauri-plugin-hoppscotch-appload-api"
+} from "@hoppscotch/plugin-appload"
 
 export function useAppUpdates() {
     const isChecking = ref(false)
