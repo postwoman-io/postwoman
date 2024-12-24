@@ -34,7 +34,8 @@ type ProxyResponse = {
 
 export class ProxyKernelInterceptorService
   extends Service
-  implements KernelInterceptor {
+  implements KernelInterceptor
+{
   public static readonly ID = "KERNEL_PROXY_INTERCEPTOR_SERVICE"
   private readonly store = this.bind(KernelInterceptorProxyStore)
 
@@ -55,7 +56,7 @@ export class ProxyKernelInterceptorService
       method: "POST",
       version: "HTTP/1.1",
       headers: {
-        "origin": ["https://hoppscotch.io"],
+        origin: ["https://hoppscotch.io"],
         "content-type": ["application/json"],
       },
       content: {
@@ -83,9 +84,10 @@ export class ProxyKernelInterceptorService
 
         console.error("res", res.right)
 
-        const proxyResponse = res.right.content.kind === "text"
-          ? JSON.parse(res.right.content.content) as ProxyResponse
-          : null
+        const proxyResponse =
+          res.right.content.kind === "text"
+            ? (JSON.parse(res.right.content.content) as ProxyResponse)
+            : null
 
         if (!proxyResponse?.success) {
           return E.left({
@@ -102,7 +104,9 @@ export class ProxyKernelInterceptorService
             content: {
               kind: "binary",
               content: new Uint8Array(binaryData),
-              mediaType: proxyResponse.headers["content-type"] || "application/octet-stream",
+              mediaType:
+                proxyResponse.headers["content-type"] ||
+                "application/octet-stream",
             },
           })
         }

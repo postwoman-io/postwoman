@@ -102,7 +102,6 @@ export class KernelInterceptorNativeStore extends Service {
     base: Required<Request>["security"],
     ...overrides: (Required<Request>["security"] | undefined)[]
   ): Required<Request>["security"] {
-
     const result = overrides.reduce(
       (acc, override) => (override ? { ...acc, ...override } : acc),
       { ...base }
@@ -114,7 +113,6 @@ export class KernelInterceptorNativeStore extends Service {
   private mergeProxy(
     ...settings: (Required<Request>["proxy"] | undefined)[]
   ): Required<Request>["proxy"] | undefined {
-
     const result = settings.reduce(
       (acc, setting) => (setting ? { ...acc, ...setting } : acc),
       undefined as Required<Request>["proxy"] | undefined
@@ -126,7 +124,6 @@ export class KernelInterceptorNativeStore extends Service {
   private getMergedSettings(
     domain: string
   ): Pick<Request, "proxy" | "security"> {
-
     const domainSettings = this.domainSettings.get(domain)
 
     const globalSettings =
@@ -159,7 +156,6 @@ export class KernelInterceptorNativeStore extends Service {
     domain: string,
     settings: Partial<DomainSetting>
   ): Promise<void> {
-
     const current = this.getMergedSettings(domain)
 
     const updatedSettings: DomainSetting = {

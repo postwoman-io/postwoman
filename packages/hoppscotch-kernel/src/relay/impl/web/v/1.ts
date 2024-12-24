@@ -1,18 +1,20 @@
 import type { VersionedAPI } from '@type/versioning'
-import type {
-  RelayV1,
-  Request,
-  RequestEvents,
-  EventEmitter,
-  Response,
-  RelayError,
-  StatusCode,
-  FormData,
-  FormDataValue,
+import {
+  type RelayV1,
+  type RelayRequest,
+  type RelayRequestEvents,
+  type RelayEventEmitter,
+  type RelayResponse,
+  type RelayError,
+  type StatusCode,
+  type FormData,
+  type FormDataValue,
+  type RelayResponseBody,
+  MediaType,
 } from '@relay/v/1'
 
 import * as E from 'fp-ts/Either'
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 import { AwsV4Signer } from 'aws4fetch'
 
 const isStatusCode = (status: number): status is StatusCode =>
@@ -50,105 +52,38 @@ async function convert(formData: globalThis.FormData): Promise<FormData> {
   return converted;
 }
 
-async function determineContent(response: AxiosResponse): Promise<Response['content']> {
-  const contentType = normalizeHeaders(response.headers)['content-type']?.[0]
-  const data = response.data
-
-  if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-    return {
-      kind: 'binary',
-      content: new Uint8Array(data),
-      mediaType: contentType ?? 'application/octet-stream'
-    }
-  }
-
-  if (typeof data === 'string') {
-    if (contentType?.includes('application/json')) {
-      try {
-        return {
-          kind: 'json',
-          content: JSON.parse(data),
-          mediaType: contentType.includes('application/ld+json') ? 'application/ld+json' : 'application/json'
-        }
-      } catch {
-        // Fall through to text
-      }
-    }
-
-    if (contentType?.includes('xml')) {
-      return {
-        kind: 'xml',
-        content: data,
-        mediaType: contentType.includes('application/xml') ? 'application/xml' : 'text/xml'
-      }
-    }
-
-    const textTypes = {
-      'text/html': 'text/html',
-      'text/css': 'text/css',
-      'text/csv': 'text/csv'
-    } as const
-
-    for (const [type, mediaType] of Object.entries(textTypes)) {
-      if (contentType?.includes(type)) {
-        return {
-          kind: 'text',
-          content: data,
-          mediaType
-        }
-      }
-    }
-
-    return {
-      kind: 'text',
-      content: data,
-      mediaType: 'text/plain'
-    }
-  }
-
-  if (data instanceof FormData) {
-    const isMultipart = contentType?.includes('multipart/form-data')
-    const convertedData = await convert(data)
-
-    if (isMultipart) {
-      return {
-        kind: 'multipart',
-        content: convertedData,
-        mediaType: 'multipart/form-data'
-      }
-    }
-
-    return {
-      kind: 'form',
-      content: convertedData,
-      mediaType: 'application/x-www-form-urlencoded'
-    }
-  }
-
-  if (data instanceof URLSearchParams) {
-    return {
-      kind: 'urlencoded',
-      content: Object.fromEntries(data),
-      mediaType: 'application/x-www-form-urlencoded'
-    }
-  }
-
-  return {
-    kind: 'json',
-    content: data,
-    mediaType: 'application/json'
-  }
-}
-
-function normalizeHeaders(headers: Record<string, any>): Record<string, string[]> {
+function normalizeHeaders(headers: Record<string, any>): Record<string, string> {
   return Object.fromEntries(
     Object.entries(headers)
       .filter(([_, v]) => v !== undefined)
       .map(([k, v]) => [
-        k.toLowerCase(),
-        Array.isArray(v) ? v.map(String) : [String(v)]
+        k,
+        String(v)
       ])
   )
+}
+
+async function responseBody(data: any, headers: Record<string, any>): Promise<RelayResponseBody> {
+  const contentType = normalizeHeaders(headers)['content-type']?.[0] ?? MediaType.APPLICATION_OCTET
+
+  if (data instanceof FormData) {
+    return {
+      body: await convert(data),
+      mediaType: contentType.includes('multipart') ? MediaType.MULTIPART_FORM : MediaType.APPLICATION_FORM
+    }
+  }
+
+  if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
+    return {
+      body: new Uint8Array(data),
+      mediaType: contentType
+    }
+  }
+
+  return {
+    body: data,
+    mediaType: contentType
+  }
 }
 
 export const implementation: VersionedAPI<RelayV1> = {
@@ -175,10 +110,7 @@ export const implementation: VersionedAPI<RelayV1> = {
         'json',
         'xml',
         'form',
-        'binary',
-        'multipart',
         'urlencoded',
-        'stream',
         'compression'
       ]),
       auth: new Set([
@@ -192,7 +124,7 @@ export const implementation: VersionedAPI<RelayV1> = {
       advanced: new Set([])
     },
 
-    canHandle(request: Request) {
+    canHandle(request: RelayRequest) {
       if (!this.capabilities.method.has(request.method)) {
         return E.left({
           kind: "unsupported_feature",
@@ -241,15 +173,15 @@ export const implementation: VersionedAPI<RelayV1> = {
       return E.right(true)
     },
 
-    execute(request: Request) {
+    execute(request: RelayRequest) {
       const cancelTokenSource = axios.CancelToken.source()
-      const emitter: EventEmitter<RequestEvents> = {
+      const emitter: RelayEventEmitter<RelayRequestEvents> = {
         on: () => () => {},
         once: () => () => {},
         off: () => {}
       }
 
-      const response: Promise<E.Either<RelayError, Response>> = (async () => {
+      const response: Promise<E.Either<RelayError, RelayResponse>> = (async () => {
         try {
           const startTime = Date.now()
           const config: AxiosRequestConfig = {
@@ -262,7 +194,8 @@ export const implementation: VersionedAPI<RelayV1> = {
             timeout: request.meta?.options?.timeout,
             decompress: request.meta?.options?.decompress ?? true,
             validateStatus: null,
-            cancelToken: cancelTokenSource.token
+            cancelToken: cancelTokenSource.token,
+            responseType: 'arraybuffer'
           }
 
           if (request.auth) {
@@ -333,13 +266,16 @@ export const implementation: VersionedAPI<RelayV1> = {
             })
           }
 
-          const response: Response = {
+
+          const headers = normalizeHeaders(axiosResponse.headers)
+
+          const response: RelayResponse = {
             id: request.id,
             status: axiosResponse.status,
             statusText: axiosResponse.statusText,
             version: request.version,
-            headers: normalizeHeaders(axiosResponse.headers),
-            content: await determineContent(axiosResponse),
+            headers,
+            body: await responseBody(axiosResponse.data, headers),
             meta: {
               timing: {
                 start: startTime,

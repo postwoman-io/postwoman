@@ -137,7 +137,7 @@
               :class="{ 'bg-primaryLight': domain === selectedDomain }"
               @click="selectDomain(domain)"
             >
-              <span>{{
+              <span class="py-2.5">{{
                 domain === "*" ? t("settings.global_defaults") : domain
               }}</span>
               <HoppButtonSecondary

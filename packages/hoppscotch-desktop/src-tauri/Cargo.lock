@@ -366,9 +366,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.8.0"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ac0150caa2ae65ca5bd83f25c7de183dea78d4d366469f148435e2acfbad0da"
+checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
 dependencies = [
  "serde",
 ]
@@ -3603,8 +3603,9 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relay"
 version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/relay.git#4450cbfbc13f6a9749be5132b90a98c62e91c0c6"
+source = "git+https://github.com/CuriousCorrelation/relay.git#820e0bad200882514688783e20b6ed186c0d2b73"
 dependencies = [
+ "bytes",
  "curl",
  "dashmap",
  "env_logger",
@@ -3616,7 +3617,6 @@ dependencies = [
  "openssl",
  "openssl-sys",
  "serde",
- "serde_bytes",
  "serde_json",
  "strum",
  "thiserror 1.0.69",
@@ -3916,15 +3916,6 @@ dependencies = [
  "erased-serde",
  "serde",
  "typeid",
-]
-
-[[package]]
-name = "serde_bytes"
-version = "0.11.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "387cc504cb06bb40a96c8e04e951fe01854cf6bc921053c954e4a606d9675c6a"
-dependencies = [
- "serde",
 ]
 
 [[package]]
@@ -4654,7 +4645,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#7c5166d0e67227f190dc22b62b51bdeb2a65ff76"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#609ea1f7ce935497b100db89f6eb7835221bfb98"
 dependencies = [
  "relay",
  "serde",

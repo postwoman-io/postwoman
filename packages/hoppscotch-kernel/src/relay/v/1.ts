@@ -86,24 +86,34 @@ export type FormDataValue =
 
 export type FormData = Map<string, FormDataValue[]>
 
+export enum MediaType {
+    TEXT_PLAIN = "text/plain",
+    TEXT_HTML = "text/html",
+    TEXT_CSS = "text/css",
+    TEXT_CSV = "text/csv",
+    APPLICATION_JSON = "application/json",
+    APPLICATION_LD_JSON = "application/ld+json",
+    APPLICATION_XML = "application/xml",
+    TEXT_XML = "text/xml",
+    APPLICATION_FORM = "application/x-www-form-urlencoded",
+    APPLICATION_OCTET = "application/octet-stream",
+    MULTIPART_FORM = "multipart/form-data"
+}
+
 export type ContentType =
-    | { kind: "text"; content: string; mediaType: "text/plain" | "text/html" | "text/css" | "text/csv" }
-    | { kind: "json"; content: unknown; mediaType: "application/json" | "application/ld+json" }
-    | { kind: "xml"; content: string; mediaType: "application/xml" | "text/xml" }
-    | { kind: "form"; content: FormData; mediaType: "application/x-www-form-urlencoded" }
-    | {
-        kind: "binary"
-        content: Uint8Array
-        mediaType: "application/octet-stream" | string
-        filename?: string
-    }
-    | { kind: "multipart"; content: FormData; mediaType: "multipart/form-data" }
-    | {
-        kind: "urlencoded"
-        content: Record<string, string>
-        mediaType: "application/x-www-form-urlencoded"
-    }
+    | { kind: "text"; content: string; mediaType: MediaType.TEXT_PLAIN | MediaType.TEXT_HTML | MediaType.TEXT_CSS | MediaType.TEXT_CSV }
+    | { kind: "json"; content: unknown; mediaType: MediaType.APPLICATION_JSON | MediaType.APPLICATION_LD_JSON }
+    | { kind: "xml"; content: string; mediaType: MediaType.APPLICATION_XML | MediaType.TEXT_XML }
+    | { kind: "form"; content: FormData; mediaType: MediaType.APPLICATION_FORM }
+    | { kind: "binary"; content: Uint8Array; mediaType: MediaType.APPLICATION_OCTET | string; filename?: string }
+    | { kind: "multipart"; content: FormData; mediaType: MediaType.MULTIPART_FORM }
+    | { kind: "urlencoded"; content: Record<string, string>; mediaType: MediaType.APPLICATION_FORM }
     | { kind: "stream"; content: ReadableStream; mediaType: string }
+
+export interface RelayResponseBody<T = unknown> {
+    body: T
+    mediaType: MediaType | string
+}
 
 export type AuthType =
     | { kind: "none" }
@@ -179,7 +189,7 @@ export type CertificateType =
         password: string
     }
 
-export interface RequestEvents {
+export interface RelayRequestEvents {
     progress: {
         phase: 'upload' | 'download'
         loaded: number
@@ -190,7 +200,7 @@ export interface RequestEvents {
     }
     authChallenge: {
         type: 'basic' | 'digest' | 'oauth2'
-        params: Record<string, string[]>
+        params: Record<string, string>
     }
     cookieReceived: {
         domain: string
@@ -208,7 +218,7 @@ export interface RequestEvents {
     }
 }
 
-export type EventEmitter<T> = {
+export type RelayEventEmitter<T> = {
     on<K extends keyof T>(event: K, handler: (payload: T[K]) => void): () => void
     once<K extends keyof T>(event: K, handler: (payload: T[K]) => void): () => void
     off<K extends keyof T>(event: K, handler: (payload: T[K]) => void): void
@@ -310,13 +320,13 @@ export type RelayError =
     | { kind: "version"; message: string; cause?: unknown }
     | { kind: "abort"; message: string }
 
-export interface Request {
+export interface RelayRequest {
     id: number
     url: string
     method: Method
     version: Version
-    headers?: Record<string, string[]>
-    params?: Record<string, string[]>
+    headers?: Record<string, string>
+    params?: Record<string, string>
     content?: ContentType
     auth?: AuthType
 
@@ -371,12 +381,12 @@ export interface Request {
     }
 }
 
-export interface Response {
+export interface RelayResponse {
     id: number
     status: StatusCode
     statusText: string
     version: Version
-    headers: Record<string, string[]>
+    headers: Record<string, string>
     cookies?: Array<{
         name: string
         value: string
@@ -387,7 +397,7 @@ export interface Response {
         httpOnly?: boolean
         sameSite?: 'Strict' | 'Lax' | 'None'
     }>
-    content: ContentType
+    body: RelayResponseBody
 
     meta: {
         timing: {
@@ -428,7 +438,7 @@ export interface Response {
             url: string
             status: StatusCode
             version: Version
-            headers: Record<string, string[]>
+            headers: Record<string, string>
         }>
     }
 }
@@ -437,14 +447,14 @@ export interface RelayV1 {
     readonly id: string
     readonly capabilities: RelayCapabilities
 
-    canHandle(request: Request): E.Either<UnsupportedFeatureError, true>
+    canHandle(request: RelayRequest): E.Either<UnsupportedFeatureError, true>
 
     execute(
-        request: Request
+        request: RelayRequest
     ): {
         cancel: () => void
-        emitter: EventEmitter<RequestEvents>
-        response: Promise<E.Either<RelayError, Response>>
+        emitter: RelayEventEmitter<RelayRequestEvents>
+        response: Promise<E.Either<RelayError, RelayResponse>>
     }
 }
 
@@ -452,7 +462,7 @@ export const hasCapability = <T>(capabilities: Set<T>, capability: T): boolean =
     capabilities.has(capability)
 
 export function findSuitableRelay(
-    request: Request,
+    request: RelayRequest,
     relays: RelayV1[]
 ): E.Either<UnsupportedFeatureError, RelayV1> {
     for (const relay of relays) {
@@ -473,7 +483,7 @@ export function findSuitableRelay(
 export const content = {
     text: (
         content: string,
-        mediaType: "text/plain" | "text/html" | "text/css" | "text/csv"
+        mediaType: MediaType.TEXT_PLAIN | MediaType.TEXT_HTML | MediaType.TEXT_CSS | MediaType.TEXT_CSV
     ): ContentType => ({
         kind: "text",
         content,
@@ -482,7 +492,7 @@ export const content = {
 
     json: <T>(
         content: T,
-        mediaType: "application/json" | "application/ld+json" = "application/json"
+        mediaType: MediaType.APPLICATION_JSON | MediaType.APPLICATION_LD_JSON | MediaType.APPLICATION_JSON
     ): ContentType => ({
         kind: "json",
         content,
@@ -491,7 +501,7 @@ export const content = {
 
     xml: (
         content: string,
-        mediaType: "application/xml" | "text/xml"
+        mediaType: MediaType.APPLICATION_XML | MediaType.TEXT_XML
     ): ContentType => ({
         kind: "xml",
         content,
@@ -501,12 +511,12 @@ export const content = {
     form: (content: FormData): ContentType => ({
         kind: "form",
         content,
-        mediaType: "application/x-www-form-urlencoded"
+        mediaType: MediaType.APPLICATION_FORM
     }),
 
     binary: (
         content: Uint8Array,
-        mediaType: string = "application/octet-stream",
+        mediaType: string = MediaType.APPLICATION_OCTET,
         filename?: string
     ): ContentType => ({
         kind: "binary",
@@ -518,13 +528,13 @@ export const content = {
     multipart: (content: FormData): ContentType => ({
         kind: "multipart",
         content,
-        mediaType: "multipart/form-data"
+        mediaType: MediaType.MULTIPART_FORM
     }),
 
     urlencoded: (content: Record<string, string>): ContentType => ({
         kind: "urlencoded",
         content,
-        mediaType: "application/x-www-form-urlencoded"
+        mediaType: MediaType.APPLICATION_FORM
     }),
 
     stream: (content: ReadableStream, mediaType: string): ContentType => ({

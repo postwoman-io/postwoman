@@ -1,10 +1,10 @@
 import type { VersionedAPI } from '@type/versioning'
 import type {
     RelayV1,
-    Request,
-    RequestEvents,
-    EventEmitter,
-    Response,
+    RelayRequest,
+    RelayRequestEvents,
+    RelayEventEmitter,
+    RelayResponse,
     RelayError,
 } from '@relay/v/1'
 import * as E from 'fp-ts/Either'
@@ -78,7 +78,7 @@ export const implementation: VersionedAPI<RelayV1> = {
             ])
         },
 
-        canHandle(request: Request) {
+        canHandle(request: RelayRequest) {
             if (!this.capabilities.method.has(request.method)) {
                 return E.left({
                     kind: "unsupported_feature",
@@ -127,8 +127,8 @@ export const implementation: VersionedAPI<RelayV1> = {
             return E.right(true)
         },
 
-        execute(request: Request) {
-            const emitter: EventEmitter<RequestEvents> = {
+        execute(request: RelayRequest) {
+            const emitter: RelayEventEmitter<RelayRequestEvents> = {
                 on: () => () => {},
                 once: () => () => {},
                 off: () => {}
@@ -152,18 +152,18 @@ export const implementation: VersionedAPI<RelayV1> = {
                 proxy: request.proxy,
             } as PluginRequest
 
-            console.log("[KERNEL|DESKTOP] pluginRequest", pluginRequest)
             const responsePromise = execute(pluginRequest)
-                .then((result: RequestResult): E.Either<RelayError, Response> => {
+                .then((result: RequestResult): E.Either<RelayError, RelayResponse> => {
                     if (result.kind === 'success') {
-                        const response: Response = {
+                        console.log("[RELAY] result", result)
+                        const response: RelayResponse = {
                             id: result.response.id,
                             status: result.response.status,
                             statusText: result.response.statusText,
                             version: result.response.version,
                             headers: result.response.headers,
                             cookies: result.response.cookies,
-                            content: result.response.content,
+                            body: result.response.body,
                             meta: {
                                 timing: {
                                     start: result.response.meta.timing.start,
@@ -176,7 +176,7 @@ export const implementation: VersionedAPI<RelayV1> = {
                     }
                     return E.left(result.error)
                 })
-                .catch((error: unknown): E.Either<RelayError, Response> => {
+                .catch((error: unknown): E.Either<RelayError, RelayResponse> => {
                     const networkError: RelayError = {
                         kind: 'network',
                         message: error instanceof Error ? error.message : 'Unknown error occurred',

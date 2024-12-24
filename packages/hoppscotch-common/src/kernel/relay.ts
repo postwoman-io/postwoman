@@ -28,7 +28,6 @@ export const Relay = {
     if (!window.__KERNEL__?.relay) {
       throw new Error("Kernel relay is not initialized")
     }
-    console.log("Kernel found, executing request")
     return window.__KERNEL__.relay.execute(request)
   },
 }
