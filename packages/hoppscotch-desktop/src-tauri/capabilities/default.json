@@ -3,11 +3,15 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main",
+    "Hoppscotch"
   ],
   "permissions": [
     "core:default",
     "shell:allow-open",
+    "store:default",
+    "dialog:default",
+    "fs:allow-write-text-file",
     "hoppscotch-appload:default",
     "store:default"
   ]

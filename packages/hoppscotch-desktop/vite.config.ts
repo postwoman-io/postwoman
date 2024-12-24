@@ -45,6 +45,21 @@ export default defineConfig(async () => ({
     dedupe: ["vue"],
   },
 
+  optimizeDeps: {
+    include: ['@hoppscotch/kernel']
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          kernel: ['@hoppscotch/kernel'],
+          ui: ['@hoppscotch/ui'],
+        }
+      }
+    }
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   clearScreen: false,
   server: {

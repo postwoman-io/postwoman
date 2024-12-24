@@ -4,6 +4,7 @@ import { initializeApp } from "./helpers/app"
 import { initBackendGQLClient } from "./helpers/backend/GQLClient"
 import { performMigrations } from "./helpers/migrations"
 import { PlatformDef, setPlatformDef } from "./platform"
+import { initKernel, getKernelMode } from "@hoppscotch/kernel"
 
 import "../assets/scss/tailwind.scss"
 import "../assets/themes/themes.scss"
@@ -17,6 +18,7 @@ import { getService } from "./modules/dioc"
 import { PersistenceService } from "./services/persistence"
 
 export function createHoppApp(el: string | Element, platformDef: PlatformDef) {
+  initKernel(getKernelMode())
   setPlatformDef(platformDef)
 
   const app = createApp(App)

@@ -13,7 +13,7 @@
 
 use std::sync::Arc;
 use tauri::{
-    plugin::{Builder, TauriPlugin},
+    plugin::{Builder, Plugin, TauriPlugin},
     Manager, Runtime,
 };
 

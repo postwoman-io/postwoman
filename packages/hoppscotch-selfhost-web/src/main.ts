@@ -14,13 +14,17 @@ import { stdSupportOptionItems } from "@hoppscotch/common/platform/std/ui/suppor
 import { browserIODef } from "@hoppscotch/common/platform/std/io"
 import { InfraPlatform } from "@platform/infra/infra.platform"
 
+import { getKernelMode } from "@hoppscotch/kernel"
+import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
 createHoppApp("#app", {
   ui: {
     additionalFooterMenuItems: stdFooterItems,
     additionalSupportOptionsMenuItems: stdSupportOptionItems,
   },
   auth: authDef,
+  // NOTE: To be deprecated
   io: browserIODef,
+  kernelIO: kernelIO,
   sync: {
     environments: environmentsDef,
     collections: collectionsDef,

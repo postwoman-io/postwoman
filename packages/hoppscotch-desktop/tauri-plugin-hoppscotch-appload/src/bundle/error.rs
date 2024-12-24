@@ -2,9 +2,6 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum BundleError {
-    #[error("Bundle metadata error: {0}")]
-    MetadataError(String),
-
     #[error("File not found in bundle: {0}")]
     FileNotFound(String),
 
@@ -16,6 +13,9 @@ pub enum BundleError {
 
     #[error("Storage error: {0}")]
     Storage(#[from] crate::storage::StorageError),
+
+    #[error("API error: {0}")]
+    Api(#[from] crate::api::ApiError),
 
     #[error("Cache error: {0}")]
     Cache(#[from] crate::cache::CacheError),

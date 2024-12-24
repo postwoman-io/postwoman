@@ -40,7 +40,7 @@ export function useAppUpdates() {
     async function loadApp(bundleName: string): Promise<LoadResponse> {
         return await load({
             bundleName,
-            inline: true,
+            inline: false,
             window: {
                 title: 'Hoppscotch',
                 width: 1200,

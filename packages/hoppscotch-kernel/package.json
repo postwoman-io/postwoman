@@ -19,17 +19,17 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "type": "./dist/index.d.ts",
       "import": "./dist/hoppscotch-kernel.js",
       "require": "./dist/hoppscotch-kernel.cjs"
     },
     "./io/web": {
-      "types": "./dist/io/impl/web/index.d.ts",
+      "type": "./dist/io/impl/web/index.d.ts",
       "import": "./dist/io/impl/web/index.js",
       "require": "./dist/io/impl/web/index.cjs"
     },
     "./io/desktop": {
-      "types": "./dist/io/impl/desktop/index.d.ts",
+      "type": "./dist/io/impl/desktop/index.d.ts",
       "import": "./dist/io/impl/desktop/index.js",
       "require": "./dist/io/impl/desktop/index.cjs"
     }

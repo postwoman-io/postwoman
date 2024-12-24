@@ -36,6 +36,7 @@
     "@codemirror/view": "6.25.1",
     "@hoppscotch/codemirror-lang-graphql": "workspace:^",
     "@hoppscotch/data": "workspace:^",
+    "@hoppscotch/kernel": "workspace:^",
     "@hoppscotch/httpsnippet": "3.0.6",
     "@hoppscotch/js-sandbox": "workspace:^",
     "@hoppscotch/ui": "0.2.2",

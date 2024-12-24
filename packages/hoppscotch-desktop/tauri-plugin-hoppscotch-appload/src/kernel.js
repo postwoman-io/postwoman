@@ -1,4 +1,4 @@
-window.Kernel = {
-  name: "desktop-app-kernel",
-  revision: 1
-}
+(() => {
+  console.log('Setting desktop kernel mode');
+  window.__KERNEL_MODE__ = 'desktop';
+})();
