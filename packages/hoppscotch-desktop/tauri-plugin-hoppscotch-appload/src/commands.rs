@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
+use tauri::{command, AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder};
+
 use crate::{
     bundle::BundleLoader,
     models::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse},
     Result,
 };
-use std::sync::Arc;
-use tauri::{command, AppHandle, Manager, Runtime};
 
 fn sanitize_window_label(input: &str) -> String {
     input
@@ -60,58 +62,34 @@ pub async fn download<R: Runtime>(
 
 #[command]
 pub async fn load<R: Runtime>(app: AppHandle<R>, options: LoadOptions) -> Result<LoadResponse> {
-    tracing::info!(?options, "Starting load process");
+    let label = format!("{}", sanitize_window_label(&options.window.title));
 
-    let window_label = format!("app_{}", sanitize_window_label(&options.bundle_name));
+    tracing::info!(?options, bundle = %options.bundle_name, "Loading bundle");
+
     let url = format!("app://{}/", options.bundle_name);
+    tracing::debug!(%url, "Generated app URL");
 
-    tracing::debug!(window_label = %window_label, "Generated sanitized window label");
-
-    if options.inline {
-        let window = app.get_focused_window().ok_or_else(|| {
-            tracing::error!("No focused window found for inline loading");
-            crate::Error::WindowNotFound
+    let window = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(url.parse().unwrap()))
+        .initialization_script(crate::KERNEL_JS)
+        .title(sanitize_window_label(&label))
+        .inner_size(options.window.width, options.window.height)
+        .resizable(options.window.resizable)
+        .build()
+        .map_err(|e| {
+            tracing::error!(?e, ?label, "Failed to create window");
+            e
         })?;
-        tracing::debug!(window_label = %window.label(), "Found focused window for inline loading");
 
-        window
-            .webviews()
-            .first()
-            .ok_or_else(|| {
-                tracing::error!("No webview found in focused window");
-                crate::Error::WindowNotFound
-            })?
-            .eval(&format!("window.location.href = '{}'", url))
-            .map_err(|e| {
-                tracing::error!(?e, url = %url, "Failed to evaluate inline loading script");
-                e
-            })?;
-
-        let response = LoadResponse {
-            success: true,
-            window_label: window.label().into(),
-        };
-        tracing::info!(?response, "Inline loading completed successfully");
-        return Ok(response);
+    if let Some(main_window) = app.get_webview_window("main") {
+        main_window.close()?;
+        tracing::info!("Closing `main` window");
     }
-
-    let window =
-        tauri::WebviewWindowBuilder::new(&app, &window_label, tauri::WebviewUrl::App(url.into()))
-            .title(&options.window.title)
-            .inner_size(options.window.width, options.window.height)
-            .resizable(options.window.resizable)
-            .initialization_script(super::KERNEL_JS)
-            .build()
-            .map_err(|e| {
-                tracing::error!(?e, ?window_label, "Failed to create window");
-                e
-            })?;
 
     let response = LoadResponse {
         success: window.is_visible().unwrap_or(false),
-        window_label,
+        window_label: label,
     };
 
-    tracing::info!(?response, "Load process completed successfully");
+    tracing::info!(?response, "Bundle loaded successfully");
     Ok(response)
 }

@@ -15,6 +15,7 @@ import { LimitsPlatformDef } from "./limits"
 import { SettingsPlatformDef } from "./settings"
 import { SpotlightPlatformDef } from "./spotlight"
 import { UIPlatformDef } from "./ui"
+import { KernelIO } from "./kernel-io"
 
 export type PlatformDef = {
   ui?: UIPlatformDef
@@ -23,6 +24,7 @@ export type PlatformDef = {
   auth: AuthPlatformDef
   analytics?: AnalyticsPlatformDef
   io: IOPlatformDef
+  kernelIO: KernelIO,
   sync: {
     environments: EnvironmentsPlatformDef
     collections: CollectionsPlatformDef

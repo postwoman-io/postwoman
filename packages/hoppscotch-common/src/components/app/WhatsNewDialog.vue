@@ -48,7 +48,7 @@ defineEmits<{
 }>()
 
 const openWhatsNew = () => {
-  if (props.notesUrl) platform.io.openExternalLink(props.notesUrl)
+  if (props.notesUrl) platform.kernelIO.openExternalLink(props.notesUrl)
 }
 </script>
 

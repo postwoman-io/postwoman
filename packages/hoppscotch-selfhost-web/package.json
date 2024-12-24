@@ -28,6 +28,7 @@
     "@fontsource-variable/roboto-mono": "5.1.0",
     "@hoppscotch/common": "workspace:^",
     "@hoppscotch/data": "workspace:^",
+    "@hoppscotch/kernel": "workspace:^",
     "@hoppscotch/ui": "0.2.1",
     "@import-meta-env/unplugin": "0.6.0",
     "axios": "1.7.7",

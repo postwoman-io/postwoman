@@ -14,6 +14,7 @@
     "@fontsource-variable/material-symbols-rounded": "5.1.3",
     "@fontsource-variable/roboto-mono": "5.1.0",
     "@hoppscotch/ui": "0.2.1",
+    "@hoppscotch/kernel": "workspace:^",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
     "@tauri-apps/plugin-store": "2.1.0",

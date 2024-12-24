@@ -118,7 +118,7 @@ export class GeneralSpotlightSearcherService extends StaticSpotlightSearcherServ
   }
 
   private openURL(url: string) {
-    platform.io.openExternalLink(url)
+    platform.kernelIO.openExternalLink(url)
   }
 
   public onDocSelected(id: string): void {

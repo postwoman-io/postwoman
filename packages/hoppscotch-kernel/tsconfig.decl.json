@@ -4,6 +4,8 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationDir": "./dist",
+    "rootDir": "./src"
   },
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

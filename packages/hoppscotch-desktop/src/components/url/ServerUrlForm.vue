@@ -96,7 +96,7 @@ const handleSubmit = async () => {
     if (downloadRes.success) {
       const loadRes = await load({
         bundleName: downloadRes.bundleName,
-        inline: true,
+        inline: false,
         window: {
           title: "Hoppscotch",
           width: 1200,
