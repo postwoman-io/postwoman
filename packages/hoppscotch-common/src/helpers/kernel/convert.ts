@@ -1,4 +1,4 @@
-import { ContentType } from "@hoppscotch/kernel"
+import { AuthType, ContentType } from "@hoppscotch/kernel"
 import { ContentTypeMapper } from "./type"
 import { ContentHandlerFactory } from "./content"
 import { EffectiveHoppRESTRequest } from "../utils/EffectiveURL"
@@ -44,6 +44,7 @@ export async function convertContent(
   }
 
   const handler = new ContentHandlerFactory().getHandler(body.contentType)
+  console.log(effectiveBody)
   return handler.convert(effectiveBody)
 }
 

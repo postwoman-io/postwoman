@@ -80,6 +80,12 @@ export type StatusCode =
     | 510  // Not Extended
     | 511  // Network Auth Required
 
+export type FormDataValue =
+    | { kind: "text"; value: string }
+    | { kind: "file"; filename: string; contentType: string; data: Uint8Array }
+
+export type FormData = Map<string, FormDataValue[]>
+
 export type ContentType =
     | { kind: "text"; content: string; mediaType: "text/plain" | "text/html" | "text/css" | "text/csv" }
     | { kind: "json"; content: unknown; mediaType: "application/json" | "application/ld+json" }

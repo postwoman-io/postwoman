@@ -7,6 +7,8 @@ import type {
   Response,
   RelayError,
   StatusCode,
+  FormData,
+  FormDataValue,
 } from '@relay/v/1'
 
 import * as E from 'fp-ts/Either'
@@ -16,7 +18,39 @@ import { AwsV4Signer } from 'aws4fetch'
 const isStatusCode = (status: number): status is StatusCode =>
   status >= 100 && status < 600
 
-function determineContent(response: AxiosResponse): Response['content'] {
+async function convert(formData: globalThis.FormData): Promise<FormData> {
+  const converted = new Map<string, FormDataValue[]>();
+
+  // SAFETY: `.entries` exists but Typescript doesn't know about it
+  // mainly because of
+  // ```ts
+  //  "lib": ["esnext", "DOM"],
+  //  ````
+  // @ts-ignore
+  for (const [key, value] of formData.entries()) {
+    if (!converted.has(key)) {
+      converted.set(key, []);
+    }
+
+    if (value instanceof File) {
+      converted.get(key)!.push({
+        kind: "file",
+        filename: value.name,
+        contentType: value.type || "application/octet-stream",
+        data: new Uint8Array(await value.arrayBuffer())
+      });
+    } else {
+      converted.get(key)!.push({
+        kind: "text",
+        value: value.toString()
+      });
+    }
+  }
+
+  return converted;
+}
+
+async function determineContent(response: AxiosResponse): Promise<Response['content']> {
   const contentType = normalizeHeaders(response.headers)['content-type']?.[0]
   const data = response.data
 
@@ -24,7 +58,7 @@ function determineContent(response: AxiosResponse): Response['content'] {
     return {
       kind: 'binary',
       content: new Uint8Array(data),
-      mediaType: 'application/octet-stream'
+      mediaType: contentType ?? 'application/octet-stream'
     }
   }
 
@@ -34,7 +68,7 @@ function determineContent(response: AxiosResponse): Response['content'] {
         return {
           kind: 'json',
           content: JSON.parse(data),
-          mediaType: 'application/json'
+          mediaType: contentType.includes('application/ld+json') ? 'application/ld+json' : 'application/json'
         }
       } catch {
         // Fall through to text
@@ -49,26 +83,19 @@ function determineContent(response: AxiosResponse): Response['content'] {
       }
     }
 
-    // Handle text content types
-    if (contentType?.includes('text/html')) {
-      return {
-        kind: 'text',
-        content: data,
-        mediaType: 'text/html'
-      }
-    }
-    if (contentType?.includes('text/css')) {
-      return {
-        kind: 'text',
-        content: data,
-        mediaType: 'text/css'
-      }
-    }
-    if (contentType?.includes('text/csv')) {
-      return {
-        kind: 'text',
-        content: data,
-        mediaType: 'text/csv'
+    const textTypes = {
+      'text/html': 'text/html',
+      'text/css': 'text/css',
+      'text/csv': 'text/csv'
+    } as const
+
+    for (const [type, mediaType] of Object.entries(textTypes)) {
+      if (contentType?.includes(type)) {
+        return {
+          kind: 'text',
+          content: data,
+          mediaType
+        }
       }
     }
 
@@ -80,18 +107,29 @@ function determineContent(response: AxiosResponse): Response['content'] {
   }
 
   if (data instanceof FormData) {
+    const isMultipart = contentType?.includes('multipart/form-data')
+    const convertedData = await convert(data)
+
+    if (isMultipart) {
+      return {
+        kind: 'multipart',
+        content: convertedData,
+        mediaType: 'multipart/form-data'
+      }
+    }
+
     return {
       kind: 'form',
-      content: data,
+      content: convertedData,
       mediaType: 'application/x-www-form-urlencoded'
     }
   }
 
-  if (data instanceof ReadableStream) {
+  if (data instanceof URLSearchParams) {
     return {
-      kind: 'stream',
-      content: data,
-      mediaType: contentType ?? 'application/octet-stream'
+      kind: 'urlencoded',
+      content: Object.fromEntries(data),
+      mediaType: 'application/x-www-form-urlencoded'
     }
   }
 
@@ -301,7 +339,7 @@ export const implementation: VersionedAPI<RelayV1> = {
             statusText: axiosResponse.statusText,
             version: request.version,
             headers: normalizeHeaders(axiosResponse.headers),
-            content: determineContent(axiosResponse),
+            content: await determineContent(axiosResponse),
             meta: {
               timing: {
                 start: startTime,

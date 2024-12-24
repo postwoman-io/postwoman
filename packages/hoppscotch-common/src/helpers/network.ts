@@ -2,7 +2,7 @@ import { Observable, BehaviorSubject } from "rxjs"
 import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
 import { pipe } from "fp-ts/function"
-import { RelayError } from "@hoppscotch/kernel"
+import { Response, RelayError } from "@hoppscotch/kernel"
 import { HoppRESTResponse } from "./types/HoppRESTResponse"
 import { EffectiveHoppRESTRequest } from "./utils/EffectiveURL"
 import { getService } from "~/modules/dioc"
@@ -56,19 +56,24 @@ export function createRESTNetworkRequestStream(
 
       return pipe(
         result,
-        E.map((kernelResponse) => {
+        E.map((kernelResponse: Response) => {
+          const { start, end } = kernelResponse.meta.timing
+          const { total } = kernelResponse.meta.size
+
+          logger.debug("kernelResponse", kernelResponse)
           const response = convertResponseToHoppRESTResponse(
             kernelResponse,
             request,
             {
-              responseSize: kernelResponse.body?.byteLength ?? 0,
-              responseDuration: endTime - startTime,
+              responseSize: total,
+              responseDuration: end - start,
             }
           )
           logger.debug("Response converted", {
             size: kernelResponse.body?.byteLength ?? 0,
-            duration: endTime - startTime,
+            duration: end - start,
           })
+          logger.debug("Response", response)
           return response
         }),
         E.mapLeft((error) => {
