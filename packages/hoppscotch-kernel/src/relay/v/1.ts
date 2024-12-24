@@ -13,7 +13,7 @@ export type Method =
     | "CONNECT"    // Create tunnel
     | "TRACE"      // Loop-back test
 
-export type Protocol = "http/1.0" | "http/1.1" | "http/2" | "http/3"
+export type Version = "HTTP/1.0" | "HTTP/1.1" | "HTTP/2" | "HTTP/3"
 
 export type StatusCode =
     | 100  // Continue
@@ -158,6 +158,7 @@ export type AuthType =
         region: string
         service: string
         sessionToken?: string
+        in: "header" | "query"
     }
 
 export type CertificateType =
@@ -300,14 +301,14 @@ export type RelayError =
     | { kind: "auth"; message: string; cause?: unknown }
     | { kind: "proxy"; message: string; cause?: unknown }
     | { kind: "parse"; message: string; cause?: unknown }
-    | { kind: "protocol"; message: string; cause?: unknown }
+    | { kind: "version"; message: string; cause?: unknown }
     | { kind: "abort"; message: string }
 
 export interface Request {
     id: number
     url: string
     method: Method
-    protocol: Protocol
+    version: Version
     headers?: Record<string, string[]>
     params?: Record<string, string[]>
     content?: ContentType
@@ -368,7 +369,7 @@ export interface Response {
     id: number
     status: StatusCode
     statusText: string
-    protocol: Protocol
+    version: Version
     headers: Record<string, string[]>
     cookies?: Array<{
         name: string
@@ -401,7 +402,7 @@ export interface Response {
             total: number
         }
         tls?: {
-            protocol: string
+            version: string
             cipher: string
             certificates?: Array<{
                 subject: string
@@ -420,7 +421,7 @@ export interface Response {
         redirects?: Array<{
             url: string
             status: StatusCode
-            protocol: Protocol
+            version: Version
             headers: Record<string, string[]>
         }>
     }
@@ -555,7 +556,7 @@ export const v1: VersionedAPI<RelayV1> = {
             },
             response: Promise.resolve(
                 E.left({
-                    kind: "protocol",
+                    kind: "version",
                     message: "Not implemented"
                 })
             )

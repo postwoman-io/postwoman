@@ -56,10 +56,15 @@
         </div>
 
         <div class="flex items-center">
-          <HoppSmartToggle :on="!!domainSettings[selectedDomain]?.proxy" @change="toggleProxy" />
+          <HoppSmartToggle
+            :on="!!domainSettings[selectedDomain]?.proxy"
+            @change="toggleProxy"
+          />
           {{ t("settings.proxy") }}
         </div>
-        <p class="my-1 text-secondaryLight">{{ t("settings.proxy_capabilities") }}</p>
+        <p class="my-1 text-secondaryLight">
+          {{ t("settings.proxy_capabilities") }}
+        </p>
         <div class="flex flex-col space-y-2">
           <HoppSmartInput
             v-if="domainSettings[selectedDomain]?.proxy"
@@ -84,17 +89,15 @@
               :placeholder="' '"
               :label="t('authorization.password')"
               input-styles="floating-input !border-0"
-              @update:model-value="updateProxyPassword"
               :type="showProxyPassword ? 'text' : 'password'"
+              @update:model-value="updateProxyPassword"
             >
               <template #button>
                 <HoppButtonSecondary
                   v-tippy="{ theme: 'tooltip' }"
                   :title="
-                        showProxyPassword
-                          ? t('hide.password')
-                          : t('show.password')
-                      "
+                    showProxyPassword ? t('hide.password') : t('show.password')
+                  "
                   :icon="showProxyPassword ? IconEye : IconEyeOff"
                   @click="showProxyPassword = !showProxyPassword"
                 />
@@ -113,7 +116,11 @@
       <template #body>
         <div class="space-y-4 p-4">
           <div class="flex space-x-2">
-            <HoppSmartInput v-model="newDomain" :placeholder="'example.com'" class="flex-1" />
+            <HoppSmartInput
+              v-model="newDomain"
+              :placeholder="'example.com'"
+              class="flex-1"
+            />
             <HoppButtonSecondary
               v-tippy="{ theme: 'tooltip', content: t('settings.add_domain') }"
               :icon="IconPlus"
@@ -130,7 +137,9 @@
               :class="{ 'bg-primaryLight': domain === selectedDomain }"
               @click="selectDomain(domain)"
             >
-              <span>{{ domain === "*" ? t("settings.global_defaults") : domain }}</span>
+              <span>{{
+                domain === "*" ? t("settings.global_defaults") : domain
+              }}</span>
               <HoppButtonSecondary
                 v-if="domain !== '*'"
                 v-tippy="{
@@ -157,7 +166,9 @@
       <template #body>
         <div class="flex flex-col space-y-4">
           <div
-            v-if="domainSettings[selectedDomain]?.security?.certificates?.client"
+            v-if="
+              domainSettings[selectedDomain]?.security?.certificates?.client
+            "
             class="mx-4 border border-divider rounded"
           >
             <div class="flex px-2 items-center justify-between">
@@ -165,9 +176,14 @@
                 <div class="truncate">{{ selectedDomain }}</div>
               </div>
               <div class="flex items-center space-x-1">
-                <div
-                  class="text-secondaryLight mr-2"
-                >{{ domainSettings[selectedDomain]?.security?.certificates?.client?.kind === 'pem' ? 'PEM' : 'PFX/PKCS12' }}</div>
+                <div class="text-secondaryLight mr-2">
+                  {{
+                    domainSettings[selectedDomain]?.security?.certificates
+                      ?.client?.kind === "pem"
+                      ? "PEM"
+                      : "PFX/PKCS12"
+                  }}
+                </div>
                 <HoppButtonSecondary
                   v-tippy="{ theme: 'tooltip' }"
                   :icon="IconTrash"
@@ -187,7 +203,9 @@
                   <HoppButtonSecondary
                     :icon="certFiles.pem_cert ? IconFile : IconPlus"
                     :loading="false"
-                    :label="certFiles.pem_cert?.name || t('settings.select_file')"
+                    :label="
+                      certFiles.pem_cert?.name || t('settings.select_file')
+                    "
                     filled
                     outline
                     @click="pickPEMCertificate"
@@ -198,7 +216,9 @@
                   <HoppButtonSecondary
                     :icon="certFiles.pem_key ? IconFile : IconPlus"
                     :loading="false"
-                    :label="certFiles.pem_key?.name || t('settings.select_file')"
+                    :label="
+                      certFiles.pem_key?.name || t('settings.select_file')
+                    "
                     filled
                     outline
                     @click="pickPEMKey"
@@ -240,7 +260,10 @@
             :disabled="!isValidCertConfig"
             @click="saveClientCertificate"
           />
-          <HoppButtonSecondary :label="t('action.cancel')" @click="showCertModal = false" />
+          <HoppButtonSecondary
+            :label="t('action.cancel')"
+            @click="showCertModal = false"
+          />
         </div>
       </template>
     </HoppSmartModal>
@@ -254,11 +277,14 @@
       <template #body>
         <div class="flex flex-col space-y-4">
           <ul
-            v-if="domainSettings[selectedDomain]?.security?.certificates?.ca?.length"
+            v-if="
+              domainSettings[selectedDomain]?.security?.certificates?.ca?.length
+            "
             class="mx-4 border border-divider rounded"
           >
             <li
-              v-for="(cert, index) in domainSettings[selectedDomain].security.certificates.ca"
+              v-for="(cert, index) in domainSettings[selectedDomain].security
+                .certificates.ca"
               :key="index"
               class="flex border-dividerDark px-2 items-center justify-between"
               :class="{ 'border-t border-dividerDark': index !== 0 }"
@@ -294,7 +320,10 @@
             :disabled="!caCertFile"
             @click="saveCACertificate"
           />
-          <HoppButtonSecondary :label="t('action.cancel')" @click="showCACertModal = false" />
+          <HoppButtonSecondary
+            :label="t('action.cancel')"
+            @click="showCACertModal = false"
+          />
         </div>
       </template>
     </HoppSmartModal>

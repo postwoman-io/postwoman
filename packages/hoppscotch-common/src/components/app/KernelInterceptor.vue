@@ -1,10 +1,12 @@
 <template>
   <div class="flex flex-col space-y-2">
     <div v-if="isTooltipComponent" class="flex flex-col px-4 pt-2">
-      <h2
-        class="inline-flex pb-1 font-semibold text-secondaryDark"
-      >{{ t("settings.kernel_interceptor") }}</h2>
-      <p class="inline-flex text-tiny">{{ t("settings.kernel_interceptor_description") }}</p>
+      <h2 class="inline-flex pb-1 font-semibold text-secondaryDark">
+        {{ t("settings.kernel_interceptor") }}
+      </h2>
+      <p class="inline-flex text-tiny">
+        {{ t("settings.kernel_interceptor_description") }}
+      </p>
     </div>
 
     <div>
@@ -24,26 +26,34 @@
           @change="setKernelInterceptor(kernelInterceptor.id)"
         />
 
-        <div v-if="kernelInterceptor.selectable.type === 'unselectable'" class="px-4 py-1">
+        <div
+          v-if="kernelInterceptor.selectable.type === 'unselectable'"
+          class="px-4 py-1"
+        >
           <template v-if="kernelInterceptor.selectable.reason.type === 'text'">
-            <p
-              class="text-tiny text-secondaryLight"
-            >{{ kernelInterceptor.selectable.reason.text(t) }}</p>
+            <p class="text-tiny text-secondaryLight">
+              {{ kernelInterceptor.selectable.reason.text(t) }}
+            </p>
             <button
               v-if="kernelInterceptor.selectable.action"
               class="text-tiny text-accent hover:text-accentDark"
               @click="kernelInterceptor.selectable.action.handler"
-            >{{ kernelInterceptor.selectable.action.text(t) }}</button>
+            >
+              {{ kernelInterceptor.selectable.action.text(t) }}
+            </button>
           </template>
 
           <component
-            v-else-if="kernelInterceptor.selectable.reason.type === 'component'"
             :is="kernelInterceptor.selectable.reason.component"
+            v-else-if="kernelInterceptor.selectable.reason.type === 'component'"
             v-bind="kernelInterceptor.selectable.reason.props"
           />
         </div>
 
-        <component v-if="kernelInterceptor.subtitle" :is="kernelInterceptor.subtitle" />
+        <component
+          :is="kernelInterceptor.subtitle"
+          v-if="kernelInterceptor.subtitle"
+        />
       </div>
     </div>
   </div>
