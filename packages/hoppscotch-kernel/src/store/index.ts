@@ -1,7 +1,7 @@
 import { v1 } from './v/1'
 
 export type {
-    RelayV1,
+    StoreV1,
 } from './v/1'
 
 export const VERSIONS = {

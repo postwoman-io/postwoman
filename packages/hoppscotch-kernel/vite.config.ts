@@ -8,8 +8,6 @@ export default defineConfig({
     lib: {
       entry: {
         'hoppscotch-kernel': resolve(__dirname, 'src/index.ts'),
-        'io/impl/web/index': resolve(__dirname, 'src/io/impl/web/index.ts'),
-        'io/impl/desktop/index': resolve(__dirname, 'src/io/impl/desktop/index.ts')
       },
       formats: ['es', 'cjs']
     },
@@ -30,6 +28,7 @@ export default defineConfig({
       '~': resolve(__dirname, './src'),
       '@io': resolve(__dirname, './src/io'),
       '@relay': resolve(__dirname, './src/relay'),
+      '@store': resolve(__dirname, './src/store'),
       '@type': resolve(__dirname, './src/type'),
       '@util': resolve(__dirname, './src/util')
     }
