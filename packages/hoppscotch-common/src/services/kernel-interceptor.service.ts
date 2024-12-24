@@ -22,18 +22,17 @@ export type SelectableStatus<Props = unknown> =
       }
     }
 
-export type KernelInterceptor<Err extends RelayError = RelayError> =
-  {
-    id: string
-    name: (t: ReturnType<typeof getI18n>) => string
-    settingsEntry?: {
-      title: (t: ReturnType<typeof getI18n>) => string
-      component: Component
-    }
-    subtitle?: Component
-    selectable: SelectableStatus
-    execute: (request: Request) => ExecutionResult<Err>
+export type KernelInterceptor<Err extends RelayError = RelayError> = {
+  id: string
+  name: (t: ReturnType<typeof getI18n>) => string
+  settingsEntry?: {
+    title: (t: ReturnType<typeof getI18n>) => string
+    component: Component
   }
+  subtitle?: Component
+  selectable: SelectableStatus
+  execute: (request: Request) => ExecutionResult<Err>
+}
 
 export class KernelInterceptorService extends Service {
   public static readonly ID = "KERNEL_INTERCEPTOR_SERVICE"

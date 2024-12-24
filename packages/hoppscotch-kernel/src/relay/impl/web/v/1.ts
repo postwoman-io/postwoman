@@ -11,6 +11,7 @@ import type {
 
 import * as E from 'fp-ts/Either'
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AwsV4Signer } from 'aws4fetch'
 
 const isStatusCode = (status: number): status is StatusCode =>
   status >= 100 && status < 600
@@ -145,7 +146,8 @@ export const implementation: VersionedAPI<RelayV1> = {
       auth: new Set([
         'basic',
         'bearer',
-        'apikey'
+        'apikey',
+        'aws'
       ]),
       security: new Set([]),
       proxy: new Set([]),
@@ -257,6 +259,34 @@ export const implementation: VersionedAPI<RelayV1> = {
                   }
                 }
                 break
+              case 'aws': {
+                const { accessKey, secretKey, region, service, sessionToken, in: location } = request.auth
+                const signer = new AwsV4Signer({
+                  url: request.url,
+                  method: request.method,
+                  accessKeyId: accessKey,
+                  secretAccessKey: secretKey,
+                  region,
+                  service,
+                  sessionToken,
+                  datetime: new Date().toISOString().replace(/[:-]|\.\d{3}/g, ""),
+                  signQuery: false
+                })
+                const signed = await signer.sign()
+                if (location === "query") {
+                  config.url = signed.url.toString()
+                } else {
+                  const headers: Record<string, string> = {}
+                  signed.headers.forEach((value, key) => {
+                    headers[key] = value
+                  })
+                  config.headers = {
+                    ...config.headers,
+                    ...headers
+                  }
+                }
+                break
+              }
             }
           }
 
@@ -265,7 +295,7 @@ export const implementation: VersionedAPI<RelayV1> = {
 
           if (!isStatusCode(axiosResponse.status)) {
             return E.left({
-              kind: 'protocol',
+              kind: 'version',
               message: `Invalid status code: ${axiosResponse.status}`
             })
           }
@@ -274,7 +304,7 @@ export const implementation: VersionedAPI<RelayV1> = {
             id: request.id,
             status: axiosResponse.status,
             statusText: axiosResponse.statusText,
-            protocol: request.protocol,
+            version: request.version,
             headers: normalizeHeaders(axiosResponse.headers),
             content: determineContent(axiosResponse),
             meta: {

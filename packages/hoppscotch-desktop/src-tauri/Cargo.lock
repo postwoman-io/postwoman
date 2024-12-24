@@ -3594,7 +3594,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relay"
 version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/relay.git#b260443505ebb6822bf8385b5a66cf823028b1ee"
+source = "git+https://github.com/CuriousCorrelation/relay.git#c729d9a41ae3c9d651174df17c55a498b42eb0bb"
 dependencies = [
  "curl",
  "dashmap",
@@ -4599,7 +4599,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-appload"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload#dd542cc43744da9a4caa2691891a6cefc9cde43e"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload#20fa49e0fd108bb8ffb9a7bd166407a8c0ee30c7"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4631,7 +4631,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#d3b58539af372bf67956261b8b15c1595e5d69ba"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#7a4f215b433d5d3ea783cc1b764d8d3da0dbcb33"
 dependencies = [
  "relay",
  "serde",

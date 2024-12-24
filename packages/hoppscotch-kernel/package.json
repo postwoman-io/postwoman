@@ -53,6 +53,7 @@
   "dependencies": {
     "axios": "1.6.2",
     "fp-ts": "2.16.9",
+    "aws4fetch": "1.0.20",
     "@hoppscotch/plugin-relay": "github:CuriousCorrelation/tauri-plugin-hoppscotch-relay"
   }
 }
