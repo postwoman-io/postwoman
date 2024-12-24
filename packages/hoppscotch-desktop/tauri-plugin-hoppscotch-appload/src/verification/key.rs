@@ -24,7 +24,7 @@ impl KeyManager {
         let key_bytes = base64::engine::general_purpose::STANDARD
             .decode(&server_key.key)
             .map_err(|e| {
-                tracing::error!( error = %e, "Failed to decode key bytes");
+                tracing::error!(error = %e, "Failed to decode key bytes");
                 VerificationError::InvalidKeyFormat(e.to_string())
             })?;
 
@@ -34,7 +34,7 @@ impl KeyManager {
         })?;
 
         let verified_key = VerifyingKey::from_bytes(&key_bytes).map_err(|e| {
-            tracing::error!( error = %e, "Invalid key format");
+            tracing::error!(error = %e, "Invalid key format");
             VerificationError::InvalidKeyFormat(e.to_string())
         })?;
 

@@ -20,7 +20,8 @@
     "@vueuse/core": "11.1.0",
     "tauri-plugin-hoppscotch-appload-api": "file:tauri-plugin-hoppscotch-appload",
     "vue": "^3.3.4",
-    "vue-router": "4.4.5"
+    "vue-router": "4.4.5",
+    "vue-tippy": "6.5.0"
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.10",

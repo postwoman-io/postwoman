@@ -33,8 +33,8 @@ mod envvar;
 mod error;
 mod global;
 mod models;
-mod replacer;
 mod storage;
+mod uri;
 mod verification;
 
 pub use error::{Error, Result};
@@ -53,13 +53,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             let mut config = config::Config::default();
 
             tracing::debug!("Resolving app config directory for storage root.");
-            let app_config_dir = app
-                .path()
-                .app_config_dir()
-                .map_err(|e| {
-                    tracing::error!(error = %e, "Failed to resolve app config directory.");
-                    Error::Config(e.to_string())
-                })?;
+            let app_config_dir = app.path().app_config_dir().map_err(|e| {
+                tracing::error!(error = %e, "Failed to resolve app config directory.");
+                Error::Config(e.to_string())
+            })?;
 
             tracing::info!(
                 path = ?app_config_dir,
@@ -67,11 +64,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             );
             config.storage.root_dir = app_config_dir;
 
-            let rt = tokio::runtime::Runtime::new()
-                .map_err(|e| {
-                    tracing::error!(error = %e, "Failed to create Tokio runtime.");
-                    Error::Config(e.to_string())
-                })?;
+            let rt = tokio::runtime::Runtime::new().map_err(|e| {
+                tracing::error!(error = %e, "Failed to create Tokio runtime.");
+                Error::Config(e.to_string())
+            })?;
 
             let storage = rt.block_on(async {
                 let storage = storage::StorageManager::new(config.storage.root_dir.clone())
@@ -100,10 +96,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             ));
 
             tracing::debug!("Setting up bundle loader.");
-            let bundle_loader = Arc::new(bundle::BundleLoader::new(
-                cache.clone(),
-                storage.clone(),
-            ));
+            let bundle_loader = Arc::new(bundle::BundleLoader::new(cache.clone(), storage.clone()));
+
+            tracing::debug!("Setting up uri handler.");
+            let uri_handler = Arc::new(uri::UriHandler::new(cache.clone()));
 
             #[cfg(desktop)]
             tracing::debug!("Initializing desktop-specific components.");
@@ -118,6 +114,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             app.manage(bundle_loader);
             app.manage(cache);
             app.manage(storage);
+            app.manage(uri_handler);
             app.manage(hoppscotch);
 
             tracing::info!("hoppscotch-appload plugin setup complete.");
@@ -126,47 +123,19 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![commands::download, commands::load])
         .register_uri_scheme_protocol("app", move |ctx, req| {
             let app = ctx.app_handle();
-            let url = req.uri();
-            tracing::debug!(url = %url, "Handling app URI scheme request.");
+            let uri = req.uri();
+            tracing::debug!(url = %uri, "Handling app URI scheme request.");
 
-            let host = url.host().unwrap_or("");
-            let mut path = url.path().trim_start_matches('/');
+            let uri_handler = app.state::<Arc<uri::UriHandler>>();
 
-            if path.is_empty() {
-                path = "index.html";
-            }
-
-            tracing::debug!(host = %host, path = %path, "Processing URI scheme request path.");
-
-            let cache = app.state::<Arc<cache::CacheManager>>();
-
-            let rt = tokio::runtime::Runtime::new()
+            tokio::runtime::Runtime::new()
                 .map_err(|e| {
                     tracing::error!(error = %e, "Failed to create Tokio runtime.");
                     Error::Config(e.to_string())
-                }).unwrap();
-
-            let content_result = rt.block_on(async { cache.get_file(host, path).await });
-
-            match content_result {
-                Ok(content) => {
-                    tracing::info!(host = %host, path = %path, "Successfully retrieved file content.");
-                    let mut response = tauri::http::Response::builder().status(200);
-
-                    if let Some(mime_type) = mime_guess::from_path(path).first_raw() {
-                        response = response.header("content-type", mime_type);
-                    }
-
-                    response.body(content).unwrap()
-                }
-                Err(e) => {
-                    tracing::error!(error = %e, host = %host, path = %path, "Failed to serve file.");
-                    tauri::http::Response::builder()
-                        .status(404)
-                        .body(Vec::new())
-                        .unwrap()
-                }
-            }
+                })
+                .unwrap()
+                .block_on(async { uri_handler.handle(uri).await })
+                .unwrap()
         })
         .build()
 }

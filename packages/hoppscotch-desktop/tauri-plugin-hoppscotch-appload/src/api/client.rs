@@ -46,6 +46,9 @@ impl ApiClient {
         self.get(&format!("/api/{API_VERSION}/key")).await
     }
 
+    // NOTE: Right now this is fetching whatever is listed,
+    // but if there are more than one bundle per SH instance,
+    // this is where the changes should be made.
     pub async fn fetch_bundle_metadata(&self, name: &str) -> Result<BundleMetadata> {
         tracing::debug!(bundle_name = name, "Fetching metadata");
         self.get(&format!("/api/{API_VERSION}/manifest")).await

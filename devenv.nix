@@ -24,30 +24,24 @@ let
   ];
 
 in {
-  # https://devenv.sh/packages/
   packages = with pkgs; [
-    # General
     git
     lima
     colima
     docker
     jq
-    # FE and Node
     nodejs_22
     nodePackages_latest.typescript-language-server
     nodePackages_latest.vue-language-server
     nodePackages_latest.prisma
     prisma-engines
-    # Cargo and Rust
     cargo-edit
   ] ++ lib.optionals pkgs.stdenv.isDarwin darwinPackages
     ++ lib.optionals pkgs.stdenv.isLinux linuxPackages;
 
-  # https://devenv.sh/basics/
   env = {
     APP_GREET = "Hoppscotch";
     DATABASE_URL = "postgresql://postgres:testpass@localhost:5432/hoppscotch?connect_timeout=300";
-    # Enable BuildKit for better build performance
     DOCKER_BUILDKIT = "1";
     COMPOSE_DOCKER_CLI_BUILD = "1";
   } // lib.optionalAttrs pkgs.stdenv.isLinux {
@@ -66,7 +60,6 @@ in {
     # Place to put macOS-specific environment variables
   };
 
-  # https://devenv.sh/scripts/
   scripts = {
     hello.exec = "echo hello from $APP_GREET";
     e.exec = "emacs";
@@ -77,65 +70,6 @@ in {
     docker-prune.exec = ''
       echo "Cleaning up unused Docker resources..."
       docker system prune -f
-    '';
-
-    docker-build-aio.exec = ''
-      echo "Building Hoppscotch AIO container..."
-      docker build \
-        --build-arg DATABASE_URL="postgresql://postgres:testpass@host.docker.internal:5432/hoppscotch?connect_timeout=300" \
-        --build-arg PORT=8080 \
-        --build-arg PRODUCTION=true \
-        --build-arg HOPP_ALLOW_RUNTIME_ENV=true \
-        --build-arg BUILDKIT_INLINE_CACHE=1 \
-        --tag hoppscotch-aio \
-        --target aio \
-        --file prod.Dockerfile \
-        --pull \
-        .
-    '';
-
-    docker-run-aio.exec = ''
-      echo "Starting Hoppscotch AIO container..."
-      if docker ps -a | grep -q hoppscotch-aio; then
-        echo "Removing existing hoppscotch-aio container..."
-        docker rm -f hoppscotch-aio
-      fi
-
-      docker run -d \
-        --name hoppscotch-aio \
-        --env-file .env \
-        -e DATABASE_URL="postgresql://postgres:testpass@host.docker.internal:5432/hoppscotch?connect_timeout=300" \
-        -e PORT=8080 \
-        -e APP_PORT=8080 \
-        -e PRODUCTION=true \
-        -e HOPP_ALLOW_RUNTIME_ENV=true \
-        -p 80:80 \
-        -p 3170:3170 \
-        -p 3000:3000 \
-        -p 3100:3100 \
-        -p 3200:3200 \
-        --add-host=host.docker.internal:host-gateway \
-        --restart unless-stopped \
-        --health-cmd "/bin/sh /healthcheck.sh" \
-        --health-interval=2s \
-        hoppscotch-aio
-
-      echo "Container started. Services available at:"
-      echo "  - Main app: http://localhost:3000"
-      echo "  - Admin dashboard: http://localhost:3100"
-      echo "  - Backend: http://localhost:3170"
-      echo "  - Static Server: http://localhost:3200"
-      echo "  - HTTP port: http://localhost:80"
-      echo ""
-      echo "To view logs: docker logs -f hoppscotch-aio"
-      echo "To stop: devenv shell docker-stop-aio"
-    '';
-
-    docker-stop-aio.exec = ''
-      echo "Stopping Hoppscotch AIO container..."
-      docker stop hoppscotch-aio 2>/dev/null || true
-      docker rm hoppscotch-aio 2>/dev/null || true
-      echo "Stopped and removed container."
     '';
 
     docker-logs.exec = "docker logs -f hoppscotch-aio";
@@ -150,19 +84,66 @@ in {
       psql -U postgres -d hoppscotch -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
       echo "Database reset complete."
     '';
+
+    docker-clean-all.exec = ''
+      echo "Starting complete Docker cleanup..."
+
+      echo "1/6: Stopping all running containers..."
+      CONTAINERS=$(docker ps -q)
+      if [ -n "$CONTAINERS" ]; then
+        docker stop $CONTAINERS
+        echo "✓  Containers stopped"
+      else
+        echo "• No running containers found"
+      fi
+
+      echo "2/6: Removing all containers..."
+      CONTAINERS=$(docker ps -aq)
+      if [ -n "$CONTAINERS" ]; then
+        docker rm $CONTAINERS
+        echo "✓  Containers removed"
+      else
+        echo "• No containers to remove"
+      fi
+
+      echo "3/6: Removing all images..."
+      IMAGES=$(docker images -q)
+      if [ -n "$IMAGES" ]; then
+        docker rmi --force $IMAGES
+        echo "✓  Images removed"
+      else
+        echo "• No images to remove"
+      fi
+
+      echo "4/6: Removing all volumes..."
+      VOLUMES=$(docker volume ls -q)
+      if [ -n "$VOLUMES" ]; then
+        docker volume rm $VOLUMES
+        echo "✓  Volumes removed"
+      else
+        echo "• No volumes to remove"
+      fi
+
+      echo "5/6: Removing custom networks..."
+      NETWORKS=$(docker network ls --filter type=custom -q)
+      if [ -n "$NETWORKS" ]; then
+        docker network rm $NETWORKS
+        echo "✓  Networks removed"
+      else
+        echo "• No custom networks to remove"
+      fi
+
+      echo "6/6: Running system prune..."
+      docker system prune --all --force --volumes
+      echo "✓  System pruned"
+
+      echo "Done!"
+    '';
   };
 
   enterShell = ''
     git --version
     echo "Hoppscotch development environment ready!"
-    echo "Available commands:"
-    echo "  - docker-build-aio : Build the Hoppscotch AIO container"
-    echo "  - docker-run-aio   : Run the Hoppscotch AIO container"
-    echo "  - docker-stop-aio  : Stop and remove the container"
-    echo "  - docker-logs      : View container logs"
-    echo "  - docker-status    : Check container status"
-    echo "  - docker-prune     : Clean up unused Docker resources"
-    echo "  - db-reset         : Reset the database schema"
     ${lib.optionalString pkgs.stdenv.isDarwin ''
       # Place to put macOS-specific shell initialization
     ''}
@@ -171,15 +152,12 @@ in {
     ''}
   '';
 
-  # https://devenv.sh/tests/
   enterTest = ''
     echo "Running tests"
   '';
 
-  # https://devenv.sh/integrations/dotenv/
   dotenv.enable = true;
 
-  # https://devenv.sh/languages/
   languages = {
     typescript.enable = true;
     javascript = {
@@ -225,12 +203,4 @@ in {
       max_wal_size = "4GB";
     };
   };
-
-  # https://devenv.sh/pre-commit-hooks/
-  # pre-commit.hooks.shellcheck.enable = true;
-
-  # https://devenv.sh/processes/
-  # processes.ping.exec = "ping example.com";
-
-  # See full reference at https://devenv.sh/reference/options/
 }
