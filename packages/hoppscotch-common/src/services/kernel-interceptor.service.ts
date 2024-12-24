@@ -2,9 +2,9 @@ import * as E from "fp-ts/Either"
 import { Service } from "dioc"
 import { Component, computed, reactive, watchEffect, markRaw } from "vue"
 import type { getI18n } from "~/modules/i18n"
-import { Request, Response, InterceptorError } from "@hoppscotch/kernel"
+import { Request, Response, RelayError } from "@hoppscotch/kernel"
 
-export type ExecutionResult<Err extends InterceptorError = InterceptorError> = {
+export type ExecutionResult<Err extends RelayError = RelayError> = {
   cancel: () => void
   response: Promise<E.Either<Err, Response>>
 }
@@ -22,7 +22,7 @@ export type SelectableStatus<Props = unknown> =
       }
     }
 
-export type KernelInterceptor<Err extends InterceptorError = InterceptorError> =
+export type KernelInterceptor<Err extends RelayError = RelayError> =
   {
     id: string
     name: (t: ReturnType<typeof getI18n>) => string
@@ -104,7 +104,7 @@ export class KernelInterceptorService extends Service {
     }
 
     if (!this.state.interceptors.has(id)) {
-      console.warn("Attempted to set unknown interceptor as active")
+      console.warn("Attempted to set unknown interceptor as active", id)
       return
     }
 

@@ -1,10 +1,10 @@
 import type { Version } from './type/versioning'
 import { VERSIONS as IO_VERSIONS } from './io'
-import { VERSIONS as INTERCEPTOR_VERSIONS } from './interceptor'
+import { VERSIONS as RELAY_VERSIONS } from './relay'
 import { IO_IMPLS as WEB_IO_IMPLS } from './io/impl/web'
 import { IO_IMPLS as DESKTOP_IO_IMPLS } from './io/impl/desktop'
-import { INTERCEPTOR_IMPLS as WEB_INTERCEPTOR_IMPLS } from './interceptor/impl/web'
-import { INTERCEPTOR_IMPLS as DESKTOP_INTERCEPTOR_IMPLS } from './interceptor/impl/desktop'
+import { RELAY_IMPLS as WEB_RELAY_IMPLS } from './relay/impl/web'
+import { RELAY_IMPLS as DESKTOP_RELAY_IMPLS } from './relay/impl/desktop'
 
 export interface KernelInfo {
   name: string
@@ -15,7 +15,7 @@ export interface KernelInfo {
 export interface KernelAPI {
   info: KernelInfo
   io: typeof IO_VERSIONS.v1.api
-  interceptor: typeof INTERCEPTOR_VERSIONS.v1.api
+  relay: typeof RELAY_VERSIONS.v1.api
 }
 
 export type KernelMode = 'web' | 'desktop'
@@ -40,7 +40,7 @@ export function initKernel(mode?: KernelMode): KernelAPI {
         capabilities: ["basic-io"]
       },
       io: DESKTOP_IO_IMPLS.v1.api,
-      interceptor: DESKTOP_INTERCEPTOR_IMPLS.v1.api
+      relay: DESKTOP_RELAY_IMPLS.v1.api
     }
 
     window.__KERNEL__ = kernel
@@ -53,7 +53,7 @@ export function initKernel(mode?: KernelMode): KernelAPI {
         capabilities: ["basic-io"]
       },
       io: WEB_IO_IMPLS.v1.api,
-      interceptor: WEB_INTERCEPTOR_IMPLS.v1.api
+      relay: WEB_RELAY_IMPLS.v1.api
     }
 
     window.__KERNEL__ = kernel
@@ -72,10 +72,10 @@ export type {
 export type {
   Request,
   Response,
-  InterceptorError,
-  InterceptorV1,
+  RelayError,
+  RelayV1,
   Method,
   ContentType,
   AuthType,
   CertificateType,
-} from '@interceptor/v/1'
+} from '@relay/v/1'

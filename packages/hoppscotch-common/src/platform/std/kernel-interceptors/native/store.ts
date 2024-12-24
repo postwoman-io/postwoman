@@ -9,22 +9,22 @@ type DomainSetting = {
 
 const defaultConfig: Pick<Request, "proxy" | "security"> = {
   security: {
-    validateCertificates: false,
-    verifyHost: true
+    validateCertificates: true,
+    verifyHost: true,
+    verifyPeer: true
   },
-  proxy: {
-    url: ""
-  }
+  proxy: undefined
 }
 
 export class KernelInterceptorNativeStore extends Service {
   public static readonly ID = "KERNEL_NATIVE_INTERCEPTOR_STORE"
-  private domainSettings = new Map<string, DomainSetting>()
   private static readonly GLOBAL_DOMAIN = "*"
   private static readonly DEFAULT_GLOBAL_SETTINGS: DomainSetting = {
     ...defaultConfig,
     version: "v1"
   }
+
+  private domainSettings = new Map<string, DomainSetting>()
 
   onServiceInit(): void {
     console.log("[Store] Initializing service")
@@ -37,66 +37,93 @@ export class KernelInterceptorNativeStore extends Service {
     }
   }
 
-  private getMergedSettings(domain: string): Pick<Request, "proxy" | "security"> {
-    console.log("[Store] Getting merged settings for domain:", domain)
-    const domainSettings = this.domainSettings.get(domain)
-    const globalSettings = this.domainSettings.get(KernelInterceptorNativeStore.GLOBAL_DOMAIN)
+  private mergeSecurity(base: Required<Request>["security"], ...overrides: (Required<Request>["security"] | undefined)[]): Required<Request>["security"] {
+    console.log("[Store] Merging security with base:", base)
+    console.log("[Store] Security overrides:", overrides)
 
-    const mergedSettings = {
-      security: domainSettings?.security ?? globalSettings?.security ?? defaultConfig.security,
-      proxy: domainSettings?.proxy ?? globalSettings?.proxy ?? defaultConfig.proxy,
-    }
+    const result = overrides.reduce((acc, override) =>
+      override ? { ...acc, ...override } : acc,
+      { ...base }
+    )
 
-    console.log("[Store] Merged settings:", mergedSettings)
-    return mergedSettings
+    console.log("[Store] Merged security result:", result)
+    return result
   }
 
-  public completeRequest(
-    request: Omit<Request, "proxy" | "security">
-  ): Request {
+  private mergeProxy(...settings: (Required<Request>["proxy"] | undefined)[]): Required<Request>["proxy"] | undefined {
+    console.log("[Store] Merging proxy settings:", settings)
+
+    const merged = settings.reduce((acc, setting) =>
+      setting ? { ...acc, ...setting } : acc,
+      undefined as (Required<Request>["proxy"] | undefined)
+    )
+
+    console.log("[Store] Merged proxy result:", merged)
+    return merged
+  }
+
+  private getMergedSettings(domain: string): Pick<Request, "proxy" | "security"> {
+    console.log("[Store] Getting merged settings for domain:", domain)
+
+    const domainSettings = this.domainSettings.get(domain)
+    console.log("[Store] Domain settings:", domainSettings)
+
+    const globalSettings = domain !== KernelInterceptorNativeStore.GLOBAL_DOMAIN ?
+      this.domainSettings.get(KernelInterceptorNativeStore.GLOBAL_DOMAIN) : undefined
+    console.log("[Store] Global settings:", globalSettings)
+
+    const result = {
+      security: this.mergeSecurity(
+        defaultConfig.security,
+        globalSettings?.security,
+        domainSettings?.security
+      ),
+      proxy: this.mergeProxy(
+        globalSettings?.proxy,
+        domainSettings?.proxy
+      )
+    }
+
+    console.log("[Store] Final merged settings:", result)
+    return result
+  }
+
+  public completeRequest(request: Omit<Request, "proxy" | "security">): Request {
     console.log("[Store] Completing request for URL:", request.url)
-    const hostname = new URL(request.url).hostname
-    console.log("[Store] Extracted hostname:", hostname)
-    const settings = this.getMergedSettings(hostname)
+    const host = new URL(request.url).host
+    console.log("[Store] Extracted host:", host)
+    const settings = this.getMergedSettings(host)
     const completedRequest = { ...request, ...settings }
     console.log("[Store] Completed request:", completedRequest)
     return completedRequest
   }
 
-  public saveDomainSettings(
-    domain: string,
-    settings: {
-      security?: Required<Request>["security"]
-      proxy?: Required<Request>["proxy"]
-    }
-  ): void {
-    const current = this.domainSettings.get(domain) || { version: "v1" }
-    const globalSettings = this.getMergedSettings(KernelInterceptorNativeStore.GLOBAL_DOMAIN)
+  public saveDomainSettings(domain: string, settings: Partial<DomainSetting>): void {
+    console.log("[Store] Saving settings for domain:", domain)
+    console.log("[Store] New settings:", settings)
 
-    const mergedSettings = {
-      ...current,
-      security: {
-        ...defaultConfig.security,
-        ...globalSettings.security,
-        ...current.security,
-        ...settings.security,
-      },
-      proxy: {
-        ...defaultConfig.proxy,
-        ...globalSettings.proxy,
-        ...current.proxy,
-        ...settings.proxy,
-      },
+    const current = this.getMergedSettings(domain)
+    console.log("[Store] Current merged settings:", current)
+
+    const updatedSettings: DomainSetting = {
+      version: "v1" as const,
+      security: settings.security !== undefined ?
+        this.mergeSecurity(current.security, settings.security) :
+        current.security,
+      proxy: settings.proxy !== undefined ?
+        this.mergeProxy(current.proxy, settings.proxy) :
+        current.proxy
     }
 
-    console.log("[Store] Merged with existing settings:", mergedSettings)
-    this.domainSettings.set(domain, mergedSettings)
-    console.log("[Store] Current settings:", this.domainSettings.get(domain))
+    console.log("[Store] Updated settings:", updatedSettings)
+    this.domainSettings.set(domain, updatedSettings)
   }
 
-  public getDomainSettings(domain: string) {
+  public getDomainSettings(domain: string): DomainSetting {
     console.log("[Store] Getting settings for domain:", domain)
-    return this.domainSettings.get(domain) ?? { version: "v1", ...defaultConfig }
+    const settings = this.domainSettings.get(domain) ?? { version: "v1", ...defaultConfig }
+    console.log("[Store] Retrieved settings:", settings)
+    return settings
   }
 
   public clearDomainSettings(domain: string): void {

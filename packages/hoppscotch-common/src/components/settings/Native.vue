@@ -32,6 +32,14 @@
           {{ t("settings.verify_host") }}
         </div>
 
+        <div class="flex items-center">
+          <HoppSmartToggle
+            :on="domainSettings[selectedDomain]?.security?.verifyPeer"
+            @change="toggleVerifyPeer"
+          />
+          {{ t("settings.verify_peer") }}
+        </div>
+
         <div class="flex space-x-4">
           <HoppButtonSecondary
             :icon="IconFileBadge"
@@ -52,12 +60,48 @@
           {{ t("settings.proxy") }}
         </div>
         <p class="my-1 text-secondaryLight">{{ t("settings.proxy_capabilities") }}</p>
-        <HoppSmartInput
-          v-if="domainSettings[selectedDomain]?.proxy"
-          :model-value="domainSettings[selectedDomain].proxy.url"
-          :placeholder="t('settings.proxy_url')"
-          @update:model-value="updateProxyUrl"
-        />
+        <div class="flex flex-col space-y-2">
+          <HoppSmartInput
+            v-if="domainSettings[selectedDomain]?.proxy"
+            :model-value="domainSettings[selectedDomain].proxy.url"
+            :placeholder="' '"
+            :label="t('settings.proxy_url')"
+            input-styles="floating-input !border-0"
+            @update:model-value="updateProxyUrl"
+          />
+          <div class="flex">
+            <HoppSmartInput
+              v-if="domainSettings[selectedDomain]?.proxy"
+              :model-value="domainSettings[selectedDomain].proxy.username"
+              :placeholder="' '"
+              :label="t('authorization.username')"
+              input-styles="floating-input !border-0"
+              @update:model-value="updateProxyUsername"
+            />
+            <HoppSmartInput
+              v-if="domainSettings[selectedDomain]?.proxy"
+              :model-value="domainSettings[selectedDomain].proxy.password"
+              :placeholder="' '"
+              :label="t('authorization.password')"
+              input-styles="floating-input !border-0"
+              @update:model-value="updateProxyPassword"
+              :type="showProxyPassword ? 'text' : 'password'"
+            >
+              <template #button>
+                <HoppButtonSecondary
+                  v-tippy="{ theme: 'tooltip' }"
+                  :title="
+                        showProxyPassword
+                          ? t('hide.password')
+                          : t('show.password')
+                      "
+                  :icon="showProxyPassword ? IconEye : IconEyeOff"
+                  @click="showProxyPassword = !showProxyPassword"
+                />
+              </template>
+            </HoppSmartInput>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -82,7 +126,7 @@
             <div
               v-for="domain in domains"
               :key="domain"
-              class="flex items-center justify-between p-2 rounded hover:bg-primaryLight"
+              class="flex items-center justify-between p-2 rounded opacity-50 hover:bg-primaryLight hover:cursor-pointer hover:opacity-100"
               :class="{ 'bg-primaryLight': domain === selectedDomain }"
               @click="selectDomain(domain)"
             >
@@ -267,6 +311,8 @@ import { KernelInterceptorNativeStore } from "~/platform/std/kernel-interceptors
 import IconTrash from "~icons/lucide/trash"
 import IconFile from "~icons/lucide/file"
 import IconPlus from "~icons/lucide/plus"
+import IconEye from "~icons/lucide/eye"
+import IconEyeOff from "~icons/lucide/eye-off"
 import IconSettings from "~icons/lucide/settings"
 import IconFileKey from "~icons/lucide/file-key"
 import IconFileBadge from "~icons/lucide/file-badge"
@@ -277,6 +323,7 @@ const store = useService(KernelInterceptorNativeStore)
 const selectedDomain = ref("*")
 const domainSettings = reactive<Record<string, any>>({})
 const showDomainModal = ref(false)
+const showProxyPassword = ref(false)
 const newDomain = ref("")
 const domains = ref<string[]>(store.getDomains())
 
@@ -455,6 +502,14 @@ function toggleVerifyHost() {
   })
 }
 
+function toggleVerifyPeer() {
+  updateDomainSettings({
+    security: {
+      verifyPeer: !domainSettings[selectedDomain.value]?.security?.verifyPeer,
+    },
+  })
+}
+
 function toggleProxy() {
   updateDomainSettings({
     proxy: domainSettings[selectedDomain.value]?.proxy
@@ -464,8 +519,35 @@ function toggleProxy() {
 }
 
 function updateProxyUrl(value: string) {
+  const current = domainSettings[selectedDomain.value]?.proxy
   updateDomainSettings({
-    proxy: { url: value },
+    proxy: { ...current, url: value },
+  })
+}
+
+function updateProxyUsername(value: string) {
+  const current = domainSettings[selectedDomain.value]?.proxy
+  updateDomainSettings({
+    proxy: {
+      ...current,
+      auth: {
+        ...(current?.auth ?? {}),
+        username: value,
+      },
+    },
+  })
+}
+
+function updateProxyPassword(value: string) {
+  const current = domainSettings[selectedDomain.value]?.proxy
+  updateDomainSettings({
+    proxy: {
+      ...current,
+      auth: {
+        ...(current?.auth ?? {}),
+        password: value,
+      },
+    },
   })
 }
 

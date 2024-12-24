@@ -13,7 +13,7 @@
     "paths": {
       "~/*": ["src/*"],
       "@io/*": ["src/io/*"],
-      "@interceptor/*": ["src/interceptor/*"],
+      "@relay/*": ["src/relay/*"],
       "@type/*": ["src/type/*"],
       "@util/*": ["src/util/*"]
     }
