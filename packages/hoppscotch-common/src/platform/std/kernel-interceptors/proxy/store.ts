@@ -29,7 +29,6 @@ export class KernelInterceptorProxyStore extends Service {
   private settings: ProxySettings = { ...DEFAULT_SETTINGS }
 
   async onServiceInit(): Promise<void> {
-
     const initResult = await Store.init()
     if (E.isLeft(initResult)) {
       console.error("[ProxyStore] Failed to initialize store:", initResult.left)
@@ -50,7 +49,6 @@ export class KernelInterceptorProxyStore extends Service {
   }
 
   private async loadSettings(): Promise<void> {
-
     const loadResult = await Store.get<StoredData>(
       STORE_NAMESPACE,
       SETTINGS_KEY
@@ -68,7 +66,6 @@ export class KernelInterceptorProxyStore extends Service {
   }
 
   private async persistSettings(): Promise<void> {
-
     const storedData: StoredData = {
       version: "v1",
       settings: this.settings,
@@ -87,7 +84,6 @@ export class KernelInterceptorProxyStore extends Service {
   }
 
   public async updateSettings(settings: Partial<ProxySettings>): Promise<void> {
-
     this.settings = {
       ...this.settings,
       ...settings,
@@ -101,7 +97,6 @@ export class KernelInterceptorProxyStore extends Service {
   }
 
   public async resetSettings(): Promise<void> {
-
     this.settings = { ...DEFAULT_SETTINGS }
     await this.persistSettings()
   }

@@ -3,15 +3,15 @@ import { Service } from "dioc"
 import { Component, computed, reactive, watchEffect, markRaw } from "vue"
 import type { getI18n } from "~/modules/i18n"
 import {
-  Request,
-  Response,
+  RelayRequest,
+  RelayResponse,
   RelayError,
   RelayCapabilities,
 } from "@hoppscotch/kernel"
 
 export type ExecutionResult<Err extends RelayError = RelayError> = {
   cancel: () => void
-  response: Promise<E.Either<Err, Response>>
+  response: Promise<E.Either<Err, RelayResponse>>
 }
 
 export type SelectableStatus<Props = unknown> =
@@ -37,7 +37,7 @@ export type KernelInterceptor<Err extends RelayError = RelayError> = {
   subtitle?: Component
   selectable: SelectableStatus
   capabilities: RelayCapabilities
-  execute: (request: Request) => ExecutionResult<Err>
+  execute: (request: RelayRequest) => ExecutionResult<Err>
 }
 
 export class KernelInterceptorService extends Service {
@@ -121,7 +121,7 @@ export class KernelInterceptorService extends Service {
       this.available.value.length === 0 ? null : this.state.currentId
   }
 
-  public execute(req: Request): ExecutionResult {
+  public execute(req: RelayRequest): ExecutionResult {
     const interceptor = this.validateAndGetActiveInterceptor()
     return interceptor.execute(req)
   }

@@ -16,8 +16,8 @@ import {
 import { GQLTabService } from "~/services/tab/graphql"
 import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 import {
-  convertHoppGQLRequestToRequest,
-  convertResponseToGQLResponseEvent,
+  transformHoppGQLRequestToRequest,
+  transformResponseToGQLResponseEvent,
 } from "~/helpers/kernel"
 import { makeGQLHistoryEntry, addGraphqlHistoryEntry } from "~/newstore/history"
 import { GQLHeader, makeGQLRequest, HoppGQLAuth } from "@hoppscotch/data"
@@ -76,7 +76,7 @@ type Connection = {
   } | null
 }
 
-type RunQueryOptions = {
+export type RunQueryOptions = {
   name?: string
   url: string
   headers: GQLHeader[]
@@ -176,7 +176,7 @@ export const connect = async (
 
   const poll = async () => {
     try {
-      const kernelRequest = await convertHoppGQLRequestToRequest({
+      const kernelRequest = await transformHoppGQLRequestToRequest({
         v: 7,
         name: "Introspection Query",
         url,
@@ -236,8 +236,7 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     await connect(options.url, options.headers, true)
   }
 
-  const { url, headers, query, variables, auth, operationName, operationType } =
-    options
+  const { url, headers, query, variables, auth, operationType } = options
 
   if (operationType === "subscription") {
     return runSubscription(options)
@@ -253,9 +252,8 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     auth,
   })
 
-  const startTime = Date.now()
   const result = await kernelService.execute(
-    await convertHoppGQLRequestToRequest(request)
+    await transformHoppGQLRequestToRequest(request)
   ).response
 
   if (E.isLeft(result)) {
@@ -263,12 +261,9 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     throw error
   }
 
-  const response = convertResponseToGQLResponseEvent(
+  const response = await transformResponseToGQLResponseEvent(
     result.right,
-    Date.now() - startTime,
-    request,
-    operationName,
-    operationType
+    options
   )
 
   if (response.type === "response") {

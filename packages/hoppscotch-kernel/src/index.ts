@@ -79,8 +79,9 @@ export type {
 } from '@io/v/1'
 
 export type {
-  Request,
-  Response,
+  RelayRequest,
+  RelayResponse,
+  RelayResponseBody,
   FormData,
   FormDataValue,
   RelayError,
@@ -106,4 +107,7 @@ export type {
   StoreV1,
 } from '@store/v/1'
 
-export { content } from '@relay/v/1'
+export {
+  content,
+  MediaType,
+} from '@relay/v/1'
