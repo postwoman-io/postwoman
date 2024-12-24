@@ -56,10 +56,8 @@ import { isEqual } from 'lodash-es';
 import { computed, ref } from 'vue';
 import { useI18n } from '~/composables/i18n';
 import { useToast } from '~/composables/toast';
-import {
-  hasInputValidationFailed,
-  useConfigHandler,
-} from '~/composables/useConfigHandler';
+import { useConfigHandler } from '~/composables/useConfigHandler';
+import { hasInputValidationFailed } from '~/helpers/configs';
 
 const t = useI18n();
 const toast = useToast();
