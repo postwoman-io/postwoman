@@ -1805,29 +1805,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hoppscotch-relay"
-version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#60ff2e09365ad608fe48c61da0e9e1cf22c482f0"
-dependencies = [
- "curl",
- "dashmap",
- "env_logger",
- "http",
- "infer",
- "lazy_static",
- "log",
- "openssl",
- "openssl-sys",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tokio-util",
- "tracing",
- "url-escape",
- "urlencoding",
-]
-
-[[package]]
 name = "html5ever"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1873,6 +1850,16 @@ dependencies = [
  "http",
  "http-body",
  "pin-project-lite",
+]
+
+[[package]]
+name = "http-serde"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f056c8559e3757392c8d091e796416e4649d8e49e88b8d76df6c002f05027fd"
+dependencies = [
+ "http",
+ "serde",
 ]
 
 [[package]]
@@ -3605,6 +3592,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
+name = "relay"
+version = "0.1.1"
+source = "git+https://github.com/CuriousCorrelation/relay.git#b260443505ebb6822bf8385b5a66cf823028b1ee"
+dependencies = [
+ "curl",
+ "dashmap",
+ "env_logger",
+ "http",
+ "http-serde",
+ "infer",
+ "lazy_static",
+ "log",
+ "openssl",
+ "openssl-sys",
+ "serde",
+ "serde_json",
+ "strum",
+ "thiserror 1.0.69",
+ "time",
+ "tokio-util",
+ "tracing",
+ "url-escape",
+ "urlencoding",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.12.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3753,6 +3766,12 @@ dependencies = [
  "rustls-pki-types",
  "untrusted",
 ]
+
+[[package]]
+name = "rustversion"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e819f2bc632f285be6d7cd36e25940d45b2391dd6d9b939e79de557f7014248"
 
 [[package]]
 name = "ryu"
@@ -4228,6 +4247,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
+name = "strum"
+version = "0.26.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.26.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.87",
+]
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4590,9 +4631,9 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#60ff2e09365ad608fe48c61da0e9e1cf22c482f0"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#d3b58539af372bf67956261b8b15c1595e5d69ba"
 dependencies = [
- "hoppscotch-relay",
+ "relay",
  "serde",
  "tauri",
  "tauri-plugin",
@@ -4811,9 +4852,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.36"
+version = "0.3.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dfd88e563464686c916c7e46e623e520ddc6d79fa6641390f2e3fa86e83e885"
+checksum = "35e7868883861bd0e56d9ac6efcaaca0d6d5d82a2a7ec8209ff492c07cf37b21"
 dependencies = [
  "deranged",
  "itoa 1.0.11",
@@ -4832,9 +4873,9 @@ checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "time-macros"
-version = "0.2.18"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf"
+checksum = "2834e6017e3e5e4b9834939793b282bc03b37a3336245fa820e35e233e2a85de"
 dependencies = [
  "num-conv",
  "time-core",

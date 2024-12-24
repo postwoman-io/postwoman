@@ -236,7 +236,7 @@
             <h4 class="font-semibold text-secondaryDark">
               {{ t("settings.kernel_interceptor") }}
             </h4>
-            <AppInterceptor :is-tooltip-component="false" />
+            <AppKernelInterceptor :is-tooltip-component="false" />
           </section>
           <section
             v-for="[id, settings] in kernelInterceptorsWithSettings"

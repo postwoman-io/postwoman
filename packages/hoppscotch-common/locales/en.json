@@ -529,7 +529,8 @@
     "collection": "Collapse Collection Panel",
     "more": "Hide more",
     "preview": "Hide Preview",
-    "sidebar": "Collapse sidebar"
+    "sidebar": "Collapse sidebar",
+    "password": "Hide Password"
   },
   "import": {
     "collections": "Import collections",
@@ -854,6 +855,7 @@
     "verify_email": "Verify email",
     "validate_certificates": "Validate SSL/TLS Certificates",
     "verify_host": "Verify Host",
+    "verify_peer": "Verify Peer",
     "client_certificates": "Client Certificates",
     "certificate_settings": "Certificate Settings",
     "certificate": "Certificate",
@@ -965,7 +967,8 @@
     "code": "Show code",
     "collection": "Expand Collection Panel",
     "more": "Show more",
-    "sidebar": "Expand sidebar"
+    "sidebar": "Expand sidebar",
+    "password": "Show Password"
   },
   "socketio": {
     "communication": "Communication",

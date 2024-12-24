@@ -29,7 +29,7 @@ export default defineConfig({
     alias: {
       '~': resolve(__dirname, './src'),
       '@io': resolve(__dirname, './src/io'),
-      '@interceptor': resolve(__dirname, './src/interceptor'),
+      '@relay': resolve(__dirname, './src/relay'),
       '@type': resolve(__dirname, './src/type'),
       '@util': resolve(__dirname, './src/util')
     }

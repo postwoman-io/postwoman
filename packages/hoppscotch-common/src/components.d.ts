@@ -28,6 +28,7 @@ declare module 'vue' {
     AppHeader: typeof import('./components/app/Header.vue')['default']
     AppInspection: typeof import('./components/app/Inspection.vue')['default']
     AppInterceptor: typeof import('./components/app/Interceptor.vue')['default']
+    AppKernelInterceptor: typeof import('./components/app/KernelInterceptor.vue')['default']
     AppLogo: typeof import('./components/app/Logo.vue')['default']
     AppOptions: typeof import('./components/app/Options.vue')['default']
     AppPaneLayout: typeof import('./components/app/PaneLayout.vue')['default']
