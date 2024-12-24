@@ -423,3 +423,5 @@ export function useConfigHandler(updatedConfigs?: ServerConfigs) {
     AreAnyConfigFieldsEmpty,
   };
 }
+
+export const hasInputValidationFailed = ref(false);
