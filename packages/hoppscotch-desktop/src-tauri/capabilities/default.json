@@ -8,6 +8,8 @@
   ],
   "permissions": [
     "core:default",
+    "core:window:default",
+    "core:window:allow-start-dragging",
     "shell:allow-open",
     "store:default",
     "dialog:default",

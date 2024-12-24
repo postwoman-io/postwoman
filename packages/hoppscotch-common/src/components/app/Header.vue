@@ -2,10 +2,11 @@
   <div>
     <header
       ref="headerRef"
+      data-tauri-drag-region
       class="grid grid-cols-5 grid-rows-1 gap-2 overflow-x-auto overflow-y-hidden p-2"
-      @mousedown.prevent="platform.ui?.appHeader?.onHeaderAreaClick?.()"
     >
       <div
+        data-tauri-drag-region
         class="col-span-2 flex items-center justify-between space-x-2"
         :style="{
           paddingTop: platform.ui?.appHeader?.paddingTop?.value,
@@ -20,10 +21,10 @@
           />
         </div>
       </div>
-      <div class="col-span-1 flex items-center justify-between space-x-2">
+      <div data-tauri-drag-region class="col-span-1 flex items-center justify-between space-x-2">
         <AppSpotlightSearch />
       </div>
-      <div class="col-span-2 flex items-center justify-between space-x-2">
+      <div data-tauri-drag-region class="col-span-2 flex items-center justify-between space-x-2">
         <div class="flex">
           <HoppButtonSecondary
             v-if="showInstallButton"
@@ -177,9 +178,8 @@
                       </span>
                       <span
                         class="inline-flex truncate text-secondaryLight text-tiny"
+                        >{{ currentUser.email }}</span
                       >
-                        {{ currentUser.email }}
-                      </span>
                     </div>
                     <hr />
                     <HoppSmartItem

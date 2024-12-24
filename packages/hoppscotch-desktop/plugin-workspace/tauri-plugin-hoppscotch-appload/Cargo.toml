@@ -1,0 +1,44 @@
+[package]
+name = "tauri-plugin-hoppscotch-appload"
+version = "0.1.0"
+authors = [ "CuriousCorrelation" ]
+description = "A Tauri plugin to download and load Hoppscotch web app into WebView"
+edition = "2021"
+rust-version = "1.77.2"
+exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
+links = "tauri-plugin-hoppscotch-appload"
+
+[dependencies]
+tauri = { version = "2.0.6", features = ["unstable"] }
+serde = "1.0"
+serde_json = { version = "1", features = [] }
+thiserror = { version = "2.0.3", features = [] }
+url = { version = "2.5.3", features = ["serde"] }
+reqwest = { version = "0.12.9", features = [] }
+zip = { version = "2.2.0", features = [] }
+tokio = { version = "1.41.1", features = [] }
+mime-infer = { version = "3.0.0", features = [] }
+regex = { version = "1.11.1", features = [] }
+tracing = "0.1.41"
+dashmap = { version = "6.1.0" }
+flate2 = { version = "1.0.35" }
+chrono = { version = "0.4.38", features = ["serde"] }
+base64 = "0.22.1"
+blake3 = { version = "1.5.4", features = ["serde"] }
+ed25519-dalek = { version = "2.1.1", features = ["serde"] }
+hex = "0.4.3"
+lru = "0.12.5"
+sys-info = "0.9.1"
+humantime-serde = "1.1.1"
+futures = "0.3.31"
+mime_guess = "2.0.5"
+rayon = "1.10.0"
+hex_color = "3.0.0"
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.1", features = ["build"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.26.0"
+objc = "0.2.7"
+rand = "0.8.5"
