@@ -2,7 +2,7 @@ import { markRaw } from "vue"
 import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import { getI18n } from "~/modules/i18n"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { preProcessRelayRequest } from "~/helpers/functional/preprocess"
 import type { RelayCapabilities, RelayRequest } from "@hoppscotch/kernel"
 import { Relay } from "~/kernel/relay"
 import { Service } from "dioc"
@@ -70,9 +70,11 @@ export class NativeKernelInterceptorService
   public execute(
     request: RelayRequest
   ): ExecutionResult<KernelInterceptorError> {
+    console.log("[NATIVE]: request", request)
     const effectiveRequest = this.store.completeRequest(
       preProcessRelayRequest(request)
     )
+    console.log("[NATIVE]: effectiveRequest", effectiveRequest)
     const relevantCookies = this.cookieJar.getCookiesForURL(
       new URL(effectiveRequest.url!)
     )
@@ -83,6 +85,7 @@ export class NativeKernelInterceptorService
         .join(";")
     }
 
+    console.log("[NATIVE]: effectiveRequest", effectiveRequest)
     const relayExecution = Relay.execute(effectiveRequest)
 
     const response = pipe(relayExecution.response, (promise) =>

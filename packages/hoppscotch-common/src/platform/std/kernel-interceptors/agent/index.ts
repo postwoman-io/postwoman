@@ -4,7 +4,7 @@ import { body } from "@hoppscotch/kernel"
 import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import axios, { CancelTokenSource } from "axios"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { preProcessRelayRequest } from "~/helpers/functional/preprocess"
 import {
   RelayRequest,
   RelayResponse,

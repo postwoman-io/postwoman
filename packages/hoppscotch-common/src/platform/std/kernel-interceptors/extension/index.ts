@@ -13,7 +13,7 @@ import type {
 import * as E from "fp-ts/Either"
 import { getI18n } from "~/modules/i18n"
 import { until } from "@vueuse/core"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { preProcessRelayRequest } from "~/helpers/functional/preprocess"
 
 export class ExtensionKernelInterceptorService
   extends Service

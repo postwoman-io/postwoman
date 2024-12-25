@@ -6,6 +6,10 @@ import { Store } from "~/kernel/store"
 import type { RelayRequest, RelayResponse } from "@hoppscotch/kernel"
 import { x25519 } from "@noble/curves/ed25519"
 import { base16 } from "@scure/base"
+import {
+  InputDomainSetting,
+  convertDomainSetting,
+} from "~/helpers/functional/domain-settings"
 
 const STORE_NAMESPACE = "interceptors.agent.v1"
 
@@ -13,23 +17,18 @@ const STORE_KEYS = {
   SETTINGS: "settings",
 } as const
 
-type DomainSetting = {
-  version: "v1"
-  security?: Required<RelayRequest>["security"]
-  proxy?: Required<RelayRequest>["proxy"]
-}
-
 interface StoredData {
   version: string
   auth: {
     key: string | null
     sharedSecret: string | null
   }
-  domains: Record<string, DomainSetting>
+  domains: Record<string, InputDomainSetting>
   lastUpdated: string
 }
 
-const defaultDomainConfig: Pick<RelayRequest, "proxy" | "security"> = {
+const defaultDomainConfig: InputDomainSetting = {
+  version: "v1",
   security: {
     validateCertificates: true,
     verifyHost: true,
@@ -41,12 +40,12 @@ const defaultDomainConfig: Pick<RelayRequest, "proxy" | "security"> = {
 export class KernelInterceptorAgentStore extends Service {
   public static readonly ID = "AGENT_INTERCEPTOR_STORE"
   private static readonly GLOBAL_DOMAIN = "*"
-  private static readonly DEFAULT_GLOBAL_SETTINGS: DomainSetting = {
+  private static readonly DEFAULT_GLOBAL_SETTINGS: InputDomainSetting = {
     ...defaultDomainConfig,
     version: "v1",
   }
 
-  private domainSettings = new Map<string, DomainSetting>()
+  private domainSettings = new Map<string, InputDomainSetting>()
 
   public isAgentRunning = ref(false)
   public authKey = ref<string | null>(null)
@@ -121,26 +120,24 @@ export class KernelInterceptorAgentStore extends Service {
   }
 
   private mergeSecurity(
-    ...settings: (Required<RelayRequest>["security"] | undefined)[]
-  ): Required<RelayRequest>["security"] | undefined {
+    ...settings: (Required<InputDomainSetting>["security"] | undefined)[]
+  ): Required<InputDomainSetting>["security"] | undefined {
     return settings.reduce(
       (acc, setting) => (setting ? { ...acc, ...setting } : acc),
-      undefined as Required<RelayRequest>["security"] | undefined
+      undefined as Required<InputDomainSetting>["security"] | undefined
     )
   }
 
   private mergeProxy(
-    ...settings: (Required<RelayRequest>["proxy"] | undefined)[]
-  ): Required<RelayRequest>["proxy"] | undefined {
+    ...settings: (Required<InputDomainSetting>["proxy"] | undefined)[]
+  ): Required<InputDomainSetting>["proxy"] | undefined {
     return settings.reduce(
       (acc, setting) => (setting ? { ...acc, ...setting } : acc),
-      undefined as Required<RelayRequest>["proxy"] | undefined
+      undefined as Required<InputDomainSetting>["proxy"] | undefined
     )
   }
 
-  private getMergedSettings(
-    domain: string
-  ): Pick<RelayRequest, "proxy" | "security"> {
+  private getMergedSettings(domain: string): InputDomainSetting {
     const domainSettings = this.domainSettings.get(domain)
     const globalSettings =
       domain !== KernelInterceptorAgentStore.GLOBAL_DOMAIN
@@ -155,7 +152,7 @@ export class KernelInterceptorAgentStore extends Service {
       proxy: this.mergeProxy(globalSettings?.proxy, domainSettings?.proxy),
     }
 
-    return result
+    return { version: "v1", ...result }
   }
 
   public completeRequest(
@@ -163,7 +160,13 @@ export class KernelInterceptorAgentStore extends Service {
   ): RelayRequest {
     const host = new URL(request.url).host
     const settings = this.getMergedSettings(host)
-    return { ...request, ...settings }
+    const effective = convertDomainSetting(settings)
+
+    if (E.isLeft(effective)) {
+      throw effective.left
+    }
+
+    return { ...request, ...effective.right }
   }
 
   public async checkAgentStatus(): Promise<void> {
@@ -326,7 +329,7 @@ export class KernelInterceptorAgentStore extends Service {
     }
   }
 
-  public getDomainSettings(domain: string): DomainSetting {
+  public getDomainSettings(domain: string): InputDomainSetting {
     return (
       this.domainSettings.get(domain) ?? {
         ...defaultDomainConfig,
@@ -337,9 +340,9 @@ export class KernelInterceptorAgentStore extends Service {
 
   public async saveDomainSettings(
     domain: string,
-    settings: Partial<DomainSetting>
+    settings: Partial<InputDomainSetting>
   ): Promise<void> {
-    const updatedSettings: DomainSetting = {
+    const updatedSettings: InputDomainSetting = {
       ...settings,
       version: "v1",
     }
@@ -357,7 +360,7 @@ export class KernelInterceptorAgentStore extends Service {
     return Array.from(this.domainSettings.keys())
   }
 
-  public getAllDomainSettings(): Map<string, DomainSetting> {
+  public getAllDomainSettings(): Map<string, InputDomainSetting> {
     return new Map(this.domainSettings)
   }
 }
