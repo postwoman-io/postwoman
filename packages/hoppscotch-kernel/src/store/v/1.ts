@@ -20,6 +20,16 @@ export type StoreError =
   | { kind: 'storage'; message: string; cause?: unknown }
   | { kind: 'encrypt'; message: string; cause?: unknown }
 
+export interface StoreFile {
+  include?: boolean,
+
+  name: string
+  size: number
+
+  lastModified: string
+  content: Uint8Array
+}
+
 export interface StorageOptions {
   encrypt?: boolean
   temporary?: boolean
@@ -75,21 +85,13 @@ export interface StoreV1 {
   readonly capabilities: Set<StoreCapability>
 
   init(): Promise<E.Either<StoreError, void>>
-
   set(namespace: string, key: string, value: unknown, options?: StorageOptions): Promise<E.Either<StoreError, void>>
-
   get<T>(namespace: string, key: string): Promise<E.Either<StoreError, T | undefined>>
-
   remove(namespace: string, key: string): Promise<E.Either<StoreError, boolean>>
-
   clear(namespace?: string): Promise<E.Either<StoreError, void>>
-
   has(namespace: string, key: string): Promise<E.Either<StoreError, boolean>>
-
   listNamespaces(): Promise<E.Either<StoreError, string[]>>
-
   listKeys(namespace: string): Promise<E.Either<StoreError, string[]>>
-
   watch(namespace: string, key: string): StoreEventEmitter<StoreEvents>
 }
 
@@ -100,21 +102,13 @@ export const v1: VersionedAPI<StoreV1> = {
     capabilities: new Set(),
 
     init: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     set: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     get: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     remove: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     clear: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     has: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     listNamespaces: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     listKeys: async () => E.left({ kind: 'version', message: 'Not implemented' }),
-
     watch: () => ({
       on: () => () => {},
       once: () => () => {},

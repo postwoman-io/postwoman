@@ -20,7 +20,7 @@ import * as E from "fp-ts/Either"
 import { pipe } from "fp-ts/function"
 import { getI18n } from "~/modules/i18n"
 import { v4 } from "uuid"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { preProcessRelayRequest } from "~/helpers/functional/preprocess"
 
 type ProxyRequest = {
   url: string

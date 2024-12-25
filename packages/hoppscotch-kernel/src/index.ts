@@ -98,6 +98,7 @@ export type {
 export type {
   StoreCapability,
   StoreError,
+  StoreFile,
   StorageOptions,
   StoreEvents,
   StoreMetadataSchema,

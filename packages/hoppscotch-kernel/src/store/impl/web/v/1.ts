@@ -1,5 +1,6 @@
 import type { VersionedAPI } from '@type/versioning';
 import * as E from 'fp-ts/Either';
+import superjson from 'superjson';
 import {
     StoreV1,
     StoredData,
@@ -33,7 +34,7 @@ class BrowserStoreManager {
 
     async set(namespace: string, key: string, value: StoredData): Promise<void> {
         const validated = StoredDataSchema.parse(value);
-        localStorage.setItem(this.getFullKey(namespace, key), JSON.stringify(validated));
+        localStorage.setItem(this.getFullKey(namespace, key), superjson.stringify(validated));
         this.notifyListeners(namespace, key, validated.data);
     }
 
@@ -41,7 +42,7 @@ class BrowserStoreManager {
         const rawValue = localStorage.getItem(this.getFullKey(namespace, key));
         if (!rawValue) return undefined;
 
-        const parsed = JSON.parse(rawValue);
+        const parsed = superjson.parse(rawValue);
         const validated = StoredDataSchema.parse(parsed);
         return validated;
     }

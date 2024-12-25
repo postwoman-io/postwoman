@@ -10,7 +10,7 @@ import type {
   KernelInterceptorError,
 } from "~/services/kernel-interceptor.service"
 import { getI18n } from "~/modules/i18n"
-import { preProcessRelayRequest } from "~/platform/std/kernel-interceptors/helpers"
+import { preProcessRelayRequest } from "~/helpers/functional/preprocess"
 
 export class BrowserKernelInterceptorService
   extends Service

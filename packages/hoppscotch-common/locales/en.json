@@ -19,6 +19,7 @@
     "delete": "Delete",
     "disconnect": "Disconnect",
     "dismiss": "Dismiss",
+    "done": "Done",
     "dont_save": "Don't save",
     "download_file": "Download file",
     "download_test_report": "Download test report",
@@ -945,6 +946,7 @@
     "remove_domain": "Remove Domain",
     "ca_certificate": "CA Certificate",
     "ca_certificates": "CA Certificates",
+    "ca_certificates_support": "Hoppscotch supports .crt, .cer or .pem files containing one or more certificates.",
     "proxy_capabilities": "Hoppscotch Native supports HTTP/HTTPS/SOCKS proxies with NTLM and Basic Auth support."
   },
   "shared_requests": {
