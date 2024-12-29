@@ -219,7 +219,10 @@ pub fn run() {
                 }
             };
         })
-        .invoke_handler(tauri::generate_handler![command::get_otp, command::list_registrations]);
+        .invoke_handler(tauri::generate_handler![
+            command::get_otp,
+            command::list_registrations
+        ]);
 
     tracing::info!("Building Tauri application with context");
     let app = builder

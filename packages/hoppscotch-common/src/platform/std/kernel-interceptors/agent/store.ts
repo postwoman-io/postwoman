@@ -2,6 +2,7 @@ import { Service } from "dioc"
 import { ref } from "vue"
 import * as E from "fp-ts/Either"
 import axios from "axios"
+import superjson from "superjson"
 import { Store } from "~/kernel/store"
 import type { RelayRequest, RelayResponse } from "@hoppscotch/kernel"
 import { x25519 } from "@noble/curves/ed25519"
@@ -261,9 +262,9 @@ export class KernelInterceptorAgentStore extends Service {
     request: RelayRequest,
     reqID: number
   ): Promise<[string, ArrayBuffer]> {
-    const reqJSON = JSON.stringify({ ...request, req_id: reqID })
+    const { json, meta: _ } = superjson.serialize({ ...request, id: reqID })
+    const reqJSON = JSON.stringify(json)
     const reqJSONBytes = new TextEncoder().encode(reqJSON)
-
     const nonce = window.crypto.getRandomValues(new Uint8Array(12))
     const nonceB16 = base16.encode(nonce).toLowerCase()
 

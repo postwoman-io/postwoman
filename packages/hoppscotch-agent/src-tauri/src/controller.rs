@@ -13,7 +13,6 @@ use axum_extra::{
 use chrono::Utc;
 use rand::Rng;
 use serde_json::json;
-use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 use x25519_dalek::{EphemeralSecret, PublicKey};
@@ -223,14 +222,17 @@ pub async fn execute(
         }
     };
 
-    let request: relay::Request =
-        match state.validate_access_and_get_data(auth_header.token(), nonce, &body) {
-            Some(r) => r,
-            None => {
-                tracing::warn!("Invalid access or data");
-                return Err(AgentError::Unauthorized);
-            }
-        };
+    let request = match state.validate_access_and_get_data::<relay::Request>(
+        auth_header.token(),
+        nonce,
+        &body,
+    ) {
+        Some(r) => r,
+        None => {
+            tracing::warn!("Invalid access or data");
+            return Err(AgentError::Unauthorized);
+        }
+    };
 
     let request_id = request.id;
 
