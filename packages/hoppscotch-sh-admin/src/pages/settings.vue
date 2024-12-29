@@ -98,9 +98,7 @@ const triggerSaveChangesModal = () => {
   }
 
   if (hasInputValidationFailed.value) {
-    return toast.error(
-      'You have wrong input. Correct input errors and try again'
-    );
+    return toast.error(t('configs.input_validation_error'));
   }
   showSaveChangesModal.value = true;
 };
