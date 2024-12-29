@@ -6,11 +6,8 @@ import { pipe } from "fp-ts/function"
 import { Method, RelayRequest, ContentType, AuthType } from "@hoppscotch/kernel"
 import { EffectiveHoppRESTRequest } from "~/helpers/utils/EffectiveURL"
 
-import {
-  filterActive,
-  transformAuth,
-  transformContent,
-} from "~/helpers/kernel/common"
+import { transformAuth, transformContent } from "~/helpers/kernel/common"
+import { filterActiveToRecord } from "~/helpers/functional/filter-active"
 
 export const RESTRequest = {
   async toRequest(request: EffectiveHoppRESTRequest): Promise<RelayRequest> {
@@ -46,8 +43,8 @@ export const RESTRequest = {
       )
     )
 
-    const headers = filterActive(request.effectiveFinalHeaders)
-    const params = filterActive(request.effectiveFinalParams)
+    const headers = filterActiveToRecord(request.effectiveFinalHeaders)
+    const params = filterActiveToRecord(request.effectiveFinalParams)
 
     return {
       id: Date.now(),
