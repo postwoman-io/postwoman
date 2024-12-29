@@ -149,7 +149,7 @@ const smtpConfigFields = reactive<Field[]>([
   {
     name: t('configs.mail_configs.smtp_url'),
     key: 'mailer_smtp_url',
-    error: 'SMTP URL should start with smtp(s)://',
+    error: t('configs.mail_configs.input_validation'),
   },
   {
     name: t('configs.mail_configs.address_from'),
@@ -234,7 +234,8 @@ const fieldErrors = computed(() => {
 
   if (smtpConfigs.value?.fields.mailer_smtp_url) {
     const value = smtpConfigs.value.fields.mailer_smtp_url as string;
-    errors.mailer_smtp_url = !value.startsWith('smtp://');
+    errors.mailer_smtp_url =
+      !value.startsWith('smtp://') && !value.startsWith('smtps://');
   }
 
   return errors;
