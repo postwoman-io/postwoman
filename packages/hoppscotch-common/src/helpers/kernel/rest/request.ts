@@ -11,37 +11,17 @@ import { filterActiveToRecord } from "~/helpers/functional/filter-active"
 
 export const RESTRequest = {
   async toRequest(request: EffectiveHoppRESTRequest): Promise<RelayRequest> {
-    const perhapsAuth: O.Option<AuthType> = await pipe(
+    const auth = await pipe(
       transformAuth(request.auth),
-      TE.fold(
-        (_error) => T.of(O.none),
-        (result) => T.of(result)
-      )
+      TE.getOrElse(() => T.of<O.Option<AuthType>>(O.none)),
+      T.map(O.toUndefined)
     )()
 
-    const auth = pipe(
-      perhapsAuth,
-      O.fold(
-        () => undefined,
-        (c) => c
-      )
-    )
-
-    const perhapsContent: O.Option<ContentType> = await pipe(
+    const content = await pipe(
       transformContent(request.body),
-      TE.fold(
-        (_error) => T.of(O.none),
-        (result) => T.of(result)
-      )
+      TE.getOrElse(() => T.of<O.Option<ContentType>>(O.none)),
+      T.map(O.toUndefined)
     )()
-
-    const content = pipe(
-      perhapsContent,
-      O.fold(
-        () => undefined,
-        (c) => c
-      )
-    )
 
     const headers = filterActiveToRecord(request.effectiveFinalHeaders)
     const params = filterActiveToRecord(request.effectiveFinalParams)

@@ -39,15 +39,12 @@ import { KernelInterceptorProxyStore } from "~/platform/std/kernel-interceptors/
 
 import IconRotateCCW from "~icons/lucide/rotate-ccw"
 import IconCheck from "~icons/lucide/check"
-import IconEye from "~icons/lucide/eye"
-import IconEyeOff from "~icons/lucide/eye-off"
 
 const t = useI18n()
 const toast = useToast()
 const store = useService(KernelInterceptorProxyStore)
 
 const proxyUrl = ref("")
-const showToken = ref(false)
 
 const clearIcon = refAutoReset<typeof IconRotateCCW | typeof IconCheck>(
   IconRotateCCW,
