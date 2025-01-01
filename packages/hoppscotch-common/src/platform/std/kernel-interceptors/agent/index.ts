@@ -71,7 +71,7 @@ export class AgentKernelInterceptorService
       "peerverification",
     ]),
     proxy: new Set(["http", "https", "authentication", "certificates"]),
-    advanced: new Set(["redirects", "cookies"]),
+    advanced: new Set(["redirects", "cookies", "localaccess"]),
   } as const
 
   public execute(request: RelayRequest): ExecutionResult {

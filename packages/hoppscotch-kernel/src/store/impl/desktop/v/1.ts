@@ -1,3 +1,5 @@
+import { Store } from '@tauri-apps/plugin-store';
+
 import { VersionedAPI } from '@type/versioning';
 import {
     StoreV1,
@@ -8,7 +10,6 @@ import {
     StoredDataSchema,
     StoreEventEmitter,
 } from '@store/v/1';
-import { Store } from '@tauri-apps/plugin-store';
 
 import * as E from 'fp-ts/Either';
 

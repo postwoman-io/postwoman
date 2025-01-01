@@ -287,6 +287,7 @@ export type AdvancedCapability =
     | 'ipv6'
     | 'http2'
     | 'http3'
+    | 'localaccess'
 
 export interface RelayCapabilities {
     method: Set<MethodCapability>

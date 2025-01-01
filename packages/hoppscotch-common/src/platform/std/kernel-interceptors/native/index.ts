@@ -59,7 +59,7 @@ export class NativeKernelInterceptorService
       "peerverification",
     ]),
     proxy: new Set(["http", "https", "authentication", "certificates"]),
-    advanced: new Set(["redirects", "cookies"]),
+    advanced: new Set(["redirects", "cookies", "localaccess"]),
   } as const
   public readonly settingsEntry = markRaw({
     title: (t: ReturnType<typeof getI18n>) =>
