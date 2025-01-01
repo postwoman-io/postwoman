@@ -11,7 +11,7 @@ import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 import { useToast } from "~/composables/toast"
 import { PasswordGrantTypeParams } from "@hoppscotch/data"
 import { content } from "@hoppscotch/kernel"
-import { parseBytesTo } from "~/helpers/functional/parse"
+import { parseBytesToJSON } from "~/helpers/functional/json"
 
 const interceptorService = getService(KernelInterceptorService)
 
@@ -92,7 +92,7 @@ const initPasswordOauthFlow = async ({
     access_token: z.string(),
   })
 
-  const responsePayload = parseBytesTo<{ access_token: string }>(
+  const responsePayload = parseBytesToJSON<{ access_token: string }>(
     res.right.body.body
   )
 

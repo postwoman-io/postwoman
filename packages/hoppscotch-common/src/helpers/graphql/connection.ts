@@ -1,10 +1,15 @@
 import { Component, computed, reactive, ref } from "vue"
+import { OperationType } from "@urql/core"
 import { pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
+import * as E from "fp-ts/Either"
+
+import { GQLHeader, makeGQLRequest, HoppGQLAuth } from "@hoppscotch/data"
+import { RelayError } from "@hoppscotch/kernel"
+
 import { getService } from "~/modules/dioc"
 import { getI18n } from "~/modules/i18n"
 import { useToast } from "~/composables/toast"
-import { OperationType } from "@urql/core"
 import {
   GraphQLSchema,
   buildClientSchema,
@@ -14,13 +19,12 @@ import {
   GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
+IntrospectionQuery,
 } from "graphql"
 import { GQLTabService } from "~/services/tab/graphql"
 import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 import { makeGQLHistoryEntry, addGraphqlHistoryEntry } from "~/newstore/history"
-import { GQLHeader, makeGQLRequest, HoppGQLAuth } from "@hoppscotch/data"
-import * as E from "fp-ts/Either"
-import { MediaType, RelayError } from "@hoppscotch/kernel"
+import { parseBodyAsJSON } from "~/helpers/functional/json"
 import { GQLRequest } from "~/helpers/kernel/gql/request"
 import { GQLResponse } from "~/helpers/kernel/gql/response"
 
@@ -192,21 +196,9 @@ export const connect = async (
       if (E.isLeft(result)) throw new Error(result.left.toString())
 
       const response = result.right
-      // NOTE: This pattern is repated often across codebase,
-      // maybe consider making this into a kernel part or library,
-      // similar to `relay.content` const object.
       const perhapsJson = pipe(
-        response.body?.mediaType?.includes(MediaType.APPLICATION_JSON)
-          ? O.of(new Uint8Array(response.body.body).buffer)
-          : O.none,
-        O.chain((body) =>
-          O.tryCatch(() => {
-            const jsonString = new TextDecoder("utf-8")
-              .decode(body)
-              .replaceAll("\x00", "")
-            return JSON.parse(jsonString)
-          })
-        )
+        O.fromNullable(response.body),
+        O.chain((body) => parseBodyAsJSON<{ data: IntrospectionQuery }>(body))
       )
 
       if (O.isNone(perhapsJson))
