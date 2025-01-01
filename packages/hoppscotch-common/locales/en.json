@@ -645,7 +645,8 @@
       "extension_not_installed": "Extension not installed.",
       "extension_unknown_origin": "Make sure you've added the API endpoint's origin to the Hoppscotch Browser Extension list.",
       "extention_enable_action": "Enable Browser Extension",
-      "extention_not_enabled": "Extension not enabled."
+      "extention_not_enabled": "Extension not enabled.",
+      "localaccess_unsupported": "Current interceptor does not support local access, please consider using Agent, Extension interceptors or the Desktop App"
     },
     "auth": {
       "digest": "Agent interceptor is recommended when using Digest Authorization."

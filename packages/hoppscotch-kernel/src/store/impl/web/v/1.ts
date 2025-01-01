@@ -1,6 +1,7 @@
-import type { VersionedAPI } from '@type/versioning';
 import * as E from 'fp-ts/Either';
 import superjson from 'superjson';
+
+import type { VersionedAPI } from '@type/versioning';
 import {
     StoreV1,
     StoredData,

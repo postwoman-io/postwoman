@@ -38,6 +38,29 @@ export class RequestInspectorService extends Service implements Inspector {
 
   private readonly inspectionChecks: CapabilityCheck[] = [
     {
+      matcher: (req) => {
+        const localHostURLs = ["localhost", "127.0.0.1"]
+        return localHostURLs.some((host) => req.endpoint.includes(host))
+          ? {}
+          : null
+      },
+      requires: {
+        type: "advanced",
+        name: "localaccess",
+      },
+      createInspection: () => ({
+        id: "localaccess",
+        icon: markRaw(IconAlertTriangle),
+        text: {
+          type: "text",
+          text: this.t("inspections.url.localaccess_unsupported"),
+        },
+        severity: 2,
+        isApplicable: true,
+        locations: { type: "url" },
+      }),
+    },
+    {
       matcher: (req) => (req.auth.authType === "digest" ? {} : null),
       requires: { type: "auth", name: "digest" },
       createInspection: () => ({

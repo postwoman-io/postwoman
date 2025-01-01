@@ -92,7 +92,15 @@ export type {
   AuthType,
   CertificateType,
   RelayCapabilities,
+  RelayEventEmitter,
+  RelayRequestEvents,
   StatusCode
+} from '@relay/v/1'
+
+export {
+  content,
+  body,
+  MediaType,
 } from '@relay/v/1'
 
 export type {
@@ -108,9 +116,3 @@ export type {
   StoreEventEmitter,
   StoreV1,
 } from '@store/v/1'
-
-export {
-  content,
-  body,
-  MediaType,
-} from '@relay/v/1'

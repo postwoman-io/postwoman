@@ -36,12 +36,27 @@ export class ExtensionKernelInterceptorService
       "HEAD",
       "OPTIONS",
     ]),
-    header: new Set(["stringvalue"]),
-    content: new Set(["text", "json", "multipart", "form"]),
-    auth: new Set(["basic"]),
-    security: new Set([]),
-    proxy: new Set([]),
-    advanced: new Set([]),
+    header: new Set(["stringvalue", "arrayvalue", "multivalue"]),
+    content: new Set([
+      "text",
+      "json",
+      "xml",
+      "form",
+      "binary",
+      "multipart",
+      "urlencoded",
+      "compression",
+    ]),
+    auth: new Set(["basic", "bearer", "apikey"]),
+    security: new Set([
+      "clientcertificates",
+      "cacertificates",
+      "certificatevalidation",
+      "hostverification",
+      "peerverification",
+    ]),
+    proxy: new Set(["http", "https", "authentication", "certificates"]),
+    advanced: new Set(["localaccess"]),
   } as const
 
   public readonly settingsEntry = markRaw({
