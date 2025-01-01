@@ -9,7 +9,7 @@ import implicit, { ImplicitOauthFlowParams } from "./flows/implicit"
 import { getService } from "~/modules/dioc"
 import { HoppCollection } from "@hoppscotch/data"
 import { TeamCollection } from "~/helpers/backend/graphql"
-import { parseBytesTo } from "~/helpers/functional/parse"
+import { parseBytesToJSON } from "~/helpers/functional/json"
 import { MediaType } from "@hoppscotch/kernel"
 
 const persistenceService = getService(PersistenceService)
@@ -111,7 +111,7 @@ export const decodeResponseAsJSON = (response: {
 }): E.Either<"AUTH_TOKEN_REQUEST_FAILED", Record<string, unknown>> =>
   pipe(
     response.body.body,
-    parseBytesTo<Record<string, unknown>>,
+    parseBytesToJSON<Record<string, unknown>>,
     O.fold(
       () => E.left("AUTH_TOKEN_REQUEST_FAILED" as const),
       (data) => E.right(data)

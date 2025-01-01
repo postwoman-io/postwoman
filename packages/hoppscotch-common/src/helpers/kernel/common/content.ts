@@ -4,7 +4,7 @@ import * as O from "fp-ts/Option"
 import * as A from "fp-ts/Array"
 import { pipe } from "fp-ts/function"
 
-import { parseJSONAs } from "~/helpers/functional/parse"
+import { parseJSONAs } from "~/helpers/functional/json"
 import { HoppRESTReqBody } from "@hoppscotch/data"
 import { ContentType, MediaType, content } from "@hoppscotch/kernel"
 

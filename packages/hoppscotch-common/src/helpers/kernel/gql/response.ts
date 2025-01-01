@@ -3,7 +3,7 @@ import { pipe } from "fp-ts/function"
 import { RelayResponse } from "@hoppscotch/kernel"
 import { RunQueryOptions } from "~/helpers/graphql/connection"
 import { OperationType } from "@urql/core"
-import { parseBodyAsJSON } from "~/helpers/functional/parse"
+import { parseBodyAsJSON } from "~/helpers/functional/json"
 
 export type HoppGQLSuccessResponse = {
   type: "response"
