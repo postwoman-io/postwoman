@@ -1,33 +1,26 @@
-import { Request, RelayCapabilities } from "@hoppscotch/kernel"
+import type {
+  RelayRequest,
+  RelayRequestEvents,
+  RelayError,
+  RelayResponse,
+  RelayEventEmitter,
+} from "@hoppscotch/kernel"
+import * as E from "fp-ts/Either"
+import { getModule } from "."
 
-export const Relay = {
-  capabilities(): RelayCapabilities {
-    if (!window.__KERNEL__) {
-      throw new Error("Kernel is not initialized")
-    }
-    if (!window.__KERNEL__?.relay) {
-      throw new Error("Kernel relay is not initialized")
-    }
-    return window.__KERNEL__.relay.capabilities
-  },
+export const Relay = (() => {
+  const module = () => getModule("relay")
 
-  canHandle(request: Request) {
-    if (!window.__KERNEL__) {
-      throw new Error("Kernel is not initialized")
-    }
-    if (!window.__KERNEL__?.relay) {
-      throw new Error("Kernel relay is not initialized")
-    }
-    return window.__KERNEL__.relay.canHandle(request)
-  },
-
-  execute(request: Request) {
-    if (!window.__KERNEL__) {
-      throw new Error("Kernel is not initialized")
-    }
-    if (!window.__KERNEL__?.relay) {
-      throw new Error("Kernel relay is not initialized")
-    }
-    return window.__KERNEL__.relay.execute(request)
-  },
-}
+  return {
+    capabilities: () => module().capabilities,
+    canHandle: (request: RelayRequest): E.Either<RelayError, true> =>
+      module().canHandle(request),
+    execute: (
+      request: RelayRequest
+    ): {
+      cancel: () => Promise<void>
+      emitter: RelayEventEmitter<RelayRequestEvents>
+      response: Promise<E.Either<RelayError, RelayResponse>>
+    } => module().execute(request),
+  } as const
+})()

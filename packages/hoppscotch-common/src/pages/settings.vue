@@ -197,6 +197,7 @@
         </div>
       </div>
 
+      <!-- NOTE: Old interceptors
       <div class="md:grid md:grid-cols-3 md:gap-4">
         <div class="p-8 md:col-span-1">
           <h3 class="heading">
@@ -221,6 +222,7 @@
           </section>
         </div>
       </div>
+      -->
 
       <div class="md:grid md:grid-cols-3 md:gap-4">
         <div class="p-8 md:col-span-1">

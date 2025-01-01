@@ -145,7 +145,8 @@ useService(EnvironmentsSpotlightSearcherService)
 useService(SwitchEnvSpotlightSearcherService)
 useService(WorkspaceSpotlightSearcherService)
 useService(SwitchWorkspaceSpotlightSearcherService)
-useService(InterceptorSpotlightSearcherService)
+// NOTE: Old interceptor
+// useService(InterceptorSpotlightSearcherService)
 useService(KernelInterceptorSpotlightSearcherService)
 useService(TeamsSpotlightSearcherService)
 
