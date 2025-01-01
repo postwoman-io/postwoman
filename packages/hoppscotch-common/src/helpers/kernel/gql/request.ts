@@ -25,21 +25,11 @@ export const GQLRequest = {
       "content-type": "application/json",
     }
 
-    const perhapsAuth: O.Option<AuthType> = await pipe(
+    const auth = await pipe(
       transformAuth(request.auth),
-      TE.fold(
-        (_error) => T.of(O.none),
-        (result) => T.of(result)
-      )
+      TE.getOrElse(() => T.of<O.Option<AuthType>>(O.none)),
+      T.map(O.toUndefined)
     )()
-
-    const auth = pipe(
-      perhapsAuth,
-      O.fold(
-        () => undefined,
-        (c) => c
-      )
-    )
 
     const variables = await parseVariables(request.variables)
 

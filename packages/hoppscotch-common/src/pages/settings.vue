@@ -285,7 +285,8 @@ import { useI18n } from "@composables/i18n"
 import { useColorMode } from "@composables/theming"
 import { usePageHead } from "@composables/head"
 import { useService } from "dioc/vue"
-import { InterceptorService } from "~/services/interceptor.service"
+// NOTE: Old interceptors
+// import { InterceptorService } from "~/services/interceptor.service"
 import { pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as A from "fp-ts/Array"
@@ -317,20 +318,21 @@ const kernelInterceptorsWithSettings = computed(() =>
   )
 )
 
-const interceptorService: InterceptorService = useService(InterceptorService)
-const interceptorsWithSettings = computed(() =>
-  pipe(
-    interceptorService.availableInterceptors.value,
-    A.filterMap((interceptor) =>
-      interceptor.settingsPageEntry
-        ? O.some([
-            interceptor.interceptorID,
-            interceptor.settingsPageEntry,
-          ] as const)
-        : O.none
-    )
-  )
-)
+// NOTE: Old interceptors
+// const interceptorService: InterceptorService = useService(InterceptorService)
+// const interceptorsWithSettings = computed(() =>
+//   pipe(
+//     interceptorService.availableInterceptors.value,
+//     A.filterMap((interceptor) =>
+//       interceptor.settingsPageEntry
+//         ? O.some([
+//             interceptor.interceptorID,
+//             interceptor.settingsPageEntry,
+//           ] as const)
+//         : O.none
+//     )
+//   )
+// )
 
 const ACCENT_COLOR = useSetting("THEME_COLOR")
 const PROXY_URL = useSetting("PROXY_URL")

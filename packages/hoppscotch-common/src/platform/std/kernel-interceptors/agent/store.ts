@@ -262,6 +262,7 @@ export class KernelInterceptorAgentStore extends Service {
     request: RelayRequest,
     reqID: number
   ): Promise<[string, ArrayBuffer]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { json, meta: _ } = superjson.serialize({ ...request, id: reqID })
     const reqJSON = JSON.stringify(json)
     const reqJSONBytes = new TextEncoder().encode(reqJSON)

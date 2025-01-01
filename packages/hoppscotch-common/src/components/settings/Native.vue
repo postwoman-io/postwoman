@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col space-y-4">
+  <div class="flex flex-col">
     <div class="flex items-center space-x-2 py-4">
       <h2 class="font-semibold flex-1">{{ selectedDomainDisplay }}</h2>
       <HoppButtonSecondary
@@ -255,6 +255,10 @@
             :label="t('action.done')"
             :disabled="isClientCertIncomplete"
             @click="showClientCertModal = false"
+          />
+          <HoppButtonSecondary
+            :label="t('action.clear')"
+            @click="clearClientCerts"
           />
         </div>
       </template>
