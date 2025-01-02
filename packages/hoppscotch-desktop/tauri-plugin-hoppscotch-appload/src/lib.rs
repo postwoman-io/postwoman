@@ -34,6 +34,7 @@ mod error;
 mod global;
 mod models;
 mod storage;
+mod ui;
 mod uri;
 mod verification;
 

@@ -1,3 +1,5 @@
+import * as E from 'fp-ts/Either';
+
 import { Store } from '@tauri-apps/plugin-store';
 
 import { VersionedAPI } from '@type/versioning';
@@ -11,9 +13,7 @@ import {
     StoreEventEmitter,
 } from '@store/v/1';
 
-import * as E from 'fp-ts/Either';
-
-const STORE_PATH = 'hoppscotch.store';
+const STORE_PATH = `${window.location.host}.hoppscotch.store`
 
 type NamespacedData = Record<string, Record<string, StoredData>>;
 

@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
-use tauri::{command, AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    command, AppHandle, LogicalPosition, Manager, Runtime, TitleBarStyle, WebviewUrl,
+    WebviewWindowBuilder,
+};
 
 use crate::{
     bundle::BundleLoader,
     models::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse},
-    Result,
+    ui, Result,
 };
 
 fn sanitize_window_label(input: &str) -> String {
@@ -63,7 +66,6 @@ pub async fn download<R: Runtime>(
 #[command]
 pub async fn load<R: Runtime>(app: AppHandle<R>, options: LoadOptions) -> Result<LoadResponse> {
     let label = format!("{}", sanitize_window_label(&options.window.title));
-
     tracing::info!(?options, bundle = %options.bundle_name, "Loading bundle");
 
     let url = format!("app://{}/", options.bundle_name);
@@ -79,6 +81,22 @@ pub async fn load<R: Runtime>(app: AppHandle<R>, options: LoadOptions) -> Result
             tracing::error!(?e, ?label, "Failed to create window");
             e
         })?;
+
+    #[cfg(target_os = "macos")]
+    {
+        let window_clone = window.clone();
+        window.run_on_main_thread(move || {
+            ui::macos::posit::setup_window(window_clone);
+        })?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let window_clone = window.clone();
+        window.run_on_main_thread(move || {
+            ui::windows::posit::setup_window(window_clone);
+        })?;
+    }
 
     if let Some(main_window) = app.get_webview_window("main") {
         main_window.close()?;
