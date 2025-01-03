@@ -1235,7 +1235,7 @@
     "empty_collection": "Collection is empty. Add requests to run.",
     "no_response_persist": "The collection runner is presently configured not to persist responses. This setting prevents showing the response data. To modify this behavior, initiate a new run configuration.",
     "select_request": "Select a request to see response and test results",
-    "response_body_lost_rerun": "Response body is lost. Run again the collection to get the response body.",
+    "response_body_lost_rerun": "Response body is lost. Run the collection again to get the response body.",
     "cli_command_generation_description_cloud": "Copy the below command and run it from the CLI. Please specify a personal access token.",
     "cli_command_generation_description_sh": "Copy the below command and run it from the CLI. Please specify a personal access token and verify the generated SH instance server URL.",
     "cli_command_generation_description_sh_with_server_url_placeholder": "Copy the below command and run it from the CLI. Please specify a personal access token and the SH instance server URL.",
