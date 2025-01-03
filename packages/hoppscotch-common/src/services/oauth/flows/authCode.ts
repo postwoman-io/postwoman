@@ -120,7 +120,7 @@ const initAuthCodeOauthFlow = async ({
   }
 
   const localOAuthTempConfig =
-    persistenceService.getLocalConfig("oauth_temp_config")
+    await persistenceService.getLocalConfig("oauth_temp_config")
 
   const persistedOAuthConfig: PersistedOAuthConfig = localOAuthTempConfig
     ? { ...JSON.parse(localOAuthTempConfig) }
@@ -130,7 +130,7 @@ const initAuthCodeOauthFlow = async ({
 
   // persist the state so we can compare it when we get redirected back
   // also persist the grant_type,tokenEndpoint and clientSecret so we can use them when we get redirected back
-  persistenceService.setLocalConfig(
+  await persistenceService.setLocalConfig(
     "oauth_temp_config",
     JSON.stringify(<PersistedOAuthConfig>{
       ...persistedOAuthConfig,

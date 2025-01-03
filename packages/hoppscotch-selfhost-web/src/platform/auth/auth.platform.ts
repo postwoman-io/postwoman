@@ -80,11 +80,11 @@ async function getInitialUserDetails() {
 
 const isGettingInitialUser: Ref<null | boolean> = ref(null)
 
-function setUser(user: HoppUser | null) {
+async function setUser(user: HoppUser | null) {
   currentUser$.next(user)
   probableUser$.next(user)
 
-  persistenceService.setLocalConfig("login_state", JSON.stringify(user))
+  await persistenceService.setLocalConfig("login_state", JSON.stringify(user))
 }
 
 async function setInitialUser() {
@@ -95,13 +95,13 @@ async function setInitialUser() {
 
   // no cookies sent. so the user is not logged in
   if (error && error.message === "auth/cookies_not_found") {
-    setUser(null)
+    await setUser(null)
     isGettingInitialUser.value = false
     return
   }
 
   if (error && error.message === "user/not_found") {
-    setUser(null)
+    await setUser(null)
     isGettingInitialUser.value = false
     return
   }
@@ -113,7 +113,7 @@ async function setInitialUser() {
     if (isRefreshSuccess) {
       setInitialUser()
     } else {
-      setUser(null)
+      await setUser(null)
       isGettingInitialUser.value = false
       await logout()
     }
@@ -134,7 +134,7 @@ async function setInitialUser() {
       emailVerified: true,
     }
 
-    setUser(hoppUser)
+    await setUser(hoppUser)
 
     isGettingInitialUser.value = false
 
@@ -182,7 +182,7 @@ async function sendMagicLink(email: string) {
   )
 
   if (res.data && res.data.deviceIdentifier) {
-    persistenceService.setLocalConfig(
+    await persistenceService.setLocalConfig(
       "deviceIdentifier",
       res.data.deviceIdentifier
     )
@@ -247,7 +247,7 @@ export const def: AuthPlatformDef = {
   },
   async performAuthInit() {
     const probableUser = JSON.parse(
-      persistenceService.getLocalConfig("login_state") ?? "null"
+      await persistenceService.getLocalConfig("login_state") ?? "null"
     )
     probableUser$.next(probableUser)
     await setInitialUser()
@@ -301,7 +301,7 @@ export const def: AuthPlatformDef = {
     const token = searchParams.get("token")
 
     const deviceIdentifier =
-      persistenceService.getLocalConfig("deviceIdentifier")
+      await persistenceService.getLocalConfig("deviceIdentifier")
 
     await axios.post(
       `${import.meta.env.VITE_BACKEND_API_URL}/auth/verify`,
@@ -326,7 +326,7 @@ export const def: AuthPlatformDef = {
     const res = await updateUserDisplayName(name)
 
     if (E.isRight(res)) {
-      setUser({
+      await setUser({
         ...currentUser$.value,
         displayName: res.right.updateDisplayName.displayName ?? null,
       })
@@ -344,7 +344,7 @@ export const def: AuthPlatformDef = {
     probableUser$.next(null)
     currentUser$.next(null)
 
-    persistenceService.removeLocalConfig("login_state")
+    await persistenceService.removeLocalConfig("login_state")
 
     authEvents$.next({
       event: "logout",
@@ -354,7 +354,7 @@ export const def: AuthPlatformDef = {
   async processMagicLink() {
     if (this.isSignInWithEmailLink(window.location.href)) {
       const deviceIdentifier =
-        persistenceService.getLocalConfig("deviceIdentifier")
+        await persistenceService.getLocalConfig("deviceIdentifier")
 
       if (!deviceIdentifier) {
         throw new Error(
@@ -364,7 +364,7 @@ export const def: AuthPlatformDef = {
 
       await this.signInWithEmailLink(deviceIdentifier, window.location.href)
 
-      persistenceService.removeLocalConfig("deviceIdentifier")
+      await persistenceService.removeLocalConfig("deviceIdentifier")
       window.location.href = "/"
     }
   },

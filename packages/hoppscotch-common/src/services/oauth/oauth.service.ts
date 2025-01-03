@@ -36,7 +36,7 @@ export const grantTypesInvolvingRedirect = ["AUTHORIZATION_CODE", "IMPLICIT"]
 export const routeOAuthRedirect = async () => {
   // get the temp data from the local storage
   const localOAuthTempConfig =
-    persistenceService.getLocalConfig("oauth_temp_config")
+    await persistenceService.getLocalConfig("oauth_temp_config")
 
   if (!localOAuthTempConfig) {
     return E.left("INVALID_STATE")

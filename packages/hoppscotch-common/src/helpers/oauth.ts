@@ -88,15 +88,15 @@ export const tokenRequest = async ({
     accessTokenUrl = parsedOIDCConfiguration.data.token_endpoint
   }
 
-  persistenceService.setLocalConfig("tokenEndpoint", accessTokenUrl)
-  persistenceService.setLocalConfig("client_id", clientId)
-  persistenceService.setLocalConfig("client_secret", clientSecret)
+  await persistenceService.setLocalConfig("tokenEndpoint", accessTokenUrl)
+  await persistenceService.setLocalConfig("client_id", clientId)
+  await persistenceService.setLocalConfig("client_secret", clientSecret)
 
   const state = generateRandomString()
-  persistenceService.setLocalConfig("pkce_state", state)
+  await persistenceService.setLocalConfig("pkce_state", state)
 
   const codeVerifier = generateRandomString()
-  persistenceService.setLocalConfig("pkce_codeVerifier", codeVerifier)
+  await persistenceService.setLocalConfig("pkce_codeVerifier", codeVerifier)
 
   const codeChallenge = await pkceChallengeFromVerifier(codeVerifier)
 
@@ -119,14 +119,18 @@ export const handleOAuthRedirect = async () => {
 
   if (queryParams.error) return E.left("AUTH_SERVER_RETURNED_ERROR")
   if (!queryParams.code) return E.left("NO_AUTH_CODE")
-  if (persistenceService.getLocalConfig("pkce_state") !== queryParams.state) {
+  if (
+    (await persistenceService.getLocalConfig("pkce_state")) !==
+    queryParams.state
+  ) {
     return E.left("INVALID_STATE")
   }
 
-  const tokenEndpoint = persistenceService.getLocalConfig("tokenEndpoint")
-  const clientID = persistenceService.getLocalConfig("client_id")
-  const clientSecret = persistenceService.getLocalConfig("client_secret")
-  const codeVerifier = persistenceService.getLocalConfig("pkce_codeVerifier")
+  const tokenEndpoint = await persistenceService.getLocalConfig("tokenEndpoint")
+  const clientID = await persistenceService.getLocalConfig("client_id")
+  const clientSecret = await persistenceService.getLocalConfig("client_secret")
+  const codeVerifier =
+    await persistenceService.getLocalConfig("pkce_codeVerifier")
 
   if (!tokenEndpoint) return E.left("NO_TOKEN_ENDPOINT")
   if (!clientID) return E.left("NO_CLIENT_ID")
@@ -175,10 +179,10 @@ export const handleOAuthRedirect = async () => {
     : E.left("AUTH_TOKEN_REQUEST_INVALID_RESPONSE")
 }
 
-const clearPKCEState = () => {
-  persistenceService.removeLocalConfig("pkce_state")
-  persistenceService.removeLocalConfig("pkce_codeVerifier")
-  persistenceService.removeLocalConfig("tokenEndpoint")
-  persistenceService.removeLocalConfig("client_id")
-  persistenceService.removeLocalConfig("client_secret")
+const clearPKCEState = async () => {
+  await persistenceService.removeLocalConfig("pkce_state")
+  await persistenceService.removeLocalConfig("pkce_codeVerifier")
+  await persistenceService.removeLocalConfig("tokenEndpoint")
+  await persistenceService.removeLocalConfig("client_id")
+  await persistenceService.removeLocalConfig("client_secret")
 }

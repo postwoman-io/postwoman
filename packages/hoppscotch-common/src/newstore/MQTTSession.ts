@@ -16,7 +16,7 @@ type MQTTTab = {
 
 type HoppMQTTRequest = {
   endpoint: string
-  clientID: string
+  clientID?: string
 }
 
 type HoppMQTTSession = {
