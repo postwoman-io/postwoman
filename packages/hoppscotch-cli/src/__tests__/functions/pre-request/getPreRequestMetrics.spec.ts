@@ -1,14 +1,16 @@
 import { PreRequestMetrics, RequestMetrics } from "../../../types/response";
 import { getPreRequestMetrics } from "../../../utils/pre-request";
 
+import { describe, it, expect } from "vitest";
+
 describe("getPreRequestMetrics", () => {
-  test("With empty errors.", () => {
+  it("With empty errors.", () => {
     expect(getPreRequestMetrics([], 1)).toMatchObject(<PreRequestMetrics>{
       scripts: { failed: 0, passed: 1 },
     });
   });
 
-  test("With non-empty errors.", () => {
+  it("With non-empty errors.", () => {
     expect(
       getPreRequestMetrics(
         [

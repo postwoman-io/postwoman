@@ -37,6 +37,8 @@ const SAMPLE_TEST_DESCRIPTOR: TestDescriptor = {
   ],
 };
 
+import { describe, it, expect, beforeAll } from "vitest"; // Importing from vitest
+
 describe("testDescriptorParser", () => {
   let TEST_REPORT: TestReport[];
   beforeAll(async () => {

@@ -6,6 +6,7 @@ import { getTestMetrics, testRunner } from "../../../utils/test";
 import { HoppEnvs } from "../../../types/request";
 
 import "@relmify/jest-fp-ts";
+import { describe, it, expect, beforeAll } from "vitest"; // Importing from vitest
 
 const SAMPLE_ENVS: HoppEnvs = {
   global: [],
@@ -66,7 +67,7 @@ describe("testRunner", () => {
   });
 
   it("Should fail to execute with test-script-error.", () => {
-    expect(FAILURE_TEST_RUNNER_RES).toSubsetEqualLeft(<HoppCLIError>{
+    expect(FAILURE_TEST_RUNNER_RES).toEqualLeft(<HoppCLIError>{
       code: "TEST_SCRIPT_ERROR",
     });
   });

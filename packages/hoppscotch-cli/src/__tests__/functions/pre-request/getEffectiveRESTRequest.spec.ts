@@ -3,7 +3,7 @@ import { EffectiveHoppRESTRequest } from "../../../interfaces/request";
 import { HoppCLIError } from "../../../types/errors";
 import { getEffectiveRESTRequest } from "../../../utils/pre-request";
 
-import "@relmify/jest-fp-ts";
+import "@relmify/vitest-fp-ts";
 
 const DEFAULT_ENV = <Environment>{
   name: "name",
@@ -45,7 +45,7 @@ describe("getEffectiveRESTRequest", () => {
     SAMPLE_REQUEST = Object.assign({}, DEFAULT_REQUEST);
   });
 
-  test("Endpoint, headers and params with unavailable ENV.", () => {
+  it("Endpoint, headers and params with unavailable ENV.", () => {
     SAMPLE_REQUEST.headers = [
       {
         key: "HEADER",
@@ -71,7 +71,7 @@ describe("getEffectiveRESTRequest", () => {
     });
   });
 
-  test("Auth with unavailable ENV.", () => {
+  it("Auth with unavailable ENV.", () => {
     SAMPLE_REQUEST.auth = {
       authActive: true,
       authType: "bearer",
@@ -87,7 +87,7 @@ describe("getEffectiveRESTRequest", () => {
     });
   });
 
-  test("Body with unavailable ENV.", () => {
+  it("Body with unavailable ENV.", () => {
     SAMPLE_REQUEST.body = {
       contentType: "text/plain",
       body: "<<UNKNOWN>>",
@@ -100,7 +100,7 @@ describe("getEffectiveRESTRequest", () => {
     });
   });
 
-  test("Request meta-data with available ENVs.", () => {
+  it("Request meta-data with available ENVs.", () => {
     SAMPLE_REQUEST.headers = [
       {
         key: "HEADER",

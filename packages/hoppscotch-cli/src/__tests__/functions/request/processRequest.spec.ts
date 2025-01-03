@@ -3,11 +3,13 @@ import axios, { AxiosResponse } from "axios";
 import { processRequest } from "../../../utils/request";
 import { HoppEnvs } from "../../../types/request";
 
-import "@relmify/jest-fp-ts";
+// Import Vitest mock functions
+import { vi } from "vitest";
 
-jest.mock("axios");
+// Mock axios using Vitest's vi
+vi.mock("axios");
 
-const DEFAULT_REQUEST = <HoppRESTRequest>{
+const DEFAULT_REQUEST = <HoppRESTRequest> {
   v: "1",
   name: "name",
   method: "POST",
@@ -26,7 +28,7 @@ const DEFAULT_REQUEST = <HoppRESTRequest>{
   },
 };
 
-const DEFAULT_RESPONSE = <AxiosResponse>{
+const DEFAULT_RESPONSE = <AxiosResponse> {
   data: {},
   status: 200,
   config: {
@@ -38,7 +40,7 @@ const DEFAULT_RESPONSE = <AxiosResponse>{
   headers: [],
 };
 
-const DEFAULT_ENVS = <HoppEnvs>{
+const DEFAULT_ENVS = <HoppEnvs> {
   global: [],
   selected: [],
 };
@@ -47,17 +49,20 @@ describe("processRequest", () => {
   let SAMPLE_REQUEST = DEFAULT_REQUEST;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Use vi.clearAllMocks() instead of jest.clearAllMocks()
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     SAMPLE_REQUEST = DEFAULT_REQUEST;
   });
 
-  test("With empty envs for 'true' result.", () => {
-    (axios as unknown as jest.Mock).mockResolvedValue(DEFAULT_RESPONSE);
+  it("With empty envs for 'true' result.", async () => {
+    // Mock resolved axios response
+    vi.mocked(axios).mockResolvedValue(DEFAULT_RESPONSE);
 
-    return expect(
+    // Await the promise and check for resolved value
+    await expect(
       processRequest({
         request: SAMPLE_REQUEST,
         envs: DEFAULT_ENVS,
@@ -71,19 +76,21 @@ describe("processRequest", () => {
     });
   });
 
-  test("With non-empty envs, pre-request-script and test-script.", () => {
+  it("With non-empty envs, pre-request-script and test-script.", async () => {
     SAMPLE_REQUEST.preRequestScript = `
-			pw.env.set("ENDPOINT", "https://example.com");
-		`;
+      pw.env.set("ENDPOINT", "https://example.com");
+    `;
     SAMPLE_REQUEST.testScript = `
-			pw.test("check status.", () => {
-				pw.expect(pw.response.status).toBe(200);
-			});
-		`;
+      pw.test("check status.", () => {
+        pw.expect(pw.response.status).toBe(200);
+      });
+    `;
 
-    (axios as unknown as jest.Mock).mockResolvedValue(DEFAULT_RESPONSE);
+    // Mock resolved axios response
+    vi.mocked(axios).mockResolvedValue(DEFAULT_RESPONSE);
 
-    return expect(
+    // Await the promise and check for resolved value
+    await expect(
       processRequest({
         request: SAMPLE_REQUEST,
         envs: DEFAULT_ENVS,
@@ -100,12 +107,14 @@ describe("processRequest", () => {
     });
   });
 
-  test("With invalid-pre-request-script.", () => {
+  it("With invalid-pre-request-script.", async () => {
     SAMPLE_REQUEST.preRequestScript = `invalid`;
 
-    (axios as unknown as jest.Mock).mockResolvedValue(DEFAULT_RESPONSE);
+    // Mock resolved axios response
+    vi.mocked(axios).mockResolvedValue(DEFAULT_RESPONSE);
 
-    return expect(
+    // Await the promise and check for resolved value
+    await expect(
       processRequest({
         request: SAMPLE_REQUEST,
         envs: DEFAULT_ENVS,
