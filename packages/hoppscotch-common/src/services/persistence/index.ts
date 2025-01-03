@@ -1,31 +1,38 @@
 /* eslint-disable no-restricted-globals, no-restricted-syntax */
 
+import * as E from "fp-ts/Either"
+import { pipe } from "fp-ts/lib/function"
+import * as O from "fp-ts/Option"
+import { z } from "zod"
+
+import { Service } from "dioc"
+import { Subscription } from "rxjs"
+import { watchDebounced } from "@vueuse/core"
+import { assign, clone, isEmpty } from "lodash-es"
+
 import {
-  Environment,
-  GlobalEnvironment,
   GlobalEnvironmentVariable,
   translateToNewGQLCollection,
   translateToNewRESTCollection,
 } from "@hoppscotch/data"
-import { StorageLike, watchDebounced } from "@vueuse/core"
-import { Service } from "dioc"
-import { assign, clone, isEmpty } from "lodash-es"
-import { z } from "zod"
 
+import { Store } from "~/kernel/store"
 import { GQLTabService } from "~/services/tab/graphql"
 import { RESTTabService } from "~/services/tab/rest"
+import {
+  SecretEnvironmentService,
+  SecretVariable,
+} from "../secret-environment.service"
 
 import { useToast } from "~/composables/toast"
-import { MQTTRequest$, setMQTTRequest } from "../../newstore/MQTTSession"
-import { SSERequest$, setSSERequest } from "../../newstore/SSESession"
-import { SIORequest$, setSIORequest } from "../../newstore/SocketIOSession"
-import { WSRequest$, setWSRequest } from "../../newstore/WebSocketSession"
+
 import {
   graphqlCollectionStore,
   restCollectionStore,
   setGraphqlCollections,
   setRESTCollections,
 } from "../../newstore/collections"
+
 import {
   addGlobalEnvVariable,
   environments$,
@@ -35,6 +42,7 @@ import {
   setGlobalEnvVariables,
   setSelectedEnvironmentIndex,
 } from "../../newstore/environments"
+
 import {
   graphqlHistoryStore,
   restHistoryStore,
@@ -43,7 +51,9 @@ import {
   translateToNewGQLHistory,
   translateToNewRESTHistory,
 } from "../../newstore/history"
+
 import { bulkApplyLocalState, localStateStore } from "../../newstore/localstate"
+
 import {
   HoppAccentColor,
   HoppBgColor,
@@ -53,7 +63,12 @@ import {
   performSettingsDataMigrations,
   settingsStore,
 } from "../../newstore/settings"
-import { SecretEnvironmentService } from "../secret-environment.service"
+
+import { MQTTRequest$, setMQTTRequest } from "../../newstore/MQTTSession"
+import { SSERequest$, setSSERequest } from "../../newstore/SSESession"
+import { SIORequest$, setSIORequest } from "../../newstore/SocketIOSession"
+import { WSRequest$, setWSRequest } from "../../newstore/WebSocketSession"
+
 import {
   ENVIRONMENTS_SCHEMA,
   GQL_COLLECTION_SCHEMA,
@@ -75,711 +90,522 @@ import {
   WEBSOCKET_REQUEST_SCHEMA,
 } from "./validation-schemas"
 
+const STORE_NAMESPACE = "persistence.v1"
+
+const STORE_KEYS = {
+  VUEX: "vuex",
+  SETTINGS: "settings",
+  LOCAL_STATE: "localState",
+  REST_HISTORY: "restHistory",
+  GQL_HISTORY: "gqlHistory",
+  REST_COLLECTIONS: "restCollections",
+  GQL_COLLECTIONS: "gqlCollections",
+  ENVIRONMENTS: "environments",
+  SELECTED_ENV: "selectedEnv",
+  WEBSOCKET: "websocket",
+  SOCKETIO: "socketio",
+  SSE: "sse",
+  MQTT: "mqtt",
+  GLOBAL_ENV: "globalEnv",
+  REST_TABS: "restTabs",
+  GQL_TABS: "gqlTabs",
+  SECRET_ENVIRONMENTS: "secretEnvironments",
+  SCHEMA_VERSION: "schema_version",
+} as const
+
+interface StorageSetup<S extends z.ZodType<any>> {
+  key: keyof typeof STORE_KEYS
+  schema: S
+  defaultValue?: z.infer<S>
+  onLoad?: (data: z.infer<S>) => void
+  subscribe?: (
+    callback: (data: z.infer<S>) => Promise<void>
+  ) => Subscription | void | (() => void)
+  transform?: (data: z.infer<S>) => z.infer<S>
+}
+
+interface Migration {
+  version: number
+  migrate: () => Promise<void>
+}
+
+const migrations: Migration[] = [
+  {
+    version: 1,
+    migrate: async () => {
+      const keyMappings = {
+        settings: STORE_KEYS.SETTINGS,
+        collections: STORE_KEYS.REST_COLLECTIONS,
+        collectionsGraphql: STORE_KEYS.GQL_COLLECTIONS,
+        environments: STORE_KEYS.ENVIRONMENTS,
+        history: STORE_KEYS.REST_HISTORY,
+        graphqlHistory: STORE_KEYS.GQL_HISTORY,
+        WebsocketRequest: STORE_KEYS.WEBSOCKET,
+        SocketIORequest: STORE_KEYS.SOCKETIO,
+        SSERequest: STORE_KEYS.SSE,
+        MQTTRequest: STORE_KEYS.MQTT,
+        globalEnv: STORE_KEYS.GLOBAL_ENV,
+        restTabState: STORE_KEYS.REST_TABS,
+        gqlTabState: STORE_KEYS.GQL_TABS,
+        secretEnvironments: STORE_KEYS.SECRET_ENVIRONMENTS,
+      }
+
+      for (const [oldKey, newKey] of Object.entries(keyMappings)) {
+        const data = localStorage.getItem(oldKey)
+        if (data) {
+          await Store.set(STORE_NAMESPACE, newKey, JSON.parse(data))
+          localStorage.removeItem(oldKey)
+        }
+      }
+    },
+  },
+]
+
 /**
- * This service compiles persistence logic across the codebase
+ * Service that manages persistence of app state using the kernel store
  */
 export class PersistenceService extends Service {
   public static readonly ID = "PERSISTENCE_SERVICE"
 
   private readonly restTabService = this.bind(RESTTabService)
   private readonly gqlTabService = this.bind(GQLTabService)
-
   private readonly secretEnvironmentService = this.bind(
     SecretEnvironmentService
   )
 
-  public hoppLocalConfigStorage: StorageLike = localStorage
-
-  private showErrorToast(localStorageKey: string) {
+  private showErrorToast(key: string) {
     const toast = useToast()
     toast.error(
-      `There's a mismatch with the expected schema for the value corresponding to ${localStorageKey} read from localStorage, keeping a backup in ${localStorageKey}-backup`
+      `Schema validation failed for ${key}. A backup has been created with suffix '-backup'`
     )
   }
 
-  private checkAndMigrateOldSettings() {
-    if (window.localStorage.getItem("selectedEnvIndex")) {
-      const index = window.localStorage.getItem("selectedEnvIndex")
-      if (index) {
-        if (index === "-1") {
-          window.localStorage.setItem(
-            "selectedEnvIndex",
-            JSON.stringify({
-              type: "NO_ENV_SELECTED",
-            })
-          )
-        } else if (Number(index) >= 0) {
-          window.localStorage.setItem(
-            "selectedEnvIndex",
-            JSON.stringify({
-              type: "MY_ENV",
-              index: parseInt(index),
-            })
-          )
-        }
-      }
-    }
-
-    const vuexKey = "vuex"
-    let vuexData = JSON.parse(window.localStorage.getItem(vuexKey) || "{}")
-
-    if (isEmpty(vuexData)) return
-
-    // Validate data read from localStorage
-    const result = VUEX_SCHEMA.safeParse(vuexData)
-    if (result.success) {
-      vuexData = result.data
-    } else {
-      this.showErrorToast(vuexKey)
-      window.localStorage.setItem(`${vuexKey}-backup`, JSON.stringify(vuexData))
-    }
-
-    const { postwoman } = vuexData
-
-    if (!isEmpty(postwoman?.settings)) {
-      const settingsData = assign(
-        clone(getDefaultSettings()),
-        postwoman.settings
-      )
-
-      window.localStorage.setItem("settings", JSON.stringify(settingsData))
-
-      delete postwoman.settings
-      window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
-    }
-
-    if (postwoman?.collections) {
-      window.localStorage.setItem(
-        "collections",
-        JSON.stringify(postwoman.collections)
-      )
-
-      delete postwoman.collections
-      window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
-    }
-
-    if (postwoman?.collectionsGraphql) {
-      window.localStorage.setItem(
-        "collectionsGraphql",
-        JSON.stringify(postwoman.collectionsGraphql)
-      )
-
-      delete postwoman.collectionsGraphql
-      window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
-    }
-
-    if (postwoman?.environments) {
-      window.localStorage.setItem(
-        "environments",
-        JSON.stringify(postwoman.environments)
-      )
-
-      delete postwoman.environments
-      window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
-    }
-
-    const themeColorKey = "THEME_COLOR"
-    let themeColorValue = window.localStorage.getItem(themeColorKey)
-
-    if (themeColorValue) {
-      // Validate data read from localStorage
-      const result = THEME_COLOR_SCHEMA.safeParse(themeColorValue)
-
-      if (result.success) {
-        themeColorValue = result.data
-      } else {
-        this.showErrorToast(themeColorKey)
-        window.localStorage.setItem(`${themeColorKey}-backup`, themeColorValue)
-      }
-
-      applySetting(themeColorKey, themeColorValue as HoppAccentColor)
-      window.localStorage.removeItem(themeColorKey)
-    }
-
-    const nuxtColorModeKey = "nuxt-color-mode"
-    let nuxtColorModeValue = window.localStorage.getItem(nuxtColorModeKey)
-
-    if (nuxtColorModeValue) {
-      // Validate data read from localStorage
-      const result = NUXT_COLOR_MODE_SCHEMA.safeParse(nuxtColorModeValue)
-
-      if (result.success) {
-        nuxtColorModeValue = result.data
-      } else {
-        this.showErrorToast(nuxtColorModeKey)
-        window.localStorage.setItem(
-          `${nuxtColorModeKey}-backup`,
-          nuxtColorModeValue
-        )
-      }
-
-      applySetting("BG_COLOR", nuxtColorModeValue as HoppBgColor)
-      window.localStorage.removeItem(nuxtColorModeKey)
-    }
-  }
-
-  public setupLocalStatePersistence() {
-    const localStateKey = "localState"
-    let localStateData = JSON.parse(
-      window.localStorage.getItem(localStateKey) ?? "{}"
-    )
-
-    // Validate data read from localStorage
-    const result = LOCAL_STATE_SCHEMA.safeParse(localStateData)
-
-    if (result.success) {
-      localStateData = result.data
-    } else {
-      this.showErrorToast(localStateKey)
-      window.localStorage.setItem(
-        `${localStateKey}-backup`,
-        JSON.stringify(localStateData)
-      )
-    }
-
-    if (localStateData) bulkApplyLocalState(localStateData)
-
-    localStateStore.subject$.subscribe((state) => {
-      window.localStorage.setItem(localStateKey, JSON.stringify(state))
-    })
-  }
-
-  private setupSettingsPersistence() {
-    const settingsKey = "settings"
-    let settingsData = JSON.parse(
-      window.localStorage.getItem(settingsKey) ?? "null"
-    )
-
-    if (!settingsData) {
-      settingsData = getDefaultSettings()
-    }
-
-    // Validate data read from localStorage
-    const result = SETTINGS_SCHEMA.safeParse(settingsData)
-    if (result.success) {
-      settingsData = result.data
-    } else {
-      this.showErrorToast(settingsKey)
-      window.localStorage.setItem(
-        `${settingsKey}-backup`,
-        JSON.stringify(settingsData)
-      )
-    }
-
-    const updatedSettings = settingsData
-      ? performSettingsDataMigrations(settingsData)
-      : settingsData
-
-    if (updatedSettings) {
-      bulkApplySettings(updatedSettings)
-    }
-
-    settingsStore.subject$.subscribe((settings) => {
-      window.localStorage.setItem(settingsKey, JSON.stringify(settings))
-    })
-  }
-
-  private setupHistoryPersistence() {
-    const restHistoryKey = "history"
-    let restHistoryData = JSON.parse(
-      window.localStorage.getItem(restHistoryKey) || "[]"
-    )
-
-    const graphqlHistoryKey = "graphqlHistory"
-    let graphqlHistoryData = JSON.parse(
-      window.localStorage.getItem(graphqlHistoryKey) || "[]"
-    )
-
-    // Validate data read from localStorage
-    const restHistorySchemaParsedresult = z
-      .array(REST_HISTORY_ENTRY_SCHEMA)
-      .safeParse(restHistoryData)
-
-    if (restHistorySchemaParsedresult.success) {
-      restHistoryData = restHistorySchemaParsedresult.data
-    } else {
-      this.showErrorToast(restHistoryKey)
-      window.localStorage.setItem(
-        `${restHistoryKey}-backup`,
-        JSON.stringify(restHistoryData)
-      )
-    }
-
-    const gqlHistorySchemaParsedresult = z
-      .array(GQL_HISTORY_ENTRY_SCHEMA)
-      .safeParse(graphqlHistoryData)
-
-    if (gqlHistorySchemaParsedresult.success) {
-      graphqlHistoryData = gqlHistorySchemaParsedresult.data
-    } else {
-      this.showErrorToast(graphqlHistoryKey)
-      window.localStorage.setItem(
-        `${graphqlHistoryKey}-backup`,
-        JSON.stringify(graphqlHistoryData)
-      )
-    }
-
-    const translatedRestHistoryData = restHistoryData.map(
-      translateToNewRESTHistory
-    )
-    const translatedGraphqlHistoryData = graphqlHistoryData.map(
-      translateToNewGQLHistory
-    )
-
-    setRESTHistoryEntries(translatedRestHistoryData)
-    setGraphqlHistoryEntries(translatedGraphqlHistoryData)
-
-    restHistoryStore.subject$.subscribe(({ state }) => {
-      window.localStorage.setItem(restHistoryKey, JSON.stringify(state))
-    })
-
-    graphqlHistoryStore.subject$.subscribe(({ state }) => {
-      window.localStorage.setItem(graphqlHistoryKey, JSON.stringify(state))
-    })
-  }
-
-  private setupCollectionsPersistence() {
-    const restCollectionsKey = "collections"
-    let restCollectionsData = JSON.parse(
-      window.localStorage.getItem(restCollectionsKey) || "[]"
-    )
-
-    const graphqlCollectionsKey = "collectionsGraphql"
-    let graphqlCollectionsData = JSON.parse(
-      window.localStorage.getItem(graphqlCollectionsKey) || "[]"
-    )
-
-    // Validate data read from localStorage
-    const restCollectionsSchemaParsedresult = z
-      .array(REST_COLLECTION_SCHEMA)
-      .safeParse(restCollectionsData)
-
-    if (restCollectionsSchemaParsedresult.success) {
-      restCollectionsData = restCollectionsSchemaParsedresult.data
-    } else {
-      this.showErrorToast(restCollectionsKey)
-      window.localStorage.setItem(
-        `${restCollectionsKey}-backup`,
-        JSON.stringify(restCollectionsData)
-      )
-    }
-
-    const gqlCollectionsSchemaParsedresult = z
-      .array(GQL_COLLECTION_SCHEMA)
-      .safeParse(graphqlCollectionsData)
-
-    if (gqlCollectionsSchemaParsedresult.success) {
-      graphqlCollectionsData = gqlCollectionsSchemaParsedresult.data
-    } else {
-      this.showErrorToast(graphqlCollectionsKey)
-      window.localStorage.setItem(
-        `${graphqlCollectionsKey}-backup`,
-        JSON.stringify(graphqlCollectionsData)
-      )
-    }
-
-    const translatedRestCollectionsData = restCollectionsData.map(
-      translateToNewRESTCollection
-    )
-    const translatedGraphqlCollectionsData = graphqlCollectionsData.map(
-      translateToNewGQLCollection
-    )
-
-    setRESTCollections(translatedRestCollectionsData)
-    setGraphqlCollections(translatedGraphqlCollectionsData)
-
-    restCollectionStore.subject$.subscribe(({ state }) => {
-      window.localStorage.setItem(restCollectionsKey, JSON.stringify(state))
-    })
-
-    graphqlCollectionStore.subject$.subscribe(({ state }) => {
-      window.localStorage.setItem(graphqlCollectionsKey, JSON.stringify(state))
-    })
-  }
-
-  private setupEnvironmentsPersistence() {
-    const environmentsKey = "environments"
-    let environmentsData: Environment[] = JSON.parse(
-      window.localStorage.getItem(environmentsKey) || "[]"
-    )
-
-    // Validate data read from localStorage
-    const result = ENVIRONMENTS_SCHEMA.safeParse(environmentsData)
-    if (result.success) {
-      environmentsData = result.data
-    } else {
-      this.showErrorToast(environmentsKey)
-      window.localStorage.setItem(
-        `${environmentsKey}-backup`,
-        JSON.stringify(environmentsData)
-      )
-    }
-
-    // Check if a global env is defined and if so move that to globals
-    const globalIndex = environmentsData.findIndex(
-      (x) => x.name.toLowerCase() === "globals"
-    )
-
-    if (globalIndex !== -1) {
-      const globalEnv = environmentsData[globalIndex]
-      globalEnv.variables.forEach((variable: GlobalEnvironmentVariable) =>
-        addGlobalEnvVariable(variable)
-      )
-
-      // Remove global from environments
-      environmentsData.splice(globalIndex, 1)
-
-      // Just sync the changes manually
-      window.localStorage.setItem(
-        environmentsKey,
-        JSON.stringify(environmentsData)
-      )
-    }
-
-    replaceEnvironments(environmentsData)
-
-    environments$.subscribe((envs) => {
-      window.localStorage.setItem(environmentsKey, JSON.stringify(envs))
-    })
-  }
-
-  private setupSecretEnvironmentsPersistence() {
-    const secretEnvironmentsKey = "secretEnvironments"
-    const secretEnvironmentsData = window.localStorage.getItem(
-      secretEnvironmentsKey
-    )
-
-    try {
-      if (secretEnvironmentsData) {
-        let parsedSecretEnvironmentsData = JSON.parse(secretEnvironmentsData)
-
-        // Validate data read from localStorage
-        const result = SECRET_ENVIRONMENT_VARIABLE_SCHEMA.safeParse(
-          parsedSecretEnvironmentsData
-        )
-
-        if (result.success) {
-          parsedSecretEnvironmentsData = result.data
-        } else {
-          this.showErrorToast(secretEnvironmentsKey)
-          window.localStorage.setItem(
-            `${secretEnvironmentsKey}-backup`,
-            JSON.stringify(parsedSecretEnvironmentsData)
-          )
-        }
-
-        this.secretEnvironmentService.loadSecretEnvironmentsFromPersistedState(
-          parsedSecretEnvironmentsData
-        )
-      }
-    } catch (e) {
+  async init(): Promise<void> {
+    const initResult = await Store.init()
+    if (E.isLeft(initResult)) {
       console.error(
-        `Failed parsing persisted secret environment, state:`,
-        secretEnvironmentsData
+        "[PersistenceService] Failed to initialize store:",
+        initResult.left
       )
+      return
     }
-
-    watchDebounced(
-      this.secretEnvironmentService.persistableSecretEnvironments,
-      (newSecretEnvironment) => {
-        window.localStorage.setItem(
-          secretEnvironmentsKey,
-          JSON.stringify(newSecretEnvironment)
-        )
-      },
-      {
-        debounce: 500,
-      }
-    )
   }
 
-  private setupSelectedEnvPersistence() {
-    const selectedEnvIndexKey = "selectedEnvIndex"
-    let selectedEnvIndexValue = JSON.parse(
-      window.localStorage.getItem(selectedEnvIndexKey) ?? "null"
+  // Using `ZodType<any>` because there's little to be gained in making it generic over `T`
+  // since we're using `schema.safeParse` anyways with toast for errors.
+  private async setupStorage<S extends z.ZodType<any>>({
+    key,
+    schema,
+    defaultValue,
+    onLoad,
+    subscribe,
+    transform,
+  }: StorageSetup<S>) {
+    const loadResult = await Store.get<z.infer<S>>(
+      STORE_NAMESPACE,
+      STORE_KEYS[key]
     )
 
-    // Validate data read from localStorage
-    const result = SELECTED_ENV_INDEX_SCHEMA.safeParse(selectedEnvIndexValue)
-    if (result.success) {
-      selectedEnvIndexValue = result.data
-    } else {
-      this.showErrorToast(selectedEnvIndexKey)
-      window.localStorage.setItem(
-        `${selectedEnvIndexKey}-backup`,
-        JSON.stringify(selectedEnvIndexValue)
+    const isReallyEmpty = (d: unknown): boolean =>
+      d === null ||
+      d === undefined ||
+      (typeof d === "object" && !Array.isArray(d) && Object.keys(d).length === 0)
+
+    const result = pipe(
+      loadResult,
+      E.fold(
+        () => defaultValue,
+        (data) =>
+          pipe(
+            data,
+            O.fromNullable,
+            O.chain((d) => (isReallyEmpty(d) ? O.none : O.some(d))),
+            O.getOrElse(() => defaultValue)
+          )
       )
+    )
+
+    // NOTE: Some services define their own defaults,
+    // so `{}` is a valid value for safe parsing.
+    // TODO: Maybe consider making it consistent?
+    const isStillEmpty = isReallyEmpty(result)
+
+    if (result && !isStillEmpty) {
+      const schemaResult = schema.safeParse(result)
+      if (schemaResult.success) {
+        const transformedData = transform
+          ? transform(schemaResult.data)
+          : schemaResult.data
+        if (onLoad) onLoad(transformedData)
+      } else {
+        this.showErrorToast(key)
+        await Store.set(STORE_NAMESPACE, `${STORE_KEYS[key]}-backup`, result)
+      }
     }
 
-    // If there is a selected env index, set it to the store else set it to null
-    if (selectedEnvIndexValue) {
-      setSelectedEnvironmentIndex(selectedEnvIndexValue)
-    } else {
-      setSelectedEnvironmentIndex({
-        type: "NO_ENV_SELECTED",
+    if (subscribe) {
+      subscribe(async (newData) => {
+        await Store.set(STORE_NAMESPACE, STORE_KEYS[key], newData)
       })
     }
-
-    selectedEnvironmentIndex$.subscribe((envIndex) => {
-      window.localStorage.setItem(selectedEnvIndexKey, JSON.stringify(envIndex))
-    })
   }
 
-  private setupWebsocketPersistence() {
-    const wsRequestKey = "WebsocketRequest"
-    let wsRequestData = JSON.parse(
-      window.localStorage.getItem(wsRequestKey) || "null"
+  private async runMigrations() {
+    const versionResult = await Store.get<string>(
+      STORE_NAMESPACE,
+      STORE_KEYS.SCHEMA_VERSION
     )
+    const currentVersion = E.isRight(versionResult)
+      ? versionResult.right || "0"
+      : "0"
+    const targetVersion = "1"
 
-    // Validate data read from localStorage
-    const result = WEBSOCKET_REQUEST_SCHEMA.safeParse(wsRequestData)
-    if (result.success) {
-      wsRequestData = result.data
-    } else {
-      this.showErrorToast(wsRequestKey)
-      window.localStorage.setItem(
-        `${wsRequestKey}-backup`,
-        JSON.stringify(wsRequestData)
-      )
+    if (currentVersion !== targetVersion) {
+      for (const migration of migrations) {
+        if (migration.version > parseInt(currentVersion)) {
+          await migration.migrate()
+        }
+      }
+
+      await Store.set(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION, targetVersion)
+    }
+  }
+
+  private async checkAndMigrateOldSettings() {
+    const oldSelectedEnvIndex = window.localStorage.getItem("selectedEnvIndex")
+    if (oldSelectedEnvIndex) {
+      if (oldSelectedEnvIndex === "-1") {
+        await Store.set(STORE_NAMESPACE, STORE_KEYS.SELECTED_ENV, {
+          type: "NO_ENV_SELECTED" as const,
+        })
+      } else if (Number(oldSelectedEnvIndex) >= 0) {
+        await Store.set(STORE_NAMESPACE, STORE_KEYS.SELECTED_ENV, {
+          type: "MY_ENV" as const,
+          index: parseInt(oldSelectedEnvIndex),
+        })
+      }
+      window.localStorage.removeItem("selectedEnvIndex")
     }
 
-    setWSRequest(wsRequestData)
-
-    WSRequest$.subscribe((req) => {
-      window.localStorage.setItem(wsRequestKey, JSON.stringify(req))
-    })
-  }
-
-  private setupSocketIOPersistence() {
-    const sioRequestKey = "SocketIORequest"
-    let sioRequestData = JSON.parse(
-      window.localStorage.getItem(sioRequestKey) || "null"
-    )
-
-    // Validate data read from localStorage
-    const result = SOCKET_IO_REQUEST_SCHEMA.safeParse(sioRequestData)
-    if (result.success) {
-      sioRequestData = result.data
-    } else {
-      this.showErrorToast(sioRequestKey)
-      window.localStorage.setItem(
-        `${sioRequestKey}-backup`,
-        JSON.stringify(sioRequestData)
-      )
-    }
-
-    setSIORequest(sioRequestData)
-
-    SIORequest$.subscribe((req) => {
-      window.localStorage.setItem(sioRequestKey, JSON.stringify(req))
-    })
-  }
-
-  private setupSSEPersistence() {
-    const sseRequestKey = "SSERequest"
-    let sseRequestData = JSON.parse(
-      window.localStorage.getItem(sseRequestKey) || "null"
-    )
-
-    // Validate data read from localStorage
-    const result = SSE_REQUEST_SCHEMA.safeParse(sseRequestData)
-    if (result.success) {
-      sseRequestData = result.data
-    } else {
-      this.showErrorToast(sseRequestKey)
-      window.localStorage.setItem(
-        `${sseRequestKey}-backup`,
-        JSON.stringify(sseRequestData)
-      )
-    }
-
-    setSSERequest(sseRequestData)
-
-    SSERequest$.subscribe((req) => {
-      window.localStorage.setItem(sseRequestKey, JSON.stringify(req))
-    })
-  }
-
-  private setupMQTTPersistence() {
-    const mqttRequestKey = "MQTTRequest"
-    let mqttRequestData = JSON.parse(
-      window.localStorage.getItem(mqttRequestKey) || "null"
-    )
-
-    // Validate data read from localStorage
-    const result = MQTT_REQUEST_SCHEMA.safeParse(mqttRequestData)
-    if (result.success) {
-      mqttRequestData = result.data
-    } else {
-      this.showErrorToast(mqttRequestKey)
-      window.localStorage.setItem(
-        `${mqttRequestKey}-backup`,
-        JSON.stringify(mqttRequestData)
-      )
-    }
-
-    setMQTTRequest(mqttRequestData)
-
-    MQTTRequest$.subscribe((req) => {
-      window.localStorage.setItem(mqttRequestKey, JSON.stringify(req))
-    })
-  }
-
-  private setupGlobalEnvsPersistence() {
-    const globalEnvKey = "globalEnv"
-    let globalEnvData: GlobalEnvironment = JSON.parse(
-      window.localStorage.getItem(globalEnvKey) || "[]"
-    )
-
-    // Validate data read from localStorage
-    const result = GlobalEnvironment.safeParse(globalEnvData)
-    if (result.type === "ok") {
-      globalEnvData = result.value
-    } else {
-      this.showErrorToast(globalEnvKey)
-      window.localStorage.setItem(
-        `${globalEnvKey}-backup`,
-        JSON.stringify(globalEnvData)
-      )
-    }
-
-    setGlobalEnvVariables(globalEnvData)
-
-    globalEnv$.subscribe((vars) => {
-      window.localStorage.setItem(globalEnvKey, JSON.stringify(vars))
-    })
-  }
-
-  private setupGQLTabsPersistence() {
-    const gqlTabStateKey = "gqlTabState"
-    const gqlTabStateData = window.localStorage.getItem(gqlTabStateKey)
-
-    try {
-      if (gqlTabStateData) {
-        let parsedGqlTabStateData = JSON.parse(gqlTabStateData)
-
-        // Validate data read from localStorage
-        const result = GQL_TAB_STATE_SCHEMA.safeParse(parsedGqlTabStateData)
-
-        if (result.success) {
-          parsedGqlTabStateData = result.data
-        } else {
-          this.showErrorToast(gqlTabStateKey)
-          window.localStorage.setItem(
-            `${gqlTabStateKey}-backup`,
-            JSON.stringify(parsedGqlTabStateData)
+    const vuexData = JSON.parse(window.localStorage.getItem("vuex") || "{}")
+    if (!isEmpty(vuexData)) {
+      const result = VUEX_SCHEMA.safeParse(vuexData)
+      if (result.success) {
+        const { postwoman } = result.data
+        if (!isEmpty(postwoman?.settings)) {
+          const settingsData = assign(
+            clone(getDefaultSettings()),
+            postwoman.settings
+          )
+          delete postwoman.settings
+          await Store.set(STORE_NAMESPACE, STORE_KEYS.SETTINGS, settingsData)
+        }
+        if (postwoman?.collections) {
+          await Store.set(
+            STORE_NAMESPACE,
+            STORE_KEYS.REST_COLLECTIONS,
+            postwoman.collections
           )
         }
-
-        this.gqlTabService.loadTabsFromPersistedState(parsedGqlTabStateData)
-      }
-    } catch (e) {
-      console.error(
-        `Failed parsing persisted tab state, state:`,
-        gqlTabStateData
-      )
-    }
-
-    watchDebounced(
-      this.gqlTabService.persistableTabState,
-      (newGqlTabStateData) => {
-        window.localStorage.setItem(
-          gqlTabStateKey,
-          JSON.stringify(newGqlTabStateData)
-        )
-      },
-      { debounce: 500, deep: true }
-    )
-  }
-
-  private setupRESTTabsPersistence() {
-    const restTabStateKey = "restTabState"
-    const restTabStateData = window.localStorage.getItem(restTabStateKey)
-
-    try {
-      if (restTabStateData) {
-        let parsedRESTTabStateData = JSON.parse(restTabStateData)
-
-        // Validate data read from localStorage
-        const result = REST_TAB_STATE_SCHEMA.safeParse(parsedRESTTabStateData)
-
-        if (result.success) {
-          parsedRESTTabStateData = result.data
-        } else {
-          this.showErrorToast(restTabStateKey)
-          window.localStorage.setItem(
-            `${restTabStateKey}-backup`,
-            JSON.stringify(parsedRESTTabStateData)
+        if (postwoman?.collectionsGraphql) {
+          await Store.set(
+            STORE_NAMESPACE,
+            STORE_KEYS.GQL_COLLECTIONS,
+            postwoman.collectionsGraphql
           )
         }
-
-        this.restTabService.loadTabsFromPersistedState(parsedRESTTabStateData)
+        if (postwoman?.environments) {
+          await Store.set(
+            STORE_NAMESPACE,
+            STORE_KEYS.ENVIRONMENTS,
+            postwoman.environments
+          )
+        }
       }
-    } catch (e) {
-      console.error(
-        `Failed parsing persisted tab state, state:`,
-        restTabStateData
-      )
+
+      window.localStorage.removeItem("vuex")
     }
 
-    watchDebounced(
-      this.restTabService.persistableTabState,
-      (newRestTabStateData) => {
-        window.localStorage.setItem(
-          restTabStateKey,
-          JSON.stringify(newRestTabStateData)
+    const themeColor = window.localStorage.getItem("THEME_COLOR")
+    if (themeColor) {
+      const result = THEME_COLOR_SCHEMA.safeParse(themeColor)
+      if (result.success) {
+        applySetting("THEME_COLOR", result.data as HoppAccentColor)
+      }
+      window.localStorage.removeItem("THEME_COLOR")
+    }
+
+    const nuxtColorMode = window.localStorage.getItem("nuxt-color-mode")
+    if (nuxtColorMode) {
+      const result = NUXT_COLOR_MODE_SCHEMA.safeParse(nuxtColorMode)
+      if (result.success) {
+        applySetting("BG_COLOR", result.data as HoppBgColor)
+      }
+      window.localStorage.removeItem("nuxt-color-mode")
+    }
+  }
+
+  private async setupLocalStatePersistence() {
+    await this.setupStorage({
+      key: "LOCAL_STATE",
+      schema: LOCAL_STATE_SCHEMA,
+      defaultValue: {},
+      onLoad: bulkApplyLocalState,
+      subscribe: (callback) =>
+        localStateStore.subject$.subscribe((state) => callback(state)),
+    })
+  }
+
+  private async setupSettingsPersistence() {
+    await this.setupStorage({
+      key: "SETTINGS",
+      schema: SETTINGS_SCHEMA as z.ZodType<any>,
+      defaultValue: getDefaultSettings(),
+      transform: performSettingsDataMigrations,
+      onLoad: bulkApplySettings,
+      subscribe: (callback) =>
+        settingsStore.subject$.subscribe((state) => callback(state)),
+    })
+  }
+
+  private async setupHistoryPersistence() {
+    await this.setupStorage({
+      key: "REST_HISTORY",
+      schema: z.array(REST_HISTORY_ENTRY_SCHEMA as z.ZodType<any>),
+      defaultValue: [],
+      transform: (data) => data.map(translateToNewRESTHistory),
+      onLoad: setRESTHistoryEntries,
+      subscribe: (callback) =>
+        restHistoryStore.subject$.subscribe(({ state }) => callback(state)),
+    })
+
+    await this.setupStorage({
+      key: "GQL_HISTORY",
+      schema: z.array(GQL_HISTORY_ENTRY_SCHEMA as z.ZodType<any>),
+      defaultValue: [],
+      transform: (data) => data.map(translateToNewGQLHistory),
+      onLoad: setGraphqlHistoryEntries,
+      subscribe: (callback) =>
+        graphqlHistoryStore.subject$.subscribe(({ state }) => callback(state)),
+    })
+  }
+
+  private async setupCollectionsPersistence() {
+    await this.setupStorage({
+      key: "REST_COLLECTIONS",
+      schema: z.array(REST_COLLECTION_SCHEMA as z.ZodType<any>),
+      defaultValue: [],
+      transform: (data) => data.map(translateToNewRESTCollection),
+      onLoad: setRESTCollections,
+      subscribe: (callback) =>
+        restCollectionStore.subject$.subscribe(({ state }) => callback(state)),
+    })
+
+    await this.setupStorage({
+      key: "GQL_COLLECTIONS",
+      schema: z.array(GQL_COLLECTION_SCHEMA as z.ZodType<any>),
+      defaultValue: [],
+      transform: (data) => data.map(translateToNewGQLCollection),
+      onLoad: setGraphqlCollections,
+      subscribe: (callback) =>
+        graphqlCollectionStore.subject$.subscribe(({ state }) =>
+          callback(state)
+        ),
+    })
+  }
+
+  private async setupEnvironmentsPersistence() {
+    await this.setupStorage({
+      key: "ENVIRONMENTS",
+      schema: ENVIRONMENTS_SCHEMA as z.ZodType<any>,
+      defaultValue: [],
+      transform: (data) => {
+        const globalIndex = data.findIndex(
+          (x: any) => x.name.toLowerCase() === "globals"
         )
+        if (globalIndex !== -1) {
+          const globalEnv = data[globalIndex]
+          globalEnv.variables.forEach((variable: GlobalEnvironmentVariable) =>
+            addGlobalEnvVariable(variable)
+          )
+          data.splice(globalIndex, 1)
+        }
+        return data
       },
-      { debounce: 500, deep: true }
-    )
+      onLoad: replaceEnvironments,
+      subscribe: (callback) =>
+        environments$.subscribe((state) => callback(state)),
+    })
   }
 
-  public setupLocalPersistence() {
-    this.checkAndMigrateOldSettings()
+  private async setupGlobalEnvsPersistence() {
+    await this.setupStorage({
+      key: "GLOBAL_ENV",
+      schema: z.any(),
+      defaultValue: { v: 1, variables: [] },
+      onLoad: setGlobalEnvVariables,
+      subscribe: (callback) => globalEnv$.subscribe((state) => callback(state)),
+    })
+  }
 
-    this.setupLocalStatePersistence()
-    this.setupSettingsPersistence()
-    this.setupRESTTabsPersistence()
+  private async setupSelectedEnvPersistence() {
+    await this.setupStorage({
+      key: "SELECTED_ENV",
+      schema: SELECTED_ENV_INDEX_SCHEMA as z.ZodType<any>,
+      defaultValue: { type: "NO_ENV_SELECTED" as const },
+      onLoad: setSelectedEnvironmentIndex,
+      subscribe: (callback) =>
+        selectedEnvironmentIndex$.subscribe((state) => callback(state)),
+    })
+  }
 
-    this.setupGQLTabsPersistence()
+  private async setupWebsocketPersistence() {
+    await this.setupStorage({
+      key: "WEBSOCKET",
+      schema: WEBSOCKET_REQUEST_SCHEMA as z.ZodType<any>,
+      onLoad: (data) => setWSRequest(data ?? undefined),
+      subscribe: (callback) => WSRequest$.subscribe((state) => callback(state)),
+    })
+  }
 
-    this.setupHistoryPersistence()
-    this.setupCollectionsPersistence()
-    this.setupGlobalEnvsPersistence()
-    this.setupEnvironmentsPersistence()
-    this.setupSelectedEnvPersistence()
-    this.setupWebsocketPersistence()
-    this.setupSocketIOPersistence()
-    this.setupSSEPersistence()
-    this.setupMQTTPersistence()
+  private async setupSocketIOPersistence() {
+    await this.setupStorage({
+      key: "SOCKETIO",
+      schema: SOCKET_IO_REQUEST_SCHEMA as z.ZodType<any>,
+      onLoad: (data) => setSIORequest(data ?? undefined),
+      subscribe: (callback) =>
+        SIORequest$.subscribe((state) => callback(state)),
+    })
+  }
 
-    this.setupSecretEnvironmentsPersistence()
+  private async setupSSEPersistence() {
+    await this.setupStorage({
+      key: "SSE",
+      schema: SSE_REQUEST_SCHEMA as z.ZodType<any>,
+      onLoad: (data) => setSSERequest(data ?? undefined),
+      subscribe: (callback) =>
+        SSERequest$.subscribe((state) => callback(state)),
+    })
+  }
+
+  private async setupMQTTPersistence() {
+    await this.setupStorage({
+      key: "MQTT",
+      schema: MQTT_REQUEST_SCHEMA as z.ZodType<any>,
+      onLoad: (data) => setMQTTRequest(data ?? undefined),
+      subscribe: (callback) =>
+        MQTTRequest$.subscribe((state) => callback(state)),
+    })
+  }
+
+  private async setupRESTTabsPersistence() {
+    await this.setupStorage({
+      key: "REST_TABS",
+      schema: REST_TAB_STATE_SCHEMA as z.ZodType<any>,
+      defaultValue: {},
+      onLoad: (data) => this.restTabService.loadTabsFromPersistedState(data),
+      subscribe: () =>
+        watchDebounced(
+          this.restTabService.persistableTabState,
+          async (newData) => {
+            await Store.set(STORE_NAMESPACE, STORE_KEYS.REST_TABS, newData)
+          },
+          { debounce: 500, deep: true }
+        ),
+    })
+  }
+
+  private async setupGQLTabsPersistence() {
+    await this.setupStorage({
+      key: "GQL_TABS",
+      schema: GQL_TAB_STATE_SCHEMA as z.ZodType<any>,
+      defaultValue: {},
+      onLoad: (data) => this.gqlTabService.loadTabsFromPersistedState(data),
+      subscribe: () =>
+        watchDebounced(
+          this.gqlTabService.persistableTabState,
+          async (newData) => {
+            await Store.set(STORE_NAMESPACE, STORE_KEYS.GQL_TABS, newData)
+          },
+          { debounce: 500, deep: true }
+        ),
+    })
+  }
+
+  private async setupSecretEnvironmentsPersistence() {
+    await this.setupStorage({
+      key: "SECRET_ENVIRONMENTS",
+      schema: SECRET_ENVIRONMENT_VARIABLE_SCHEMA,
+      defaultValue: {},
+      onLoad: (data) =>
+        this.secretEnvironmentService.loadSecretEnvironmentsFromPersistedState(
+          data
+        ),
+      subscribe: () =>
+        watchDebounced(
+          this.secretEnvironmentService.persistableSecretEnvironments,
+          async (newData: Record<string, SecretVariable[]>) => {
+            await Store.set(
+              STORE_NAMESPACE,
+              STORE_KEYS.SECRET_ENVIRONMENTS,
+              newData
+            )
+          },
+          { debounce: 500 }
+        ),
+    })
+  }
+
+  public async setupLocalPersistence() {
+    await this.init()
+    await this.runMigrations()
+    await this.checkAndMigrateOldSettings()
+
+    await this.setupLocalStatePersistence()
+    await this.setupSettingsPersistence()
+
+    await this.setupHistoryPersistence()
+    await this.setupCollectionsPersistence()
+
+    await this.setupGlobalEnvsPersistence()
+    await this.setupEnvironmentsPersistence()
+
+    await this.setupSelectedEnvPersistence()
+
+    await this.setupWebsocketPersistence()
+    await this.setupSocketIOPersistence()
+    await this.setupSSEPersistence()
+    await this.setupMQTTPersistence()
+    await this.setupRESTTabsPersistence()
+    await this.setupGQLTabsPersistence()
+
+    await this.setupSecretEnvironmentsPersistence()
   }
 
   /**
-   * Gets a value from localStorage
-   *
-   * NOTE: Use localStorage to only store non-reactive simple data
-   * For more complex data, use stores and connect it to `PersistenceService`
+   * Gets a value from persistence
    */
-  public getLocalConfig(name: string) {
-    return window.localStorage.getItem(name)
+  public async getLocalConfig(
+    name: string
+  ): Promise<string | null | undefined> {
+    const result = await Store.get<string>(STORE_NAMESPACE, name)
+    if (E.isRight(result)) {
+      return result.right
+    }
+    return null
   }
 
   /**
-   * Sets a value in localStorage
-   *
-   * NOTE: Use localStorage to only store non-reactive simple data
-   * For more complex data, use stores and connect it to `PersistenceService`
+   * Sets a value in persistence
    */
-  public setLocalConfig(key: string, value: string) {
-    window.localStorage.setItem(key, value)
+  public async setLocalConfig(key: string, value: string): Promise<void> {
+    await Store.set(STORE_NAMESPACE, key, value)
   }
 
   /**
-   * Clear config value in localStorage
+   * Clear config value from persistence
    */
-  public removeLocalConfig(key: string) {
-    window.localStorage.removeItem(key)
+  public async removeLocalConfig(key: string): Promise<void> {
+    await Store.remove(STORE_NAMESPACE, key)
   }
 }

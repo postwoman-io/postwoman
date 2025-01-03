@@ -118,9 +118,9 @@ onBeforeMount(() => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   const cookiesAllowed =
-    persistenceService.getLocalConfig("cookiesAllowed") === "yes"
+    (await persistenceService.getLocalConfig("cookiesAllowed")) === "yes"
   const platformAllowsCookiePrompts =
     platform.platformFeatureFlags.promptAsUsingCookies ?? true
 
@@ -130,8 +130,8 @@ onMounted(() => {
       action: [
         {
           text: `${t("action.learn_more")}`,
-          onClick: (_, toastObject) => {
-            persistenceService.setLocalConfig("cookiesAllowed", "yes")
+          onClick: async (_, toastObject) => {
+            await persistenceService.setLocalConfig("cookiesAllowed", "yes")
             toastObject.goAway(0)
             window
               .open("https://docs.hoppscotch.io/support/privacy", "_blank")
@@ -140,8 +140,8 @@ onMounted(() => {
         },
         {
           text: `${t("action.dismiss")}`,
-          onClick: (_, toastObject) => {
-            persistenceService.setLocalConfig("cookiesAllowed", "yes")
+          onClick: async (_, toastObject) => {
+            await persistenceService.setLocalConfig("cookiesAllowed", "yes")
             toastObject.goAway(0)
           },
         },
