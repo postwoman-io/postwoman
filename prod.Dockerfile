@@ -47,8 +47,6 @@ RUN pnpm fetch
 COPY . .
 RUN pnpm install -f --prefer-offline
 
-
-
 FROM base_builder AS backend_builder
 WORKDIR /usr/src/app/packages/hoppscotch-backend
 RUN pnpm exec prisma generate
