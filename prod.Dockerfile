@@ -12,7 +12,7 @@ COPY pnpm-lock.yaml .
 RUN pnpm fetch
 
 COPY . .
-RUN pnpm install -f --offline
+RUN pnpm install -f --prefer-offline
 
 RUN npm uninstall -g cross-spawn && \
     npm cache clean --force && \
