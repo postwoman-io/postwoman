@@ -10,10 +10,10 @@ import {
 
 import { HoppCollection, HoppRESTRequest } from "@hoppscotch/data"
 
-import { getSyncInitFunction } from "../../lib/sync"
+import { getSyncInitFunction } from "@lib/sync"
 
-import { StoreSyncDefinitionOf } from "../../lib/sync"
-import { createMapper } from "../../lib/sync/mapper"
+import { StoreSyncDefinitionOf } from "@lib/sync"
+import { createMapper } from "@lib/sync/mapper"
 import {
   createGQLChildUserCollection,
   createGQLRootUserCollection,
@@ -26,7 +26,7 @@ import {
 } from "./collections.api"
 
 import * as E from "fp-ts/Either"
-import { ReqType } from "../../api/generated/graphql"
+import { ReqType } from "@api/generated/graphql"
 import { moveOrReorderRequests } from "./collections.sync"
 
 // gqlCollectionsMapper uses the collectionPath as the local identifier

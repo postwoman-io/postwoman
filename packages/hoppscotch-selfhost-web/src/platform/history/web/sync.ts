@@ -9,20 +9,20 @@ import {
   settingsStore,
 } from "@hoppscotch/common/newstore/settings"
 
-import { getSyncInitFunction } from "../../lib/sync"
+import { getSyncInitFunction } from "@lib/sync"
 
 import * as E from "fp-ts/Either"
 
-import { StoreSyncDefinitionOf } from "../../lib/sync"
+import { StoreSyncDefinitionOf } from "@lib/sync"
 import {
   createUserHistory,
   deleteAllUserHistory,
   removeRequestFromHistory,
   toggleHistoryStarStatus,
-} from "./history.api"
-import { ReqType } from "../../api/generated/graphql"
+} from "./api"
+import { ReqType } from "@api/generated/graphql"
 
-import { isHistoryStoreEnabled } from "./history.platform"
+import { isHistoryStoreEnabled } from "."
 
 export const restHistoryStoreSyncDefinition: StoreSyncDefinitionOf<
   typeof restHistoryStore

@@ -1,6 +1,6 @@
 import { runGQLQuery } from "@hoppscotch/common/helpers/backend/GQLClient"
 import { InfraPlatformDef } from "@hoppscotch/common/platform/infra"
-import { GetSmtpStatusDocument } from "../../api/generated/graphql"
+import { GetSmtpStatusDocument } from "@api/generated/graphql"
 import * as E from "fp-ts/Either"
 
 const getSMTPStatus = () => {

@@ -11,7 +11,7 @@ import {
   setGlobalEnvVariables,
   updateEnvironment,
 } from "@hoppscotch/common/newstore/environments"
-import { authEvents$, def as platformAuth } from "@platform/auth/auth.platform"
+import { authEvents$, def as platformAuth } from "@platform/auth/web"
 
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import { EnvironmentsPlatformDef } from "@hoppscotch/common/src/platform/environments"

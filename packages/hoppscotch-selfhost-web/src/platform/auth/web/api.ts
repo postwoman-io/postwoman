@@ -6,7 +6,7 @@ import {
   UpdateUserDisplayNameDocument,
   UpdateUserDisplayNameMutation,
   UpdateUserDisplayNameMutationVariables,
-} from "../../api/generated/graphql"
+} from "@api/generated/graphql"
 
 const expectedAllowedProvidersSchema = z.object({
   // currently supported values are "GOOGLE", "GITHUB", "EMAIL", "MICROSOFT", "SAML"
