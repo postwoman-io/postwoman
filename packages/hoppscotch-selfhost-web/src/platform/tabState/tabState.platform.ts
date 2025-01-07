@@ -4,7 +4,7 @@ import { HoppUser } from "@hoppscotch/common/platform/auth"
 import { TabStatePlatformDef } from "@hoppscotch/common/platform/tab"
 import { def as platformAuth } from "@platform/auth"
 import { getCurrentRestSession, updateUserSession } from "./tabState.api"
-import { SessionType } from "../../api/generated/graphql"
+import { SessionType } from "@api/generated/graphql"
 import * as E from "fp-ts/Either"
 
 async function writeCurrentTabState(

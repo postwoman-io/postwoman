@@ -1,3 +1,8 @@
+import * as E from "fp-ts/Either"
+import axios from "axios"
+import { BehaviorSubject, Subject } from "rxjs"
+import { Ref, ref, watch } from "vue"
+
 import { getService } from "@hoppscotch/common/modules/dioc"
 import {
   AuthEvent,
@@ -5,11 +10,8 @@ import {
   HoppUser,
 } from "@hoppscotch/common/platform/auth"
 import { PersistenceService } from "@hoppscotch/common/services/persistence"
-import axios from "axios"
-import { BehaviorSubject, Subject } from "rxjs"
-import { Ref, ref, watch } from "vue"
-import { getAllowedAuthProviders, updateUserDisplayName } from "./auth.api"
-import * as E from "fp-ts/Either"
+
+import { getAllowedAuthProviders, updateUserDisplayName } from "./api"
 
 export const authEvents$ = new Subject<AuthEvent | { event: "token_refresh" }>()
 const currentUser$ = new BehaviorSubject<HoppUser | null>(null)

@@ -14,7 +14,7 @@ import {
   UpdateUserSettingsMutation,
   UpdateUserSettingsMutationVariables,
   UserSettingsUpdatedDocument,
-} from "../../api/generated/graphql"
+} from "@api/generated/graphql"
 
 export const getUserSettings = () =>
   runGQLQuery<

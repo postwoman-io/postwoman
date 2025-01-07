@@ -15,8 +15,8 @@ import {
   HoppRESTRequest,
 } from "@hoppscotch/data"
 
-import { getSyncInitFunction, StoreSyncDefinitionOf } from "../../lib/sync"
-import { createMapper } from "../../lib/sync/mapper"
+import { getSyncInitFunction, StoreSyncDefinitionOf } from "@lib/sync"
+import { createMapper } from "@lib/sync/mapper"
 import {
   createRESTChildUserCollection,
   createRESTRootUserCollection,
@@ -32,7 +32,7 @@ import {
 } from "./collections.api"
 
 import * as E from "fp-ts/Either"
-import { ReqType } from "../../api/generated/graphql"
+import { ReqType } from "@api/generated/graphql"
 
 // restCollectionsMapper uses the collectionPath as the local identifier
 export const restCollectionsMapper = createMapper<string, string>()

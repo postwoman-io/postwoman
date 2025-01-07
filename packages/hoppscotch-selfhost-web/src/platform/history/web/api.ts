@@ -30,7 +30,7 @@ import {
   IsUserHistoryEnabledDocument,
   UserHistoryStoreStatusChangedDocument,
   UserHistoryAllDeletedDocument,
-} from "../../api/generated/graphql"
+} from "@api/generated/graphql"
 
 export const getUserHistoryEntries = () =>
   runGQLQuery<GetRestUserHistoryQuery, GetRestUserHistoryQueryVariables, "">({

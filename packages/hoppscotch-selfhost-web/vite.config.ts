@@ -71,6 +71,7 @@ export default defineConfig({
       ),
       "@workers": path.resolve(__dirname, "../hoppscotch-common/src/workers"),
       "@platform": path.resolve(__dirname, "./src/platform"),
+      "@api": path.resolve(__dirname, "./src/api"),
       "@lib": path.resolve(__dirname, "./src/lib"),
       stream: "stream-browserify",
       util: "util",

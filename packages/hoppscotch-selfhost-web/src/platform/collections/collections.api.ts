@@ -72,7 +72,7 @@ import {
   DuplicateUserCollectionDocument,
   DuplicateUserCollectionMutation,
   DuplicateUserCollectionMutationVariables,
-} from "../../api/generated/graphql"
+} from "@api/generated/graphql"
 
 export const createRESTRootUserCollection = (title: string, data?: string) =>
   runMutation<

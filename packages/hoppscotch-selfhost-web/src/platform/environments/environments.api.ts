@@ -27,7 +27,7 @@ import {
   UserEnvironmentCreatedDocument,
   UserEnvironmentUpdatedDocument,
   UserEnvironmentDeletedDocument,
-} from "./../../api/generated/graphql"
+} from "@api/generated/graphql"
 
 import { Environment } from "@hoppscotch/data"
 
