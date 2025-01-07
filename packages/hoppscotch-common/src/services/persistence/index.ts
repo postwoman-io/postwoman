@@ -209,7 +209,9 @@ export class PersistenceService extends Service {
     const isReallyEmpty = (d: unknown): boolean =>
       d === null ||
       d === undefined ||
-      (typeof d === "object" && !Array.isArray(d) && Object.keys(d).length === 0)
+      (typeof d === "object" &&
+        !Array.isArray(d) &&
+        Object.keys(d).length === 0)
 
     const result = pipe(
       loadResult,
