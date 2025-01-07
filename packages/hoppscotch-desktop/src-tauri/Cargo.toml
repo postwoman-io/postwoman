@@ -24,8 +24,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = [] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tauri-plugin-store = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
+tauri-plugin-store = "2.2.0"
+tauri-plugin-dialog = "2.2.0"
+tauri-plugin-fs = "2.2.0"
+tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-hoppscotch-appload = { git = "https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload" }
 tauri-plugin-hoppscotch-relay = { git = "https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay" }
