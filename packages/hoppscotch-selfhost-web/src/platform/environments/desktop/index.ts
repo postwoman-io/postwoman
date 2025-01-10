@@ -1,6 +1,4 @@
-import * as E from "fp-ts/Either"
-import { entityReference } from "verzod"
-
+import { authEvents$, def as platformAuth } from "@platform/auth/desktop"
 import {
   createEnvironment,
   deleteEnvironment,
@@ -11,14 +9,13 @@ import {
   setGlobalEnvVariables,
   updateEnvironment,
 } from "@hoppscotch/common/newstore/environments"
-import { authEvents$, def as platformAuth } from "@platform/auth/web"
 
-import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import { EnvironmentsPlatformDef } from "@hoppscotch/common/src/platform/environments"
+import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 
-import { environnmentsSyncer } from "@platform/environments/environments.sync"
+import { environnmentsSyncer } from "@platform/environments/desktop/sync"
 
-import { GlobalEnvironment } from "@hoppscotch/data"
+import * as E from "fp-ts/Either"
 import { runDispatchWithOutSyncing } from "@lib/sync"
 import {
   createUserGlobalEnvironment,
@@ -27,7 +24,7 @@ import {
   runUserEnvironmentCreatedSubscription,
   runUserEnvironmentDeletedSubscription,
   runUserEnvironmentUpdatedSubscription,
-} from "@platform/environments/environments.api"
+} from "./api"
 
 export function initEnvironmentsSync() {
   const currentUser$ = platformAuth.getCurrentUserStream()
@@ -84,7 +81,6 @@ async function loadUserEnvironments() {
       runDispatchWithOutSyncing(() => {
         replaceEnvironments(
           environments.map(({ id, variables, name }) => ({
-            v: 1,
             id,
             name,
             variables: JSON.parse(variables),
@@ -102,16 +98,8 @@ async function loadGlobalEnvironments() {
     const globalEnv = res.right.me.globalEnvironments
 
     if (globalEnv) {
-      const globalEnvVariableEntries = JSON.parse(globalEnv.variables)
-
-      const result = entityReference(GlobalEnvironment).safeParse(
-        globalEnvVariableEntries
-      )
-
       runDispatchWithOutSyncing(() => {
-        setGlobalEnvVariables(
-          result.success ? result.data : globalEnvVariableEntries
-        )
+        setGlobalEnvVariables(JSON.parse(globalEnv.variables))
         setGlobalEnvID(globalEnv.id)
       })
     }
@@ -176,7 +164,6 @@ function setupUserEnvironmentUpdatedSubscription() {
         if ((localIndex || localIndex == 0) && name) {
           runDispatchWithOutSyncing(() => {
             updateEnvironment(localIndex, {
-              v: 1,
               id,
               name,
               variables: JSON.parse(variables),

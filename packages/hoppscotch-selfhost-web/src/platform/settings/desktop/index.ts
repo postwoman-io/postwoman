@@ -1,11 +1,11 @@
 import { SettingsPlatformDef } from "@hoppscotch/common/platform/settings"
-import { settingsSyncer } from "./settings.sync"
-import { authEvents$, def as platformAuth } from "@platform/auth/web"
+import { settingsSyncer } from "./sync"
+import { authEvents$, def as platformAuth } from "@platform/auth/desktop"
 import {
   createUserSettings,
   getUserSettings,
   runUserSettingsUpdatedSubscription,
-} from "./settings.api"
+} from "./api"
 import * as E from "fp-ts/Either"
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import {

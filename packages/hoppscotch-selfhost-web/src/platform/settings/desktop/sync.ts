@@ -4,7 +4,7 @@ import { getSyncInitFunction } from "@lib/sync"
 
 import { StoreSyncDefinitionOf } from "@lib/sync"
 
-import { updateUserSettings } from "./settings.api"
+import { updateUserSettings } from "./api"
 
 export const settingsSyncDefinition: StoreSyncDefinitionOf<
   typeof settingsStore

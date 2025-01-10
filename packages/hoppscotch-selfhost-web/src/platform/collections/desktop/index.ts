@@ -1,5 +1,5 @@
 import { CollectionsPlatformDef } from "@hoppscotch/common/platform/collections"
-import { authEvents$, def as platformAuth } from "@platform/auth/web"
+import { authEvents$, def as platformAuth } from "@platform/auth/desktop"
 import { runDispatchWithOutSyncing } from "@lib/sync"
 
 import {
@@ -14,8 +14,8 @@ import {
   runUserRequestDeletedSubscription,
   runUserRequestMovedSubscription,
   runUserRequestUpdatedSubscription,
-} from "./collections.api"
-import { collectionsSyncer, getStoreByCollectionType } from "./collections.sync"
+} from "./api"
+import { collectionsSyncer, getStoreByCollectionType } from "./sync"
 
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import {
@@ -48,7 +48,6 @@ import {
   updateRESTRequestOrder,
 } from "@hoppscotch/common/newstore/collections"
 import {
-  generateUniqueRefId,
   GQLHeader,
   HoppCollection,
   HoppGQLRequest,
@@ -71,7 +70,6 @@ function initCollectionsSync() {
 
   gqlCollectionsSyncer.startStoreSync()
 
-  // TODO: fix collection schema transformation on backend maybe?
   loadUserCollections("REST")
   loadUserCollections("GQL")
 
@@ -96,7 +94,6 @@ function initCollectionsSync() {
 
 type ExportedUserCollectionREST = {
   id?: string
-  _ref_id?: string
   folders: ExportedUserCollectionREST[]
   requests: Array<HoppRESTRequest & { id: string }>
   name: string
@@ -105,7 +102,6 @@ type ExportedUserCollectionREST = {
 
 type ExportedUserCollectionGQL = {
   id?: string
-  _ref_id?: string
   folders: ExportedUserCollectionGQL[]
   requests: Array<HoppGQLRequest & { id: string }>
   name: string
@@ -134,13 +130,11 @@ function exportedCollectionToHoppCollection(
         : {
             auth: { authType: "inherit", authActive: false },
             headers: [],
-            _ref_id: generateUniqueRefId("coll"),
           }
 
     return {
       id: restCollection.id,
-      _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
-      v: 6,
+      v: 4,
       name: restCollection.name,
       folders: restCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -198,13 +192,11 @@ function exportedCollectionToHoppCollection(
         : {
             auth: { authType: "inherit", authActive: false },
             headers: [],
-            _ref_id: generateUniqueRefId("coll"),
           }
 
     return {
       id: gqlCollection.id,
-      _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
-      v: 6,
+      v: 4,
       name: gqlCollection.name,
       folders: gqlCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -374,7 +366,6 @@ function setupUserCollectionCreatedSubscription() {
             : {
                 auth: { authType: "inherit", authActive: false },
                 headers: [],
-                _ref_id: generateUniqueRefId("coll"),
               }
 
         runDispatchWithOutSyncing(() => {
@@ -383,8 +374,7 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 6,
-                _ref_id: data._ref_id,
+                v: 4,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
               })
@@ -392,8 +382,7 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 6,
-                _ref_id: data._ref_id,
+                v: 4,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
               })
@@ -605,8 +594,6 @@ function setupUserCollectionDuplicatedSubscription() {
               auth: { authType: "inherit", authActive: false },
               headers: [],
             }
-      // Duplicated collection will have a unique ref id
-      const _ref_id = generateUniqueRefId("coll")
 
       const folders = transformDuplicatedCollections(childCollectionsJSONStr)
 
@@ -620,8 +607,7 @@ function setupUserCollectionDuplicatedSubscription() {
         name,
         folders,
         requests,
-        v: 6,
-        _ref_id,
+        v: 4,
         auth,
         headers: addDescriptionField(headers),
       }
@@ -1042,8 +1028,6 @@ function transformDuplicatedCollections(
           ? JSON.parse(data)
           : { auth: { authType: "inherit", authActive: false }, headers: [] }
 
-      const _ref_id = generateUniqueRefId("coll")
-
       const folders = transformDuplicatedCollections(childCollectionsJSONStr)
 
       const requests = transformDuplicatedCollectionRequests(userRequests)
@@ -1053,8 +1037,7 @@ function transformDuplicatedCollections(
         name,
         folders,
         requests,
-        _ref_id,
-        v: 6,
+        v: 4,
         auth,
         headers: addDescriptionField(headers),
       }

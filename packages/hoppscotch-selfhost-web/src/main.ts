@@ -1,21 +1,23 @@
 import { ref } from "vue"
 import { listen } from "@tauri-apps/api/event"
-
 import { createHoppApp } from "@hoppscotch/common"
-import { def as environmentsDef } from "./platform/environments/environments.platform"
-import { def as collectionsDef } from "./platform/collections/collections.platform"
-import { def as settingsDef } from "./platform/settings/settings.platform"
+
+import { def as webAuth } from "@platform/auth/web"
+import { def as webEnvironments } from "@platform/environments/web"
+import { def as webCollections } from "@platform/collections/web"
+import { def as webSettings } from "@platform/settings/web"
+import { def as webHistory } from "@platform/history/web"
+
+import { def as desktopAuth } from "@platform/auth/desktop"
+import { def as desktopEnvironments } from "@platform/environments/desktop"
+import { def as desktopCollections } from "@platform/collections/desktop"
+import { def as desktopSettings } from "@platform/settings/desktop"
+import { def as desktopHistory } from "@platform/history/desktop"
+
 import { stdFooterItems } from "@hoppscotch/common/platform/std/ui/footerItem"
 import { stdSupportOptionItems } from "@hoppscotch/common/platform/std/ui/supportOptionsItem"
 import { InfraPlatform } from "@platform/infra/infra.platform"
-// import { proxyInterceptor } from "@hoppscotch/common/platform/std/interceptors/proxy"
-// import { ExtensionInspectorService } from "@hoppscotch/common/platform/std/inspections/extension.inspector"
-// import { ExtensionInterceptorService } from "@hoppscotch/common/platform/std/interceptors/extension"
-// import { AgentInterceptorService } from "@hoppscotch/common/platform/std/interceptors/agent"
-// import { browserIODef } from "@hoppscotch/common/platform/std/io"
-
-import { KernelMode, getKernelMode } from "@hoppscotch/kernel"
-
+import { getKernelMode } from "@hoppscotch/kernel"
 import { kernelIO } from "@hoppscotch/common/platform/std/kernel-io"
 
 import { NativeKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/native"
@@ -24,38 +26,35 @@ import { ProxyKernelInterceptorService } from "@hoppscotch/common/platform/std/k
 import { ExtensionKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/extension"
 import { BrowserKernelInterceptorService } from "@hoppscotch/common/platform/std/kernel-interceptors/browser"
 
-import { def as webAuth } from "@platform/auth/web"
-import { def as desktopAuth } from "@platform/auth/desktop"
+type Platform = 'web' | 'desktop'
 
-import { def as webHistory } from "@platform/history/web"
+const createPlatformDef = <Web, Desktop>(web: Web, desktop: Desktop) => ({
+  web,
+  desktop,
+  get: (platform: Platform) => platform === 'web' ? web : desktop
+})
+
+const webInterceptors = [BrowserKernelInterceptorService, ProxyKernelInterceptorService, AgentKernelInterceptorService, ExtensionKernelInterceptorService]
+const desktopInterceptors = [NativeKernelInterceptorService, ProxyKernelInterceptorService]
+
+const platformDefs = {
+  auth: createPlatformDef(webAuth, desktopAuth),
+  environments: createPlatformDef(webEnvironments, desktopEnvironments),
+  collections: createPlatformDef(webCollections, desktopCollections),
+  settings: createPlatformDef(webSettings, desktopSettings),
+  history: createPlatformDef(webHistory, desktopHistory),
+  interceptors: createPlatformDef(webInterceptors, desktopInterceptors)
+}
 
 const kernelMode = getKernelMode()
-const defaultInterceptor = kernelMode == "desktop" ? "native" : "browser"
-
 const headerPaddingLeft = ref("0px")
 const headerPaddingTop = ref("0px")
 
-const MODE_INTERCEPTORS = {
-  desktop: [
-    NativeKernelInterceptorService,
-    ProxyKernelInterceptorService],
-  web: [
-    BrowserKernelInterceptorService,
-    ProxyKernelInterceptorService,
-    AgentKernelInterceptorService,
-    ExtensionKernelInterceptorService
-  ],
-} as const;
-
-const getInterceptors = (mode: KernelMode) =>
-  MODE_INTERCEPTORS[mode].map(service => ({ type: "service" as const, service }));
-
-const MODE_AUTHS = {
-  desktop: [desktopAuth],
-  web: [webAuth],
-} as const
-
-export const getAuths = (mode: KernelMode) => MODE_AUTHS[mode][0]
+const getInterceptors = (mode: Platform) =>
+  platformDefs.interceptors.get(mode).map(service => ({
+    type: "service" as const,
+    service
+  }))
 
 createHoppApp("#app", {
   ui: {
@@ -66,33 +65,18 @@ createHoppApp("#app", {
       paddingTop: headerPaddingTop,
     },
   },
-  auth: getAuths(kernelMode),
-  // NOTE: To be deprecated
-  // io: browserIODef,
-  kernelIO: kernelIO,
+  auth: platformDefs.auth.get(kernelMode),
+  kernelIO,
   sync: {
-    environments: environmentsDef,
-    collections: collectionsDef,
-    settings: settingsDef,
-    history: webHistory,
+    environments: platformDefs.environments.get(kernelMode),
+    collections: platformDefs.collections.get(kernelMode),
+    settings: platformDefs.settings.get(kernelMode),
+    history: platformDefs.history.get(kernelMode),
   },
-  // NOTE: To be deprecated
-  // interceptors: {
-  //   default: "browser",
-  //   interceptors: [
-  //     { type: "standalone", interceptor: proxyInterceptor },
-  //     { type: "service", service: ExtensionInterceptorService },
-  //     { type: "service", service: AgentInterceptorService },
-  //   ],
-  // },
   kernelInterceptors: {
-    default: defaultInterceptor,
+    default: kernelMode === "desktop" ? "native" : "browser",
     interceptors: getInterceptors(kernelMode),
   },
-  // NOTE: To be deprecated
-  // additionalInspectors: [
-  //   { type: "service", service: ExtensionInspectorService },
-  // ],
   platformFeatureFlags: {
     exportAsGIST: false,
     hasTelemetry: false,
