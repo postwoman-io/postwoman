@@ -23,11 +23,11 @@ import {
   duplicateUserCollection,
   editGQLUserRequest,
   updateUserCollection,
-} from "./collections.api"
+} from "./api"
 
 import * as E from "fp-ts/Either"
 import { ReqType } from "@api/generated/graphql"
-import { moveOrReorderRequests } from "./collections.sync"
+import { moveOrReorderRequests } from "./sync"
 
 // gqlCollectionsMapper uses the collectionPath as the local identifier
 export const gqlCollectionsMapper = createMapper<string, string>()

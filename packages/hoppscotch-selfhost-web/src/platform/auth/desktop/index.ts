@@ -1,13 +1,11 @@
 import * as E from "fp-ts/Either"
-import { listen } from '@tauri-apps/api/event'
-import { open } from "@tauri-apps/plugin-shell"
+
 import { BehaviorSubject, Subject } from "rxjs"
 import { Ref, ref, watch } from "vue"
 
+import { Io } from "@hoppscotch/common/kernel/io"
 import { content } from "@hoppscotch/kernel"
-
 import { getService } from "@hoppscotch/common/modules/dioc"
-
 import {
   AuthEvent,
   AuthPlatformDef,
@@ -41,15 +39,21 @@ async function logout() {
 }
 
 async function signInUserWithGithubFB() {
-  await open(`${import.meta.env.VITE_BACKEND_API_URL}/auth/github?redirect_uri=desktop`);
+  await Io.openExternalLink({
+    url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/github?redirect_uri=desktop`
+  })
 }
 
 async function signInUserWithGoogleFB() {
-  await open(`${import.meta.env.VITE_BACKEND_API_URL}/auth/google?redirect_uri=desktop`);
+  await Io.openExternalLink({
+    url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/google?redirect_uri=desktop`
+  })
 }
 
 async function signInUserWithMicrosoftFB() {
-  await open(`${import.meta.env.VITE_BACKEND_API_URL}/auth/microsoft?redirect_uri=desktop`);
+  await Io.openExternalLink({
+    url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/microsoft?redirect_uri=desktop`
+  })
 }
 
 async function getInitialUserDetails() {
@@ -262,8 +266,8 @@ export const def: AuthPlatformDef = {
     probableUser$.next(probableUser)
     await setInitialUser()
 
-    await listen('scheme-request-received', async (event: any) => {
-      let deep_link = event.payload as string;
+    await Io.listen<string>('scheme-request-received', async (event) => {
+      let deep_link = event.payload;
       const params = new URLSearchParams(deep_link.split('?')[1]);
 
       const accessToken = params.get('access_token');

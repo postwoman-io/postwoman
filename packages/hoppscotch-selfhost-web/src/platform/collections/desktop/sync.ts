@@ -9,13 +9,11 @@ import {
   settingsStore,
 } from "@hoppscotch/common/newstore/settings"
 
-import {
-  generateUniqueRefId,
-  HoppCollection,
-  HoppRESTRequest,
-} from "@hoppscotch/data"
+import { HoppCollection, HoppRESTRequest } from "@hoppscotch/data"
 
-import { getSyncInitFunction, StoreSyncDefinitionOf } from "@lib/sync"
+import { getSyncInitFunction } from "@lib/sync"
+
+import { StoreSyncDefinitionOf } from "@lib/sync"
 import { createMapper } from "@lib/sync/mapper"
 import {
   createRESTChildUserCollection,
@@ -23,16 +21,14 @@ import {
   createRESTUserRequest,
   deleteUserCollection,
   deleteUserRequest,
-  duplicateUserCollection,
   editUserRequest,
   moveUserCollection,
   moveUserRequest,
-  updateUserCollection,
+  renameUserCollection,
   updateUserCollectionOrder,
-} from "./collections.api"
+} from "./api"
 
 import * as E from "fp-ts/Either"
-import { ReqType } from "@api/generated/graphql"
 
 // restCollectionsMapper uses the collectionPath as the local identifier
 export const restCollectionsMapper = createMapper<string, string>()
@@ -51,75 +47,27 @@ const recursivelySyncCollections = async (
 
   // if parentUserCollectionID does not exist, create the collection as a root collection
   if (!parentUserCollectionID) {
-    const data = {
-      auth: collection.auth ?? {
-        authType: "inherit",
-        authActive: true,
-      },
-      headers: collection.headers ?? [],
-      _ref_id: collection._ref_id,
-    }
-    const res = await createRESTRootUserCollection(
-      collection.name,
-      JSON.stringify(data)
-    )
+    const res = await createRESTRootUserCollection(collection.name)
+
     if (E.isRight(res)) {
       parentCollectionID = res.right.createRESTRootUserCollection.id
 
-      const returnedData = res.right.createRESTRootUserCollection.data
-        ? JSON.parse(res.right.createRESTRootUserCollection.data)
-        : {
-            auth: {
-              authType: "inherit",
-              authActive: true,
-            },
-            headers: [],
-            _ref_id: generateUniqueRefId("coll"),
-          }
-
       collection.id = parentCollectionID
-      collection._ref_id = returnedData._ref_id ?? generateUniqueRefId("coll")
-      collection.auth = returnedData.auth
-      collection.headers = returnedData.headers
       removeDuplicateRESTCollectionOrFolder(parentCollectionID, collectionPath)
     } else {
       parentCollectionID = undefined
     }
   } else {
     // if parentUserCollectionID exists, create the collection as a child collection
-    const data = {
-      auth: collection.auth ?? {
-        authType: "inherit",
-        authActive: true,
-      },
-      headers: collection.headers ?? [],
-      _ref_id: collection._ref_id,
-    }
-
     const res = await createRESTChildUserCollection(
       collection.name,
-      parentUserCollectionID,
-      JSON.stringify(data)
+      parentUserCollectionID
     )
 
     if (E.isRight(res)) {
       const childCollectionId = res.right.createRESTChildUserCollection.id
 
-      const returnedData = res.right.createRESTChildUserCollection.data
-        ? JSON.parse(res.right.createRESTChildUserCollection.data)
-        : {
-            auth: {
-              authType: "inherit",
-              authActive: true,
-            },
-            headers: [],
-            _ref_id: generateUniqueRefId("coll"),
-          }
-
       collection.id = childCollectionId
-      collection._ref_id = returnedData._ref_id ?? generateUniqueRefId("coll")
-      collection.auth = returnedData.auth
-      collection.headers = returnedData.headers
 
       removeDuplicateRESTCollectionOrFolder(
         childCollectionId,
@@ -207,13 +155,8 @@ export const storeSyncDefinition: StoreSyncDefinitionOf<
       [collectionIndex]
     )?.id
 
-    const data = {
-      auth: collection.auth,
-      headers: collection.headers,
-    }
-
-    if (collectionID) {
-      updateUserCollection(collectionID, collection.name, JSON.stringify(data))
+    if (collectionID && collection.name) {
+      renameUserCollection(collectionID, collection.name)
     }
   },
   async addFolder({ name, path }) {
@@ -252,12 +195,9 @@ export const storeSyncDefinition: StoreSyncDefinitionOf<
     )?.id
 
     const folderName = folder.name
-    const data = {
-      auth: folder.auth,
-      headers: folder.headers,
-    }
-    if (folderID) {
-      updateUserCollection(folderID, folderName, JSON.stringify(data))
+
+    if (folderID && folderName) {
+      renameUserCollection(folderID, folderName)
     }
   },
   async removeFolder({ folderID }) {
@@ -288,11 +228,6 @@ export const storeSyncDefinition: StoreSyncDefinitionOf<
       if (sourceCollectionID) {
         await moveUserCollection(sourceCollectionID, destinationCollectionID)
       }
-    }
-  },
-  async duplicateCollection({ collectionSyncID }) {
-    if (collectionSyncID) {
-      await duplicateUserCollection(collectionSyncID, ReqType.Rest)
     }
   },
   editRequest({ path, requestIndex, requestNew }) {
