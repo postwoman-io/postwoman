@@ -75,6 +75,9 @@ export type {
   SaveFileResponse,
   OpenExternalLinkOptions,
   OpenExternalLinkResponse,
+  Event,
+  EventCallback,
+  UnlistenFn,
   IoV1,
 } from '@io/v/1'
 
