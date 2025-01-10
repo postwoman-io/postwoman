@@ -5,7 +5,10 @@ export type {
   SaveFileWithDialogOptions,
   SaveFileResponse,
   OpenExternalLinkOptions,
-  OpenExternalLinkResponse
+  OpenExternalLinkResponse,
+  Event,
+  EventCallback,
+  UnlistenFn
 } from './v/1'
 
 export const VERSIONS = {
