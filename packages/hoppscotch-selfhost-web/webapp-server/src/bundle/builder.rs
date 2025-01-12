@@ -41,8 +41,10 @@ impl BundleBuilder {
                 let relative_path = path
                     .strip_prefix(frontend_path)
                     .unwrap()
-                    .to_string_lossy()
-                    .into_owned();
+                    .components()
+                    .map(|comp| comp.as_os_str().to_string_lossy())
+                    .collect::<Vec<_>>()
+                    .join("/");
 
                 let content = std::fs::read(path).map_err(|e| {
                     BundleError::Config(format!("Failed to read file {}: {}", path.display(), e))
