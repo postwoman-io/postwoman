@@ -7,6 +7,7 @@
     "declaration": true,
     "declarationDir": "./dist",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "allowJs": true
   },
   "include": ["src/*"]

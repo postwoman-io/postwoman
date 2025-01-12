@@ -4838,7 +4838,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-hoppscotch-appload"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload#1b83faeab400ea89c656c7ecfce03e59e9ff3448"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload#c4e50826dda82d35c60d5bde4c01cdc6b0148f40"
 dependencies = [
  "base64 0.22.1",
  "blake3",
