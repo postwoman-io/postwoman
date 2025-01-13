@@ -3,7 +3,7 @@
     <span>
       <span class="hopp-doc-explorer-argument-name">{{ arg.name }}</span>
       :
-      <!-- <GraphqlTypeLinkNew :type="arg.type" /> -->
+      <GraphqlTypeLinkNew :type="arg.type" />
       <GraphqlDefaultValue v-if="showDefaultValue !== false" :field="arg" />
     </span>
   </template>
