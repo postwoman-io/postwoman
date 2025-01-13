@@ -1,6 +1,6 @@
 <!-- FieldDocumentation.vue -->
 <template>
-  <div>
+  <div class="px-3">
     <AppMarkdown v-if="hasDescription" type="description">
       {{ description }}
     </AppMarkdown>

@@ -1,7 +1,7 @@
 <template>
-  <section class="hopp-doc-explorer" aria-label="Documentation Explorer">
-    <div class="hopp-doc-explorer-header p-4">
-      <div class="hopp-doc-explorer-header-content">
+  <section class="hopp-doc-explorer pb-10" aria-label="Documentation Explorer">
+    <div class="hopp-doc-explorer-header px-3 pt-4">
+      <div class="hopp-doc-explorer-header-content mb-6">
         <a
           v-if="prevName"
           href="#"
@@ -12,7 +12,7 @@
           <icon-lucide-chevron-left />
           {{ prevName }}
         </a>
-        <div class="hopp-doc-explorer-title">
+        <div class="hopp-doc-explorer-title text-xl font-bold">
           {{ currentNavItem.name }}
         </div>
       </div>
@@ -53,11 +53,18 @@ const prevName = computed(() => {
 <style lang="scss">
 a.hopp-doc-explorer-field-name {
   color: hsl(208, 100%, 72%);
+  &:hover {
+    text-decoration: underline;
+  }
 }
 a.hopp-doc-explorer-type-name {
   color: hsl(30, 100%, 80%);
   cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
 }
+
 .hopp-doc-explorer-argument-name {
   color: hsl(243, 100%, 77%);
 }

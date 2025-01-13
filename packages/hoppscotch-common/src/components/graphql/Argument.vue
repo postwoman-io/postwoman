@@ -1,8 +1,8 @@
 <template>
   <template v-if="inline">
     <span>
-      <span class="hopp-doc-explorer-argument-name">{{ arg.name }}</span>
-      :
+      <span class="hopp-doc-explorer-argument-name">{{ arg.name }}</span
+      >:
       <GraphqlTypeLinkNew :type="arg.type" />
       <GraphqlDefaultValue v-if="showDefaultValue !== false" :field="arg" />
     </span>

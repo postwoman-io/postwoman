@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4">
+  <div class="px-3">
     <AppMarkdown type="description" class="mb-4">
       {{ schemaDescription }}
     </AppMarkdown>

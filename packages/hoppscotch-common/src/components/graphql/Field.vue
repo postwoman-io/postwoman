@@ -4,8 +4,7 @@
       <GraphqlFieldLink :field="field" />
 
       <template v-if="args.length > 0">
-        (
-        <span>
+        (<span>
           <template v-for="arg in args" :key="arg.name">
             <div
               v-if="args.length > 1"
@@ -14,12 +13,9 @@
               <GraphqlArgument :arg="arg" inline />
             </div>
             <GraphqlArgument v-else :arg="arg" inline />
-          </template>
-        </span>
-        )
-      </template>
-
-      {{ ": " }}
+          </template> </span
+        >)</template
+      >:
       <GraphqlTypeLinkNew :type="field.type" />
       <GraphqlDefaultValue :field="field" />
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isNamedType(type)">
+  <div v-if="isNamedType(type)" class="px-3">
     <AppMarkdown v-if="type.description" type="description">
       {{ type.description }}
     </AppMarkdown>
