@@ -1,124 +1,54 @@
 <template>
-  <div>
-    <div class="flex justify-between gap-2 group">
-      <div
-        class="field-title flex-1 flex items-center gap-2"
-        :class="{ 'field-highlighted': isHighlighted }"
-      >
-        <icon-lucide-plus-circle
-          @click="emit('add-field', gqlField)"
-          class="opacity-0 w-0 group-hover:opacity-100 group-hover:w-4 -ml-2 group-hover:ml-0 cursor-pointer hover:text-accent transition-all duration-300 ease-out overflow-hidden"
-        />
-        <span class="transition-all duration-300 ease-out">
-          {{ fieldName }}
-          <span v-if="fieldArgs.length > 0">
-            (
-            <span v-for="(field, index) in fieldArgs" :key="`field-${index}`">
-              {{ field.name }}:
-              <GraphqlTypeLink
-                :gql-type="field.type"
-                @jump-to-type="jumpToType"
-              />
-              <span v-if="index !== fieldArgs.length - 1">, </span>
-            </span>
-            ) </span
-          >:
-          <GraphqlTypeLink
-            :gql-type="gqlField.type"
-            @jump-to-type="jumpToType"
-          />
-        </span>
-      </div>
+  <div class="hopp-doc-explorer-item">
+    <div>
+      <GraphqlFieldLink :field="field" />
 
-      <div v-if="gqlField.deprecationReason">
-        <span
-          v-tippy="{ theme: 'tomato' }"
-          class="flex cursor-pointer items-center gap-2 text-xs !text-red-500 hover:!text-red-600"
-          :title="gqlField.deprecationReason"
-        >
-          <IconAlertTriangle /> {{ t("state.deprecated") }}
+      <template v-if="args.length > 0">
+        (
+        <span>
+          <template v-for="arg in args" :key="arg.name">
+            <div
+              v-if="args.length > 1"
+              class="hopp-doc-explorer-argument-multiple"
+            >
+              <GraphqlArgument :arg="arg" inline />
+            </div>
+            <GraphqlArgument v-else :arg="arg" inline />
+          </template>
         </span>
-      </div>
+        )
+      </template>
+
+      {{ ": " }}
+      <GraphqlTypeLinkNew :type="field.type" />
+      <GraphqlDefaultValue :field="field" />
     </div>
-    <div
-      v-if="gqlField.description"
-      class="field-desc py-2 text-secondaryLight"
+
+    <AppMarkdown
+      v-if="field.description"
+      type="description"
+      :only-show-first-child="true"
     >
-      {{ gqlField.description }}
-    </div>
-    <div v-if="fieldArgs.length > 0">
-      <h5 class="my-2">Arguments:</h5>
-      <div class="border-l-2 border-divider pl-4">
-        <div
-          v-for="(field, index) in fieldArgs"
-          :key="`field-${index}`"
-          class="group"
-        >
-          <div class="argument-title flex-1 flex items-center gap-2">
-            <icon-lucide-plus-circle
-              @click="emit('add-arg', field)"
-              class="opacity-0 w-0 group-hover:opacity-100 group-hover:w-4 -mr-2 group-hover:mr-0 cursor-pointer hover:text-accent transition-all duration-300 ease-out overflow-hidden"
-            />
-            <span class="transition-all duration-300 ease-out">
-              {{ field.name }}:
-              <GraphqlTypeLink
-                :gql-type="field.type"
-                @jump-to-type="jumpToType"
-              />
-            </span>
-          </div>
-          <div
-            v-if="field.description"
-            class="field-desc py-2 text-secondaryLight"
-          >
-            {{ field.description }}
-          </div>
-        </div>
-      </div>
-    </div>
+      {{ field.description }}
+    </AppMarkdown>
+
+    <GraphqlDeprecationReason>
+      {{ field.deprecationReason }}
+    </GraphqlDeprecationReason>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "@composables/i18n"
-import { GraphQLType } from "graphql"
 import { computed } from "vue"
-import IconAlertTriangle from "~icons/lucide/alert-triangle"
+import { ExplorerFieldDef } from "~/helpers/graphql/explorer"
 
-const t = useI18n()
-
-const props = withDefaults(
-  defineProps<{
-    gqlField: any
-    isHighlighted: boolean
-  }>(),
-  {
-    gqlField: {},
-    isHighlighted: false,
-  }
-)
-
-const emit = defineEmits<{
-  (e: "jump-to-type", type: GraphQLType): void
-  (e: "add-field", field: any): void
-  (e: "add-arg", arg: any): void
+const props = defineProps<{
+  field: ExplorerFieldDef
 }>()
 
-const fieldName = computed(() => props.gqlField.name)
-
-const fieldArgs = computed(() => props.gqlField.args || [])
-
-const jumpToType = (type: GraphQLType) => {
-  emit("jump-to-type", type)
-}
+const args = computed(() =>
+  "args" in props.field
+    ? props.field.args.filter((arg) => !arg.deprecationReason)
+    : []
+)
 </script>
-
-<style lang="scss" scoped>
-.field-highlighted {
-  @apply border-b-2 border-accent;
-}
-
-.field-title {
-  @apply select-text;
-}
-</style>

@@ -10,7 +10,7 @@
       :icon="IconBookOpen"
       :label="`${t('tab.documentation')}`"
     >
-      <GraphqlDoc />
+      <GraphqlDocExplorer />
     </HoppSmartTab>
     <HoppSmartTab :id="'schema'" :icon="IconBox" :label="`${t('tab.schema')}`">
       <div

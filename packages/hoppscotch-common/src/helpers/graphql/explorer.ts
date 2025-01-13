@@ -33,14 +33,17 @@ export type ExplorerNavStack = [ExplorerNavStackItem, ...ExplorerNavStackItem[]]
 
 const initialNavStackItem: ExplorerNavStackItem = { name: "Docs" }
 
+const navStack = ref<ExplorerNavStack>([initialNavStackItem])
+const schema = ref<GraphQLSchema | null>()
+const validationErrors = ref<any[]>([])
 export function useExplorer(initialSchema?: GraphQLSchema) {
-  const navStack = ref<ExplorerNavStack>([initialNavStackItem])
-  const schema = ref<GraphQLSchema | null>(initialSchema ?? null)
-  const validationErrors = ref<any[]>([])
+  schema.value = initialSchema ?? null
 
-  const currentNavItem = computed(
-    () => navStack.value[navStack.value.length - 1]
-  )
+  const currentNavItem = computed(() => {
+    const lastItem = navStack.value[navStack.value.length - 1]
+    console.log("currentNavItem", lastItem)
+    return lastItem
+  })
 
   function push(item: ExplorerNavStackItem) {
     console.log("pushing", item)
@@ -50,6 +53,8 @@ export function useExplorer(initialSchema?: GraphQLSchema) {
     if (lastItem.def === item.def) return
 
     navStack.value.push(item)
+
+    console.log("navStack", navStack.value)
   }
 
   function pop() {

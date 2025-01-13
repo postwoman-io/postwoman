@@ -1,21 +1,22 @@
 <template>
   <div class="p-4">
-    <div type="description" class="mb-4">
+    <AppMarkdown type="description" class="mb-4">
       {{ schemaDescription }}
-    </div>
+    </AppMarkdown>
+
     <GraphqlExplorerSection title="Root Types">
       <div v-if="queryType">
-        <span class="graphiql-doc-explorer-root-type">query</span>
+        <span class="hopp-doc-explorer-root-type">query</span>
         {{ ": " }}
         <GraphqlTypeLinkNew :type="queryType" />
       </div>
       <div v-if="mutationType">
-        <span class="graphiql-doc-explorer-root-type">mutation</span>
+        <span class="hopp-doc-explorer-root-type">mutation</span>
         {{ ": " }}
         <GraphqlTypeLinkNew :type="mutationType" />
       </div>
       <div v-if="subscriptionType">
-        <span class="graphiql-doc-explorer-root-type">subscription</span>
+        <span class="hopp-doc-explorer-root-type">subscription</span>
         {{ ": " }}
         <GraphqlTypeLinkNew :type="subscriptionType" />
       </div>
@@ -34,14 +35,9 @@
 import { computed } from "vue"
 import type { GraphQLSchema } from "graphql"
 
-interface SchemaDocumentationProps {
-  /**
-   * The schema that should be rendered.
-   */
+const props = defineProps<{
   schema: GraphQLSchema
-}
-
-const props = defineProps<SchemaDocumentationProps>()
+}>()
 
 const queryType = props.schema.getQueryType()
 const mutationType = props.schema.getMutationType?.()

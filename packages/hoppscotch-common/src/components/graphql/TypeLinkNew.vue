@@ -1,44 +1,45 @@
 <template>
   <template v-if="type">
-    <component :is="renderType(type, renderNamedType)" />
+    <component :is="renderedType.type" v-bind="renderedType.props">
+      {{ renderedType.children }}
+    </component>
   </template>
 </template>
 
 <script setup lang="ts">
-import type { GraphQLNamedType, GraphQLType } from "graphql"
-import { h } from "vue"
-import { useExplorer, renderType } from "../../helpers/graphql/explorer"
+import { GraphQLType } from "graphql"
+import { computed } from "vue"
 
-interface TypeLinkProps {
+import { renderType, useExplorer } from "~/helpers/graphql/explorer"
+
+const props = defineProps<{
   type: GraphQLType
-  schema: any
+}>()
+
+const { push } = useExplorer()
+
+const handleTypeClick = (event: MouseEvent, namedType: any) => {
+  event.preventDefault()
+  push({ name: namedType.name, def: namedType })
 }
 
-const props = defineProps<TypeLinkProps>()
+const renderedType = computed(() => {
+  if (!props.type) return null
 
-// Use the explorer composable
-const { push } = useExplorer(props.schema)
-
-const renderNamedType = (namedType: GraphQLNamedType) => {
-  const handleClick = (event: MouseEvent) => {
-    event.preventDefault()
-    push({
-      name: namedType.name,
-      def: namedType,
-    })
-  }
-
-  return h(
-    "span",
-    {
-      class: "graphiql-doc-explorer-type-name",
-      style: {
-        color: "hsl(30,100%,80%)",
-        cursor: "pointer",
+  return renderType(props.type, (namedType) => {
+    return {
+      type: "a",
+      props: {
+        class: "hopp-doc-explorer-type-name",
+        href: "#",
+        style: {
+          color: "hsl(30,100%,80%)",
+          cursor: "pointer",
+        },
+        onClick: (event: MouseEvent) => handleTypeClick(event, namedType),
       },
-      onClick: handleClick,
-    },
-    namedType.name
-  )
-}
+      children: namedType.name,
+    }
+  })
+})
 </script>
