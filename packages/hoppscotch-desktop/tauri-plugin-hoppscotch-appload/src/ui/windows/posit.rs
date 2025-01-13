@@ -20,7 +20,8 @@ pub struct WindowsWindow<R: Runtime> {
 
 impl<R: Runtime> WindowsWindow<R> {
     pub fn new(window: WebviewWindow<R>) -> Self {
-        let hwnd = HWND(window.hwnd().expect("Failed to get window handle"));
+        let hwnd = window.hwnd().expect("Failed to get window handle");
+        let hwnd = HWND(hwnd.0);
         Self { window, hwnd }
     }
 
@@ -63,7 +64,7 @@ impl<R: Runtime> WindowsWindow<R> {
     }
 
     fn set_caption_color(&self, color: HexColor) {
-        if let Ok(version) = WindowsVersion::detect() {
+        if let Some(version) = WindowsVersion::detect() {
             if version >= WindowsVersion::new(10, 0, 22000) {
                 unsafe {
                     let color_ref = self.hex_color_to_colorref(color);
@@ -105,12 +106,9 @@ struct WinThemeAttribute {
 
 impl WinThemeAttribute {
     fn new() -> Self {
-        let flags = WTNCA_NODRAWCAPTION | WTNCA_NODRAWICON;
+        let flag = WTNCA_NODRAWCAPTION | WTNCA_NODRAWICON;
         let mask = WTNCA_NODRAWCAPTION | WTNCA_NODRAWICON | WTNCA_NOSYSMENU | WTNCA_NOMIRRORHELP;
-        Self {
-            flag: flags.0,
-            mask: mask.0,
-        }
+        Self { flag, mask }
     }
 }
 
