@@ -1,5 +1,25 @@
 <template>
   <section class="hopp-doc-explorer pb-10" aria-label="Documentation Explorer">
+    <div
+      class="sticky top-0 z-10 flex flex-shrink-0 overflow-x-auto bg-primary"
+    >
+      <input
+        v-model="graphqlFieldsFilterText"
+        type="search"
+        autocomplete="off"
+        class="flex w-full bg-transparent px-4 py-2 h-8"
+        :placeholder="`${t('action.search')}`"
+      />
+      <div class="flex">
+        <HoppButtonSecondary
+          v-tippy="{ theme: 'tooltip' }"
+          to="https://docs.hoppscotch.io/documentation/protocols/graphql"
+          blank
+          :title="t('app.wiki')"
+          :icon="IconHelpCircle"
+        />
+      </div>
+    </div>
     <div class="hopp-doc-explorer-header px-3 pt-4">
       <div class="hopp-doc-explorer-header-content mb-6">
         <a
@@ -34,10 +54,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import IconHelpCircle from "~icons/lucide/help-circle"
+import { computed, ref } from "vue"
 import { isType } from "graphql"
 import { useExplorer } from "../../helpers/graphql/explorer"
 import { schema } from "~/helpers/graphql/connection"
+import { useI18n } from "~/composables/i18n"
+
+const t = useI18n()
 
 // Use explorer composable
 const { navStack, currentNavItem, pop } = useExplorer()
@@ -48,6 +72,9 @@ const prevName = computed(() => {
     ? navStack.value[navStack.value.length - 2].name
     : undefined
 })
+
+// Filter text for fields
+const graphqlFieldsFilterText = ref("")
 </script>
 
 <style lang="scss">

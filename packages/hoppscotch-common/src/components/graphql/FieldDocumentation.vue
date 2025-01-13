@@ -1,10 +1,10 @@
 <!-- FieldDocumentation.vue -->
 <template>
   <div class="px-3">
-    <AppMarkdown v-if="hasDescription" type="description">
+    <AppMarkdown v-if="hasDescription" type="description" class="mb-6">
       {{ description }}
     </AppMarkdown>
-    <GraphqlDeprecationReason :preview="false">
+    <GraphqlDeprecationReason :preview="false" class="mb-4">
       {{ deprecationReason }}
     </GraphqlDeprecationReason>
     <GraphqlExplorerSection title="Type">
