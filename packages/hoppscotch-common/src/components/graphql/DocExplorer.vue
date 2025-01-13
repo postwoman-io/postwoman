@@ -49,3 +49,27 @@ const prevName = computed(() => {
     : undefined
 })
 </script>
+
+<style lang="scss">
+a.hopp-doc-explorer-field-name {
+  color: hsl(208, 100%, 72%);
+}
+a.hopp-doc-explorer-type-name {
+  color: hsl(30, 100%, 80%);
+  cursor: pointer;
+}
+.hopp-doc-explorer-argument-name {
+  color: hsl(243, 100%, 77%);
+}
+
+.hopp-doc-explorer-argument-deprecation {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: hsl(0, 100%, 90%);
+  border-radius: 0.25rem;
+}
+
+.hopp-doc-explorer-item {
+  margin-bottom: 1rem;
+}
+</style>

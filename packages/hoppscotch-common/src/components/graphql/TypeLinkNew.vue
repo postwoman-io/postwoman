@@ -32,10 +32,6 @@ const renderedType = computed(() => {
       props: {
         class: "hopp-doc-explorer-type-name",
         href: "#",
-        style: {
-          color: "hsl(30,100%,80%)",
-          cursor: "pointer",
-        },
         onClick: (event: MouseEvent) => handleTypeClick(event, namedType),
       },
       children: namedType.name,

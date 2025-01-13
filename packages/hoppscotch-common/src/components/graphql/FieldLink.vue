@@ -1,5 +1,10 @@
 <template>
-  <a href="#" class="hopp-doc-explorer-field-name" @click="handleClick">
+  <a
+    href="#"
+    class="hopp-doc-explorer-field-name"
+    style="color: hsl(30, 100%, 80%); cursor: pointer"
+    @click="handleClick"
+  >
     {{ field.name }}
   </a>
 </template>
