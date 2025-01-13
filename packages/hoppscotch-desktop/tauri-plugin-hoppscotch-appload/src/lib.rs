@@ -100,7 +100,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             let bundle_loader = Arc::new(bundle::BundleLoader::new(cache.clone(), storage.clone()));
 
             tracing::debug!("Setting up uri handler.");
-            let uri_handler = Arc::new(uri::UriHandler::new(cache.clone()));
+            let config = app.config();
+            let uri_handler = Arc::new(uri::UriHandler::new(cache.clone(), config.clone()));
 
             #[cfg(desktop)]
             tracing::debug!("Initializing desktop-specific components.");

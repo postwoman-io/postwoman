@@ -159,14 +159,14 @@ impl BundleLoader {
 
     fn generate_bundle_name(&self, server_url: &str, metadata: &crate::BundleMetadata) -> String {
         format!(
-            "{}-{}",
+            "{}_{}",
             server_url
                 .split("://")
                 .nth(1)
                 .unwrap_or("unknown")
-                .replace(['/', '.', ':'], "-")
-                .trim_end_matches('-'),
-            metadata.version
+                .replace(['/', '.', ':'], "_")
+                .trim_end_matches('_'),
+            metadata.version.replace('.', "_")
         )
     }
 }

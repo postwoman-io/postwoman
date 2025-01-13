@@ -10,8 +10,13 @@ yarn.lock
 
 /.tauri
 /target
-Cargo.lock
 node_modules/
+# Devenv
+.devenv*
+devenv.local.nix
 
-dist-js
-dist
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
