@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from "vue"
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from "vue"
 import type {
   GraphQLArgument,
   GraphQLField,
@@ -146,6 +146,7 @@ const selectSearchResult = (result: SearchResult) => {
   })
   showSearchResults.value = false
   searchText.value = ""
+  currentResultIndex.value = -1
 }
 
 const scrollActiveResultIntoView = async () => {
@@ -195,6 +196,14 @@ const handleClickOutside = (event: MouseEvent) => {
     showSearchResults.value = false
   }
 }
+
+// Add watch for searchText
+watch(searchText, () => {
+  currentResultIndex.value = -1
+  if (searchText.value.trim()) {
+    showSearchResults.value = true
+  }
+})
 
 // Lifecycle
 onMounted(() => {
