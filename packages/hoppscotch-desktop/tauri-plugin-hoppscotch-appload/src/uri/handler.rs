@@ -37,6 +37,18 @@ impl UriHandler {
                 Response::builder()
                     .status(200)
                     .header("content-type", mime_type)
+                    .header(
+                        "content-security-policy",
+                        "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' customprotocol: asset:; \
+                         script-src * 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; \
+                         connect-src ipc: http://ipc.localhost https://api.hoppscotch.io *; \
+                         font-src https://fonts.gstatic.com data: 'self'; \
+                         img-src 'self' asset: http://asset.localhost blob: data: customprotocol:; \
+                         style-src 'unsafe-inline' 'self' https://fonts.googleapis.com data: asset:; \
+                         worker-src * 'self' data: 'unsafe-eval' blob:;"
+                    )
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .header("x-content-type-options", "nosniff")
                     .body(content)
             }
             Err(e) => {

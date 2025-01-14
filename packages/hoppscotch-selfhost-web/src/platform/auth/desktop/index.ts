@@ -18,6 +18,10 @@ import {
   KernelInterceptorService
 } from "@hoppscotch/common/services/kernel-interceptor.service"
 
+import Login from "@platform-components/Login.vue"
+
+import { getAllowedAuthProviders, updateUserDisplayName } from "./api"
+
 export const authEvents$ = new Subject<AuthEvent | { event: "token_refresh" }>()
 export const currentUser$ = new BehaviorSubject<HoppUser | null>(null)
 export const probableUser$ = new BehaviorSubject<HoppUser | null>(null)
@@ -107,13 +111,13 @@ async function setInitialUser() {
   const error = res.errors && res.errors[0]
 
   if (error && error.message === "auth/cookies_not_found") {
-    setUser(null)
+    await setUser(null)
     isGettingInitialUser.value = false
     return
   }
 
   if (error && error.message === "user/not_found") {
-    setUser(null)
+    await setUser(null)
     isGettingInitialUser.value = false
     return
   }
@@ -122,9 +126,9 @@ async function setInitialUser() {
     const isRefreshSuccess = await refreshToken()
 
     if (isRefreshSuccess) {
-      setInitialUser()
+      await setInitialUser()
     } else {
-      setUser(null)
+      await setUser(null)
       isGettingInitialUser.value = false
     }
 
@@ -142,7 +146,7 @@ async function setInitialUser() {
       emailVerified: true,
     }
 
-    setUser(hoppUser)
+    await setUser(hoppUser)
     isGettingInitialUser.value = false
 
     authEvents$.next({
@@ -170,7 +174,7 @@ async function refreshToken() {
     const res = await response
     if (E.isLeft(res)) return false
 
-    setAuthCookies(res.right.headers)
+    await setAuthCookies(res.right.headers)
     const isSuccessful = res.right.status === 200
 
     if (isSuccessful) {
@@ -223,12 +227,18 @@ async function setAuthCookies(headers: Headers) {
 }
 
 export const def: AuthPlatformDef = {
+  customLoginSelectorUI: Login,
+
   getCurrentUserStream: () => currentUser$,
   getAuthEventsStream: () => authEvents$,
   getProbableUserStream: () => probableUser$,
 
   getCurrentUser: () => currentUser$.value,
   getProbableUser: () => probableUser$.value,
+
+  async getAllowedAuthProviders() {
+    return await getAllowedAuthProviders()
+  },
 
   getBackendHeaders() {
     return {}
@@ -266,7 +276,7 @@ export const def: AuthPlatformDef = {
     probableUser$.next(probableUser)
     await setInitialUser()
 
-    await Io.listen<string>('scheme-request-received', async (event) => {
+    await Io.listen<string>('scheme-request-received', async (event: { payload: string }) => {
       let deep_link = event.payload;
       const params = new URLSearchParams(deep_link.split('?')[1]);
 
@@ -327,7 +337,7 @@ export const def: AuthPlatformDef = {
     await signInUserWithMicrosoftFB()
   },
 
-  async signInWithEmailLink(_email, _url) {
+  async signInWithEmailLink(email: string, url: string) {
     const deviceIdentifier = await persistenceService.getLocalConfig("deviceIdentifier")
 
     if (!deviceIdentifier) {
@@ -336,7 +346,10 @@ export const def: AuthPlatformDef = {
       )
     }
 
-    const verifyToken = await persistenceService.getLocalConfig("verifyToken")
+    const urlObject = new URL(url)
+    const searchParams = new URLSearchParams(urlObject.search)
+    const token = searchParams.get("token")
+    const verifyToken = token || await persistenceService.getLocalConfig("verifyToken")
 
     const { response } = interceptorService.execute({
       id: Date.now(),
@@ -351,7 +364,7 @@ export const def: AuthPlatformDef = {
     const res = await response
     if (E.isLeft(res)) throw new Error("Failed to verify email link")
 
-    setAuthCookies(res.right.headers)
+    await setAuthCookies(res.right.headers)
 
     await persistenceService.removeLocalConfig("deviceIdentifier")
     await persistenceService.removeLocalConfig("verifyToken")
@@ -362,8 +375,20 @@ export const def: AuthPlatformDef = {
     return
   },
 
-  async setDisplayName(_name: string) {
-    return
+  async setDisplayName(name: string) {
+    if (!name) return E.left("USER_NAME_CANNOT_BE_EMPTY")
+    if (!currentUser$.value) return E.left("NO_USER_LOGGED_IN")
+
+    const res = await updateUserDisplayName(name)
+
+    if (E.isRight(res)) {
+      await setUser({
+        ...currentUser$.value,
+        displayName: res.right.updateDisplayName.displayName ?? null,
+      })
+      return E.right(undefined)
+    }
+    return E.left(res.left)
   },
 
   async signOutUser() {
