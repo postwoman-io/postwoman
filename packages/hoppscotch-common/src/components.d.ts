@@ -100,6 +100,7 @@ declare module 'vue' {
     GraphqlDefaultValue: typeof import('./components/graphql/DefaultValue.vue')['default']
     GraphqlDeprecationReason: typeof import('./components/graphql/DeprecationReason.vue')['default']
     GraphqlDirective: typeof import('./components/graphql/Directive.vue')['default']
+    GraphqlDirectives: typeof import('./components/graphql/Directives.vue')['default']
     GraphqlDoc: typeof import('./components/graphql/Doc.vue')['default']
     GraphqlDocExplorer: typeof import('./components/graphql/DocExplorer.vue')['default']
     GraphqlExplorerSection: typeof import('./components/graphql/ExplorerSection.vue')['default']

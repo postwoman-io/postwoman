@@ -17,9 +17,9 @@ import IconDeprecatedEnumValue from "~icons/lucide/diamond-minus"
 import IconDeprecatedField from "~icons/lucide/diamond-minus"
 import IconDierctive from "~icons/lucide/arrow-right"
 import IconEnumValue from "~icons/lucide/arrow-right"
-import IconField from "~icons/lucide/arrow-right"
+import IconField from "~icons/lucide/rectangle-ellipsis"
 import IconImplements from "~icons/lucide/arrow-right"
-import IconType from "~icons/lucide/type"
+import IconType from "~icons/lucide/file-type"
 import IconRootTypes from "~icons/lucide/folder-kanban"
 
 type ExplorerSectionTitle =

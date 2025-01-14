@@ -24,7 +24,7 @@
       </div>
       <div
         v-if="schema"
-        class="flex items-center overflow-x-auto whitespace-nowrap px-4 py-2 text-tiny text-secondaryLight"
+        class="flex items-center overflow-x-auto whitespace-nowrap px-3 py-2 text-tiny text-secondaryLight"
       >
         <template v-for="(item, index) in navStack" :key="index">
           <span
@@ -33,10 +33,12 @@
           >
             {{ item.name }}
           </span>
-          <icon-lucide-chevron-right
-            v-if="index < navStack.length - 1"
-            class="mx-2"
-          />
+          <span>
+            <icon-lucide-chevron-right
+              v-if="index < navStack.length - 1"
+              class="mx-1"
+            />
+          </span>
         </template>
       </div>
     </div>
@@ -66,7 +68,6 @@ import { isType } from "graphql"
 import { ref } from "vue"
 import { useI18n } from "~/composables/i18n"
 import { schema } from "~/helpers/graphql/connection"
-import IconEye from "~icons/lucide/eye"
 import { useExplorer } from "../../helpers/graphql/explorer"
 
 const t = useI18n()
@@ -99,6 +100,10 @@ a.hopp-doc-explorer-type-name {
   color: hsl(243, 100%, 77%);
 }
 
+.hopp-doc-explorer-argument-multiple {
+  margin-left: 0.5rem;
+}
+
 .hopp-doc-explorer-argument-deprecation {
   margin-top: 0.5rem;
   padding: 0.5rem;
@@ -107,6 +112,6 @@ a.hopp-doc-explorer-type-name {
 }
 
 .hopp-doc-explorer-item {
-  margin-bottom: 1rem;
+  @apply py-1;
 }
 </style>

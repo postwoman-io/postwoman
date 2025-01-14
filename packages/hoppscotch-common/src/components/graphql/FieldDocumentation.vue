@@ -18,7 +18,7 @@
       <GraphqlTypeLink :type="type" />
     </GraphqlExplorerSection>
     <GraphqlArguments :field="field" />
-    <GraphqlDirective :field="field" />
+    <GraphqlDirectives :field="field" />
   </div>
 </template>
 

@@ -1,4 +1,4 @@
-import { ref, computed } from "vue"
+import { ref, computed, h, VNode } from "vue"
 import type {
   GraphQLSchema,
   GraphQLNamedType,
@@ -165,15 +165,18 @@ export function useExplorer(initialSchema?: GraphQLSchema) {
   }
 }
 
+/**
+ * Recursive rendering function for GraphQL types.
+ */
 export function renderType(
   type: GraphQLType,
-  renderNamedType: (namedType: GraphQLNamedType) => string
-): string {
+  renderNamedType: (namedType: GraphQLNamedType) => any
+): VNode {
   if (isNonNullType(type)) {
-    return `${renderType(type.ofType, renderNamedType)}!`
+    return h("span", {}, [renderType(type.ofType, renderNamedType), "!"])
   }
   if (isListType(type)) {
-    return `[${renderType(type.ofType, renderNamedType)}]`
+    return h("span", {}, ["[", renderType(type.ofType, renderNamedType), "]"])
   }
-  return renderNamedType(type)
+  return renderNamedType(type as GraphQLNamedType)
 }
