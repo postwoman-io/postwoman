@@ -4,9 +4,7 @@
     class="hopp-doc-explorer pb-10"
     aria-label="Documentation Explorer"
   >
-    <div
-      class="sticky top-0 z-10 flex flex-shrink-0 flex-col overflow-x-auto border-b border-dividerLight bg-primary"
-    >
+    <div class="sticky top-0 z-10 border-b border-dividerLight bg-primary">
       <GraphqlSchemaSearch />
       <div
         class="flex items-center overflow-x-auto whitespace-nowrap px-3 py-2 text-tiny text-secondaryLight"

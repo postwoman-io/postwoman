@@ -1,6 +1,6 @@
 <template>
-  <div class="flex border-b border-dividerLight">
-    <div ref="searchWrapper" class="relative flex flex-1">
+  <div class="border-b border-dividerLight autocomplete-wrapper">
+    <div ref="searchWrapper" class="no-scrollbar inset-0 flex flex-1">
       <input
         v-model="searchText"
         type="search"
@@ -10,24 +10,24 @@
         @keydown="handleSearchKeystroke"
         @focusin="showSearchResults = true"
       />
-      <ul
-        v-if="showSearchResults && filteredResults.length > 0"
-        ref="resultsMenu"
-        class="suggestions"
-      >
-        <li
-          v-for="(result, index) in filteredResults"
-          :key="`result-${index}`"
-          :class="{ active: currentResultIndex === index }"
-          @click="selectSearchResult(result)"
-        >
-          <span class="truncate py-0.5">
-            {{ result.name }}
-            <span class="text-secondaryLight">- {{ result.type }}</span>
-          </span>
-        </li>
-      </ul>
     </div>
+    <ul
+      v-if="showSearchResults && filteredResults.length > 0"
+      ref="resultsMenu"
+      class="suggestions"
+    >
+      <li
+        v-for="(result, index) in filteredResults"
+        :key="`result-${index}`"
+        :class="{ active: currentResultIndex === index }"
+        @click="selectSearchResult(result)"
+      >
+        <span class="truncate py-0.5">
+          {{ result.name }}
+          <span class="text-secondaryLight">- {{ result.type }}</span>
+        </span>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -207,38 +207,43 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.suggestions {
-  @apply absolute;
-  @apply bg-popover;
-  @apply z-50;
-  @apply shadow-lg;
-  @apply max-h-46;
-  @apply border-x border-b border-divider;
-  @apply overflow-y-auto;
-  @apply -left-[1px];
-  @apply -right-[1px];
+.autocomplete-wrapper {
+  @apply relative;
+  @apply whitespace-nowrap;
 
-  top: calc(100% + 1px);
-  border-radius: 0 0 8px 8px;
+  .suggestions {
+    @apply absolute;
+    @apply bg-popover;
+    @apply z-50;
+    @apply shadow-lg;
+    @apply max-h-46;
+    @apply border-x border-b border-divider;
+    @apply overflow-y-auto;
+    @apply -left-[1px];
+    @apply -right-[1px];
 
-  li {
-    @apply flex;
-    @apply items-center;
-    @apply justify-between;
-    @apply w-full;
-    @apply px-4 py-2;
-    @apply text-secondary;
-    @apply cursor-pointer;
+    top: calc(100% + 1px);
+    border-radius: 0 0 8px 8px;
 
-    &:last-child {
-      border-radius: 0 0 0 8px;
-    }
-
-    &:hover,
-    &.active {
-      @apply bg-primaryDark;
-      @apply text-secondaryDark;
+    li {
+      @apply flex;
+      @apply items-center;
+      @apply justify-between;
+      @apply w-full;
+      @apply px-4 py-2;
+      @apply text-secondary;
       @apply cursor-pointer;
+
+      &:last-child {
+        border-radius: 0 0 0 8px;
+      }
+
+      &:hover,
+      &.active {
+        @apply bg-primaryDark;
+        @apply text-secondaryDark;
+        @apply cursor-pointer;
+      }
     }
   }
 }
