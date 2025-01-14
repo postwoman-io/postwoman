@@ -1,7 +1,7 @@
 <template>
   <a
     href="#"
-    class="hopp-doc-explorer-field-name decoration-inherit"
+    class="hopp-doc-explorer-field-name [text-decoration:inherit]"
     @click="handleClick"
   >
     {{ field.name }}

@@ -1,29 +1,14 @@
 <template>
-  <section class="hopp-doc-explorer pb-10" aria-label="Documentation Explorer">
+  <section
+    v-if="schema"
+    class="hopp-doc-explorer pb-10"
+    aria-label="Documentation Explorer"
+  >
     <div
       class="sticky top-0 z-10 flex flex-shrink-0 flex-col overflow-x-auto border-b border-dividerLight bg-primary"
     >
-      <div class="flex border-b border-dividerLight">
-        <!-- TODO: implement search -->
-        <!-- <Search :key="currentNavItem.name" /> -->
-        <input
-          v-model="graphqlFieldsFilterText"
-          type="search"
-          autocomplete="off"
-          class="flex w-full bg-transparent px-4 py-2 h-8"
-          :placeholder="`${t('action.search')}`"
-        />
-        <div class="flex">
-          <!-- <HoppButtonSecondary
-            v-tippy="{ theme: 'tooltip' }"
-            data-testid="show_deprecated"
-            :icon="IconEye"
-            :title="t('action.show_deprectated')"
-          /> -->
-        </div>
-      </div>
+      <GraphqlSchemaSearch />
       <div
-        v-if="schema"
         class="flex items-center overflow-x-auto whitespace-nowrap px-3 py-2 text-tiny text-secondaryLight"
       >
         <template v-for="(item, index) in navStack" :key="index">
@@ -50,7 +35,7 @@
       </div>
     </div>
     <div class="hopp-doc-explorer-content mt-4">
-      <template v-if="schema && navStack.length === 1">
+      <template v-if="navStack.length === 1">
         <GraphqlSchemaDocumentation :schema="schema" />
       </template>
       <template v-else-if="isType(currentNavItem.def)">
@@ -65,20 +50,13 @@
 
 <script setup lang="ts">
 import { isType } from "graphql"
-import { ref } from "vue"
-import { useI18n } from "~/composables/i18n"
 import { schema } from "~/helpers/graphql/connection"
 import { useExplorer } from "../../helpers/graphql/explorer"
-
-const t = useI18n()
 
 // Use explorer composable
 const { navStack, currentNavItem, navigateToIndex } = useExplorer()
 
 console.log(navStack, currentNavItem)
-
-// Filter text for fields
-const graphqlFieldsFilterText = ref("")
 </script>
 
 <style lang="scss">

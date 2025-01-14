@@ -26,7 +26,7 @@
 
       <span
         v-if="field.deprecationReason"
-        class="hopp-doc-explorer-deprecated inline ml-auto"
+        class="hopp-doc-explorer-deprecated inline ml-auto text-red-500"
         v-tippy="{ theme: 'tooltip' }"
         :title="field.deprecationReason"
       >

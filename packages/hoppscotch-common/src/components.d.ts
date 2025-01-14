@@ -119,6 +119,7 @@ declare module 'vue' {
     GraphqlSchemaBrowser: typeof import('./components/graphql/SchemaBrowser.vue')['default']
     GraphqlSchemaDoc: typeof import('./components/graphql/SchemaDoc.vue')['default']
     GraphqlSchemaDocumentation: typeof import('./components/graphql/SchemaDocumentation.vue')['default']
+    GraphqlSchemaSearch: typeof import('./components/graphql/SchemaSearch.vue')['default']
     GraphqlSidebar: typeof import('./components/graphql/Sidebar.vue')['default']
     GraphqlSubscriptionLog: typeof import('./components/graphql/SubscriptionLog.vue')['default']
     GraphqlTabHead: typeof import('./components/graphql/TabHead.vue')['default']
