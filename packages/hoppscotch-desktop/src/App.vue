@@ -7,9 +7,11 @@
         @toggle-sidebar="sidebarOpen = !sidebarOpen"
         @toggle-expand="sidebarExpanded = !sidebarExpanded"
       />
-      <main class="flex-1 overflow-y-auto bg-primary">
-        <div class="container mx-auto">
-          <RouterView />
+      <main class="flex-1 overflow-y-auto bg-primary flex items-center justify-center">
+        <div class="container mx-auto flex items-center justify-center">
+          <Suspense>
+            <RouterView />
+          </Suspense>
         </div>
       </main>
     </div>

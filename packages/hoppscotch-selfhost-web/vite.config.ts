@@ -71,6 +71,7 @@ export default defineConfig({
       ),
       "@workers": path.resolve(__dirname, "../hoppscotch-common/src/workers"),
       "@platform": path.resolve(__dirname, "./src/platform"),
+      "@platform-components": path.resolve(__dirname, "./src/components"),
       "@api": path.resolve(__dirname, "./src/api"),
       "@lib": path.resolve(__dirname, "./src/lib"),
       stream: "stream-browserify",
@@ -87,7 +88,7 @@ export default defineConfig({
     Vue(),
     Pages({
       routeStyle: "nuxt",
-      dirs: "../hoppscotch-common/src/pages",
+      dirs: ["../hoppscotch-common/src/pages", "./src/pages"],
       importMode: "async",
       onRoutesGenerated(routes) {
         generateSitemap({
