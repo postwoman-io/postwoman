@@ -3,28 +3,47 @@ import * as E from "fp-ts/Either"
 import { BehaviorSubject, Subject } from "rxjs"
 import { Ref, ref, watch } from "vue"
 
-import { Io } from "@hoppscotch/common/kernel/io"
 import { content } from "@hoppscotch/kernel"
+
+import { Io } from "@hoppscotch/common/kernel/io"
 import { getService } from "@hoppscotch/common/modules/dioc"
-import {
-  AuthEvent,
-  AuthPlatformDef,
-  HoppUser,
-} from "@hoppscotch/common/platform/auth"
-import {
-  PersistenceService
-} from "@hoppscotch/common/services/persistence"
-import {
-  KernelInterceptorService
-} from "@hoppscotch/common/services/kernel-interceptor.service"
+import { parseBodyAsJSON } from "@hoppscotch/common/helpers/functional/json"
+import { AuthEvent, AuthPlatformDef } from "@hoppscotch/common/platform/auth"
+import { PersistenceService } from "@hoppscotch/common/services/persistence"
+import { KernelInterceptorService } from "@hoppscotch/common/services/kernel-interceptor.service"
 
 import Login from "@platform-components/Login.vue"
-
 import { getAllowedAuthProviders, updateUserDisplayName } from "./api"
 
-export const authEvents$ = new Subject<AuthEvent | { event: "token_refresh" }>()
-export const currentUser$ = new BehaviorSubject<HoppUser | null>(null)
-export const probableUser$ = new BehaviorSubject<HoppUser | null>(null)
+export interface HoppUserWithAccessToken {
+  uid: string
+  displayName: string | null
+  email: string | null
+  photoURL: string | null
+  emailVerified: boolean
+  accessToken: string
+}
+
+export interface HoppUser {
+  uid: string
+  displayName: string | null
+  email: string | null
+  photoURL: string | null
+  emailVerified: boolean
+}
+
+interface GQLResponse {
+  data?: {
+    me: HoppUser
+  }
+  errors?: Array<{ message: string }>
+}
+
+export const authEvents$ = new Subject<AuthEvent>()
+export const currentUser$ = new BehaviorSubject<HoppUserWithAccessToken | null>(null)
+export const probableUser$ = new BehaviorSubject<HoppUserWithAccessToken | null>(null)
+
+const isGettingInitialUser: Ref<null | boolean> = ref(null)
 
 const persistenceService = getService(PersistenceService)
 const interceptorService = getService(KernelInterceptorService)
@@ -33,8 +52,8 @@ async function logout() {
   const { response } = interceptorService.execute({
     id: Date.now(),
     url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/logout`,
+    version: "HTTP/1.1",
     method: "GET",
-    version: "HTTP/1.1"
   })
 
   await response
@@ -60,14 +79,16 @@ async function signInUserWithMicrosoftFB() {
   })
 }
 
-async function getInitialUserDetails() {
+async function getInitialUserDetails(): Promise<GQLResponse | { error: string }> {
   try {
     const accessToken = await persistenceService.getLocalConfig("access_token")
+    if (!accessToken) return { error: "Access token not found" }
 
     const { response } = interceptorService.execute({
       id: Date.now(),
       url: `${import.meta.env.VITE_BACKEND_GQL_URL}`,
       method: "POST",
+      version: "HTTP/1.1",
       headers: {
         "Cookie": `access_token=${accessToken}`,
       },
@@ -85,87 +106,94 @@ async function getInitialUserDetails() {
       })
     })
 
-    const res = await response
-    if (E.isLeft(res)) {
+    const responseBytes = await response
+    if (E.isLeft(responseBytes)) {
       return { error: "auth/cookies_not_found" }
     }
 
-    return res.right.data
+    const res = parseBodyAsJSON<GQLResponse>(responseBytes.right.body)
+    if (res._tag == "Some") return res.value
+    return { error: "auth/cookies_not_found" }
   } catch (error) {
     return { error: "auth/cookies_not_found" }
   }
 }
 
-const isGettingInitialUser: Ref<null | boolean> = ref(null)
+async function setUser(user: HoppUserWithAccessToken | null) {
+  const accessToken = await persistenceService.getLocalConfig("access_token")
+  if (!accessToken) return null
 
-async function setUser(user: HoppUser | null) {
-  currentUser$.next(user)
-  probableUser$.next(user)
-  await persistenceService.setLocalConfig("login_state", JSON.stringify(user))
+  const userWithToken = user && accessToken ? {
+    ...user,
+    accessToken,
+  } : null
+
+  currentUser$.next(userWithToken)
+  probableUser$.next(userWithToken)
+  await persistenceService.setLocalConfig("login_state", JSON.stringify(userWithToken))
 }
 
-async function setInitialUser() {
+export async function setInitialUser() {
   isGettingInitialUser.value = true
   const res = await getInitialUserDetails()
 
-  const error = res.errors && res.errors[0]
-
-  if (error && error.message === "auth/cookies_not_found") {
+  if ('error' in res) {
     await setUser(null)
     isGettingInitialUser.value = false
     return
   }
 
-  if (error && error.message === "user/not_found") {
-    await setUser(null)
-    isGettingInitialUser.value = false
-    return
-  }
-
-  if (error && error.message === "Unauthorized") {
+  if (res.errors?.[0]?.message === "Unauthorized") {
     const isRefreshSuccess = await refreshToken()
-
     if (isRefreshSuccess) {
       await setInitialUser()
     } else {
       await setUser(null)
       isGettingInitialUser.value = false
     }
-
     return
   }
 
-  if (res.data && res.data.me) {
+  if (res.data?.me) {
     const hoppBackendUser = res.data.me
+    const accessToken = await persistenceService.getLocalConfig("access_token")
+    if (!accessToken) return null
 
-    const hoppUser: HoppUser = {
+    if (!accessToken) {
+      await setUser(null)
+      isGettingInitialUser.value = false
+      return
+    }
+
+    const HoppUserWithAccessToken: HoppUserWithAccessToken = {
       uid: hoppBackendUser.uid,
       displayName: hoppBackendUser.displayName,
       email: hoppBackendUser.email,
       photoURL: hoppBackendUser.photoURL,
       emailVerified: true,
+      accessToken,
     }
 
-    await setUser(hoppUser)
+    await setUser(HoppUserWithAccessToken)
     isGettingInitialUser.value = false
 
     authEvents$.next({
       event: "login",
-      user: hoppUser,
+      user: HoppUserWithAccessToken,
     })
-
-    return
   }
 }
 
 async function refreshToken() {
   try {
     const refreshToken = await persistenceService.getLocalConfig("refresh_token")
+    if (!refreshToken) return null
 
     const { response } = interceptorService.execute({
       id: Date.now(),
       url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/refresh`,
       method: "GET",
+      version: "HTTP/1.1",
       headers: {
         "Cookie": `refresh_token=${refreshToken}`
       }
@@ -177,9 +205,16 @@ async function refreshToken() {
     await setAuthCookies(res.right.headers)
     const isSuccessful = res.right.status === 200
 
-    if (isSuccessful) {
+    if (isSuccessful && currentUser$.value) {
       authEvents$.next({
-        event: "token_refresh",
+        event: "login",
+        user: {
+          uid: currentUser$.value.uid,
+          displayName: currentUser$.value.displayName,
+          email: currentUser$.value.email,
+          photoURL: currentUser$.value.photoURL,
+          emailVerified: currentUser$.value.emailVerified,
+        },
       })
     }
 
@@ -193,6 +228,7 @@ async function sendMagicLink(email: string) {
   const { response } = interceptorService.execute({
     id: Date.now(),
     url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/signin?origin=desktop`,
+    version: "HTTP/1.1",
     method: "POST",
     content: content.json({ email })
   })
@@ -210,18 +246,19 @@ async function sendMagicLink(email: string) {
 }
 
 async function setAuthCookies(headers: Headers) {
-  let cookies = headers.get('set-cookie')?.join("|") || ""
+  const cookieHeader = headers.get('set-cookie')
+  const cookies = cookieHeader ? cookieHeader.split(',') : []
 
-  const accessTokenMatch = cookies.match(/access_token=([^;]+)/);
-  const refreshTokenMatch = cookies.match(/refresh_token=([^;]+)/);
+  const accessTokenMatch = cookies.join(',').match(/access_token=([^;]+)/)
+  const refreshTokenMatch = cookies.join(',').match(/refresh_token=([^;]+)/)
 
   if (accessTokenMatch) {
-    const accessToken = accessTokenMatch[1];
+    const accessToken = accessTokenMatch[1]
     await persistenceService.setLocalConfig("access_token", accessToken)
   }
 
   if (refreshTokenMatch) {
-    const refreshToken = refreshTokenMatch[1];
+    const refreshToken = refreshTokenMatch[1]
     await persistenceService.setLocalConfig("refresh_token", refreshToken)
   }
 }
@@ -241,13 +278,17 @@ export const def: AuthPlatformDef = {
   },
 
   getBackendHeaders() {
-    return {}
+    const accessToken = currentUser$.value?.accessToken
+    return accessToken ? { Cookie: `access_token=${accessToken}` } : {} as Record<string, string>
   },
+
   getGQLClientOptions() {
+    const accessToken = currentUser$.value?.accessToken
     return {
       fetchOptions: {
         credentials: "include",
-      },
+        headers: (accessToken ? { Cookie: `access_token=${accessToken}` } : {}) as Record<string, string>
+      }
     }
   },
 
@@ -257,14 +298,20 @@ export const def: AuthPlatformDef = {
 
   onBackendGQLClientShouldReconnect(func) {
     authEvents$.subscribe((event) => {
-      if (
-        event.event == "login" ||
-        event.event == "logout" ||
-        event.event == "token_refresh"
-      ) {
+      if (event.event === "login" || event.event === "logout") {
         func()
       }
     })
+  },
+
+  isSignInWithEmailLink(url: string) {
+    const urlObject = new URL(url)
+    const searchParams = new URLSearchParams(urlObject.search)
+    return searchParams.has("token")
+  },
+
+  async processMagicLink(): Promise<void> {
+    return Promise.resolve()
   },
 
   getDevOptsBackendIDToken() {
@@ -284,14 +331,14 @@ export const def: AuthPlatformDef = {
       const refreshToken = params.get('refresh_token');
       const token = params.get('token');
 
-      if (accessToken !== null && accessToken !== undefined && refreshToken !== null && refreshToken !== undefined) {
+      if (accessToken && refreshToken) {
         await persistenceService.setLocalConfig("access_token", accessToken);
         await persistenceService.setLocalConfig("refresh_token", refreshToken);
         window.location.href = "/"
         return;
       }
 
-      if (token !== null && token !== undefined) {
+      if (token) {
         await persistenceService.setLocalConfig("verifyToken", token)
         await this.signInWithEmailLink("", "")
         await setInitialUser()
@@ -337,7 +384,7 @@ export const def: AuthPlatformDef = {
     await signInUserWithMicrosoftFB()
   },
 
-  async signInWithEmailLink(email: string, url: string) {
+  async signInWithEmailLink(_email: string, url: string) {
     const deviceIdentifier = await persistenceService.getLocalConfig("deviceIdentifier")
 
     if (!deviceIdentifier) {
@@ -354,6 +401,7 @@ export const def: AuthPlatformDef = {
     const { response } = interceptorService.execute({
       id: Date.now(),
       url: `${import.meta.env.VITE_BACKEND_API_URL}/auth/verify`,
+      version: "HTTP/1.1",
       method: "POST",
       content: content.json({
         token: verifyToken,
@@ -382,10 +430,13 @@ export const def: AuthPlatformDef = {
     const res = await updateUserDisplayName(name)
 
     if (E.isRight(res)) {
-      await setUser({
-        ...currentUser$.value,
-        displayName: res.right.updateDisplayName.displayName ?? null,
-      })
+      const user = currentUser$.value
+      if (user) {
+        await setUser({
+          ...user,
+          displayName: res.right.updateDisplayName.displayName ?? null,
+        })
+      }
       return E.right(undefined)
     }
     return E.left(res.left)

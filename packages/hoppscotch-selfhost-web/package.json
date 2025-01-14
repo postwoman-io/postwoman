@@ -46,6 +46,7 @@
     "verzod": "0.2.4",
     "vue": "3.5.12",
     "workbox-window": "7.1.0",
+    "dioc": "3.0.2",
     "zod": "3.23.8"
   },
   "devDependencies": {

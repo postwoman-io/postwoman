@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core"
+import { listen } from "@tauri-apps/api/event"
 import { Io } from "@hoppscotch/common/kernel/io"
 import { onMounted, ref } from "vue"
 import IconRotateCW from "~icons/lucide/rotate-cw"
@@ -26,6 +27,11 @@ import IconLink from "~icons/lucide/link"
 import IconCheck from "~icons/lucide/check"
 import { copyToClipboard } from "@hoppscotch/common/helpers/utils/clipboard"
 import { refAutoReset } from "@vueuse/core"
+import { PersistenceService } from "@hoppscotch/common/services/persistence"
+import { useService } from "dioc/vue"
+import { setInitialUser } from '@platform/auth/desktop'
+
+const persistenceService = useService(PersistenceService)
 
 type FlowStates =
     | { type: "loading" }
@@ -50,16 +56,17 @@ onMounted(async () => {
     const port = await invoke<number>("hopp_auth_port")
 
     const redirectURI = `http://localhost:${port}/device-token`
-    const openURL = `${import.meta.env.VITE_BASE_URL
-        }/device-login?redirect_uri=${encodeURIComponent(redirectURI)}`
+    const openURL = `${import.meta.env.VITE_BASE_URL}/device-login?redirect_uri=${encodeURIComponent(redirectURI)}`
 
     await openLink(openURL)
     authFlowState.value = { type: "waiting", openURL }
 
-    await Io.listen<string>("hopp_auth://token", async (data: { payload: string }) => {
+    await listen<string>("hopp_auth://token", async (data) => {
         authFlowState.value = { type: "loading" }
+        console.info("hopp_auth://token data", data)
         try {
-            // TODO: Authentication
+            await persistenceService.setLocalConfig("access_token", data.payload)
+            await setInitialUser()
         } catch (_) {
             authFlowState.value = { type: "error" }
         }

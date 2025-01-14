@@ -193,4 +193,24 @@ export class AuthController {
     if (E.isLeft(userInfo)) throwHTTPErr(userInfo.left);
     return userInfo.right;
   }
+
+  @Get('desktop')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(UserLastLoginInterceptor)
+  async desktopAuthCallback(
+    @GqlUser() user: AuthUser,
+    @Query('redirect_uri') redirectUri: string,
+  ) {
+    if (!redirectUri || !redirectUri.startsWith('http://localhost')) {
+      throwHTTPErr({
+        message: 'Invalid desktop callback URL',
+        statusCode: 400
+      });
+    }
+
+    const tokens = await this.authService.generateAuthTokens(user.uid);
+    if (E.isLeft(tokens)) throwHTTPErr(tokens.left);
+
+    return tokens.right;
+  }
 }
