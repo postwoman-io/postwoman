@@ -31,11 +31,12 @@ export type ExplorerNavStackItem = {
 
 export type ExplorerNavStack = [ExplorerNavStackItem, ...ExplorerNavStackItem[]]
 
-const initialNavStackItem: ExplorerNavStackItem = { name: "Docs" }
+const initialNavStackItem: ExplorerNavStackItem = { name: "Root" }
 
 const navStack = ref<ExplorerNavStack>([initialNavStackItem])
 const schema = ref<GraphQLSchema | null>()
 const validationErrors = ref<any[]>([])
+
 export function useExplorer(initialSchema?: GraphQLSchema) {
   schema.value = initialSchema ?? null
 
@@ -83,6 +84,12 @@ export function useExplorer(initialSchema?: GraphQLSchema) {
 
     // Rebuild navigation stack with new schema
     rebuildNavStack()
+  }
+
+  const navigateToIndex = (index: number) => {
+    while (navStack.value.length > index + 1) {
+      pop()
+    }
   }
 
   function rebuildNavStack() {
@@ -152,6 +159,7 @@ export function useExplorer(initialSchema?: GraphQLSchema) {
     validationErrors,
     push,
     pop,
+    navigateToIndex,
     reset,
     updateSchema,
   }

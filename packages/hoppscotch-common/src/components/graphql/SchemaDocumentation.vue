@@ -8,23 +8,23 @@
       <div v-if="queryType">
         <span class="hopp-doc-explorer-root-type">query</span>
         {{ ": " }}
-        <GraphqlTypeLinkNew :type="queryType" />
+        <GraphqlTypeLink :type="queryType" />
       </div>
       <div v-if="mutationType">
         <span class="hopp-doc-explorer-root-type">mutation</span>
         {{ ": " }}
-        <GraphqlTypeLinkNew :type="mutationType" />
+        <GraphqlTypeLink :type="mutationType" />
       </div>
       <div v-if="subscriptionType">
         <span class="hopp-doc-explorer-root-type">subscription</span>
         {{ ": " }}
-        <GraphqlTypeLinkNew :type="subscriptionType" />
+        <GraphqlTypeLink :type="subscriptionType" />
       </div>
     </GraphqlExplorerSection>
     <GraphqlExplorerSection title="All Schema Types">
       <div v-if="filteredTypes">
         <div v-for="type in filteredTypes" :key="type.name">
-          <GraphqlTypeLinkNew :type="type" />
+          <GraphqlTypeLink :type="type" />
         </div>
       </div>
     </GraphqlExplorerSection>

@@ -1,5 +1,7 @@
 <template>
-  <span class="hopp-doc-explorer-directive"> @{{ directive.name.value }} </span>
+  <span class="hopp-doc-explorer-directive">
+    @{{ directive?.name?.value }}
+  </span>
 </template>
 
 <script setup lang="ts">

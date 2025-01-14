@@ -1,6 +1,10 @@
 <template>
   <div class="hopp-doc-explorer-item">
-    <div>
+    <div
+      :class="{
+        '!line-through': field.deprecationReason,
+      }"
+    >
       <GraphqlFieldLink :field="field" />
 
       <template v-if="args.length > 0">
@@ -16,21 +20,27 @@
           </template> </span
         >)</template
       >:
-      <GraphqlTypeLinkNew :type="field.type" />
+      <GraphqlTypeLink :type="field.type" />
       <GraphqlDefaultValue :field="field" />
+
+      <span
+        v-if="field.deprecationReason"
+        class="hopp-doc-explorer-deprecated inline ml-auto"
+        v-tippy="{ theme: 'tooltip' }"
+        :title="field.deprecationReason"
+      >
+        <icon-lucide-triangle-alert />
+      </span>
     </div>
 
     <AppMarkdown
       v-if="field.description"
       type="description"
+      class="hidden"
       :only-show-first-child="true"
     >
       {{ field.description }}
     </AppMarkdown>
-
-    <GraphqlDeprecationReason>
-      {{ field.deprecationReason }}
-    </GraphqlDeprecationReason>
   </div>
 </template>
 

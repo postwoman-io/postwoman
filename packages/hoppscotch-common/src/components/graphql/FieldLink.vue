@@ -1,7 +1,7 @@
 <template>
   <a
     href="#"
-    class="hopp-doc-explorer-field-name"
+    class="hopp-doc-explorer-field-name decoration-inherit"
     style="color: hsl(30, 100%, 80%); cursor: pointer"
     @click="handleClick"
   >

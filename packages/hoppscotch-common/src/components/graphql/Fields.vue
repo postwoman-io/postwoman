@@ -3,23 +3,6 @@
     <GraphqlExplorerSection v-if="fields.length > 0" title="Fields">
       <GraphqlField v-for="field in fields" :key="field.name" :field="field" />
     </GraphqlExplorerSection>
-    <GraphqlExplorerSection
-      v-if="showDeprecated || fields.length === 0"
-      title="Deprecated Fields"
-    >
-      <GraphqlField
-        v-for="field in deprecatedFields"
-        :key="field.name"
-        :field="field"
-      />
-    </GraphqlExplorerSection>
-    <button
-      v-if="deprecatedFields.length > 0 && !showDeprecated && fields.length > 0"
-      type="button"
-      @click="handleShowDeprecated"
-    >
-      Show Deprecated Fields
-    </button>
   </div>
 </template>
 
@@ -54,26 +37,6 @@ const fieldMap = computed(() => {
 })
 
 const fields = computed(() => {
-  const result: ExplorerFieldDef[] = []
-  for (const field of Object.keys(fieldMap.value).map(
-    (name) => fieldMap.value[name]
-  )) {
-    if (!field.deprecationReason) {
-      result.push(field)
-    }
-  }
-  return result
-})
-
-const deprecatedFields = computed(() => {
-  const result: ExplorerFieldDef[] = []
-  for (const field of Object.keys(fieldMap.value).map(
-    (name) => fieldMap.value[name]
-  )) {
-    if (field.deprecationReason) {
-      result.push(field)
-    }
-  }
-  return result
+  return Object.values(fieldMap.value) as ExplorerFieldDef[]
 })
 </script>

@@ -1,45 +1,53 @@
 <template>
   <section class="hopp-doc-explorer pb-10" aria-label="Documentation Explorer">
     <div
-      class="sticky top-0 z-10 flex flex-shrink-0 overflow-x-auto bg-primary"
+      class="sticky top-0 z-10 flex flex-shrink-0 flex-col overflow-x-auto border-b border-dividerLight bg-primary"
     >
-      <input
-        v-model="graphqlFieldsFilterText"
-        type="search"
-        autocomplete="off"
-        class="flex w-full bg-transparent px-4 py-2 h-8"
-        :placeholder="`${t('action.search')}`"
-      />
-      <div class="flex">
-        <HoppButtonSecondary
-          v-tippy="{ theme: 'tooltip' }"
-          to="https://docs.hoppscotch.io/documentation/protocols/graphql"
-          blank
-          :title="t('app.wiki')"
-          :icon="IconHelpCircle"
+      <div class="flex border-b border-dividerLight">
+        <!-- TODO: implement search -->
+        <!-- <Search :key="currentNavItem.name" /> -->
+        <input
+          v-model="graphqlFieldsFilterText"
+          type="search"
+          autocomplete="off"
+          class="flex w-full bg-transparent px-4 py-2 h-8"
+          :placeholder="`${t('action.search')}`"
         />
+        <div class="flex">
+          <!-- <HoppButtonSecondary
+            v-tippy="{ theme: 'tooltip' }"
+            data-testid="show_deprecated"
+            :icon="IconEye"
+            :title="t('action.show_deprectated')"
+          /> -->
+        </div>
+      </div>
+      <div
+        v-if="schema"
+        class="flex items-center overflow-x-auto whitespace-nowrap px-4 py-2 text-tiny text-secondaryLight"
+      >
+        <template v-for="(item, index) in navStack" :key="index">
+          <span
+            class="cursor-pointer hover:text-secondary"
+            @click="navigateToIndex(index)"
+          >
+            {{ item.name }}
+          </span>
+          <icon-lucide-chevron-right
+            v-if="index < navStack.length - 1"
+            class="mx-2"
+          />
+        </template>
       </div>
     </div>
-    <div class="hopp-doc-explorer-header px-3 pt-4">
-      <div class="hopp-doc-explorer-header-content mb-6">
-        <a
-          v-if="prevName"
-          href="#"
-          class="hopp-doc-explorer-back"
-          @click.prevent="pop"
-          :aria-label="`Go back to ${prevName}`"
-        >
-          <icon-lucide-chevron-left />
-          {{ prevName }}
-        </a>
+    <div class="hopp-doc-explorer-header px-3 mt-4" v-if="navStack.length > 1">
+      <div class="hopp-doc-explorer-header-content mb-2">
         <div class="hopp-doc-explorer-title text-xl font-bold">
           {{ currentNavItem.name }}
         </div>
       </div>
-      <!-- TODO: implement search -->
-      <!-- <Search :key="currentNavItem.name" /> -->
     </div>
-    <div class="hopp-doc-explorer-content">
+    <div class="hopp-doc-explorer-content mt-4">
       <template v-if="schema && navStack.length === 1">
         <GraphqlSchemaDocumentation :schema="schema" />
       </template>
@@ -54,24 +62,19 @@
 </template>
 
 <script setup lang="ts">
-import IconHelpCircle from "~icons/lucide/help-circle"
-import { computed, ref } from "vue"
 import { isType } from "graphql"
-import { useExplorer } from "../../helpers/graphql/explorer"
-import { schema } from "~/helpers/graphql/connection"
+import { ref } from "vue"
 import { useI18n } from "~/composables/i18n"
+import { schema } from "~/helpers/graphql/connection"
+import IconEye from "~icons/lucide/eye"
+import { useExplorer } from "../../helpers/graphql/explorer"
 
 const t = useI18n()
 
 // Use explorer composable
-const { navStack, currentNavItem, pop } = useExplorer()
+const { navStack, currentNavItem, navigateToIndex } = useExplorer()
 
-// Compute previous name if navigation stack has more than one item
-const prevName = computed(() => {
-  return navStack.value.length > 1
-    ? navStack.value[navStack.value.length - 2].name
-    : undefined
-})
+console.log(navStack, currentNavItem)
 
 // Filter text for fields
 const graphqlFieldsFilterText = ref("")

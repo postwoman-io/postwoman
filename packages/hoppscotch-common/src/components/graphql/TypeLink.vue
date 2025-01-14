@@ -1,31 +1,41 @@
 <template>
-  <span
-    :class="isScalar ? 'text-secondaryLight' : 'cursor-pointer text-accent'"
-    @click="jumpToType"
-  >
-    {{ typeString }}
-  </span>
+  <template v-if="type">
+    <component :is="renderedType.type" v-bind="renderedType.props">
+      {{ renderedType.children }}
+    </component>
+  </template>
 </template>
 
 <script setup lang="ts">
-import { GraphQLScalarType, GraphQLType, getNamedType } from "graphql"
+import { GraphQLType } from "graphql"
 import { computed } from "vue"
 
+import { renderType, useExplorer } from "~/helpers/graphql/explorer"
+
 const props = defineProps<{
-  gqlType: GraphQLType
+  type: GraphQLType
 }>()
 
-const emit = defineEmits<{
-  (e: "jump-to-type", type: GraphQLType): void
-}>()
+const { push } = useExplorer()
 
-const typeString = computed(() => `${props.gqlType}`)
-const isScalar = computed(() => {
-  return getNamedType(props.gqlType) instanceof GraphQLScalarType
-})
-
-function jumpToType() {
-  if (isScalar.value) return
-  emit("jump-to-type", props.gqlType)
+const handleTypeClick = (event: MouseEvent, namedType: any) => {
+  event.preventDefault()
+  push({ name: namedType.name, def: namedType })
 }
+
+const renderedType = computed(() => {
+  if (!props.type) return null
+
+  return renderType(props.type, (namedType) => {
+    return {
+      type: "a",
+      props: {
+        class: "hopp-doc-explorer-type-name",
+        href: "#",
+        onClick: (event: MouseEvent) => handleTypeClick(event, namedType),
+      },
+      children: namedType.name,
+    }
+  })
+})
 </script>

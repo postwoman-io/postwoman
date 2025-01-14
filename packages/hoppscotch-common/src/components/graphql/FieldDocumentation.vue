@@ -1,17 +1,24 @@
-<!-- FieldDocumentation.vue -->
 <template>
   <div class="px-3">
+    <div
+      v-if="deprecationReason"
+      class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-3 mb-4 -mt-2"
+      role="alert"
+    >
+      <p class="font-bold uppercase">Deprecated</p>
+      <AppMarkdown type="deprecation">
+        {{ deprecationReason }}
+      </AppMarkdown>
+    </div>
+
     <AppMarkdown v-if="hasDescription" type="description" class="mb-6">
       {{ description }}
     </AppMarkdown>
-    <GraphqlDeprecationReason :preview="false" class="mb-4">
-      {{ deprecationReason }}
-    </GraphqlDeprecationReason>
     <GraphqlExplorerSection title="Type">
-      <GraphqlTypeLinkNew :type="type" />
+      <GraphqlTypeLink :type="type" />
     </GraphqlExplorerSection>
     <GraphqlArguments :field="field" />
-    <GraphqlDirectives :field="field" />
+    <GraphqlDirective :field="field" />
   </div>
 </template>
 

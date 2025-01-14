@@ -4,7 +4,7 @@
       v-for="implementedInterface in interfaces"
       :key="implementedInterface.name"
     >
-      <GraphqlTypeLinkNew :type="implementedInterface" />
+      <GraphqlTypeLink :type="implementedInterface" />
     </div>
   </GraphqlExplorerSection>
 </template>
