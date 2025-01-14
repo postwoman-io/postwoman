@@ -497,29 +497,29 @@ export const body = {
 export const content = {
     text: (
         content: string,
-        mediaType: MediaType.TEXT_PLAIN | MediaType.TEXT_HTML | MediaType.TEXT_CSS | MediaType.TEXT_CSV
+        mediaType?: MediaType.TEXT_PLAIN | MediaType.TEXT_HTML | MediaType.TEXT_CSS | MediaType.TEXT_CSV
     ): ContentType => ({
         kind: "text",
         content,
-        mediaType
+        mediaType: mediaType ?? MediaType.TEXT_PLAIN
     }),
 
     json: <T>(
         content: T,
-        mediaType: MediaType.APPLICATION_JSON | MediaType.APPLICATION_LD_JSON | MediaType.APPLICATION_JSON
+        mediaType?: MediaType.APPLICATION_JSON | MediaType.APPLICATION_LD_JSON | MediaType.APPLICATION_JSON
     ): ContentType => ({
         kind: "json",
         content,
-        mediaType
+        mediaType: mediaType ?? MediaType.APPLICATION_JSON
     }),
 
     xml: (
         content: string,
-        mediaType: MediaType.APPLICATION_XML | MediaType.TEXT_XML
+        mediaType?: MediaType.APPLICATION_XML | MediaType.TEXT_XML
     ): ContentType => ({
         kind: "xml",
         content,
-        mediaType
+        mediaType: mediaType ?? MediaType.APPLICATION_XML
     }),
 
     form: (content: FormData): ContentType => ({

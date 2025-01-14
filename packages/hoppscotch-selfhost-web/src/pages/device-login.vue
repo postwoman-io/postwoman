@@ -66,13 +66,13 @@
 </template>
 
 <script setup lang="ts">
-import { z } from "zod"
 import { useReadonlyStream } from "@hoppscotch/common/composables/stream"
 import { platform } from "@hoppscotch/common/platform"
-import axios from "axios"
 import { useI18n } from "@hoppscotch/common/composables/i18n"
 import { onBeforeMount, ref } from "vue"
 import { initializeApp } from "@hoppscotch/common/helpers/app"
+import axios from "axios"
+import { z } from "zod"
 
 const t = useI18n()
 
@@ -83,10 +83,6 @@ const currentUser = useReadonlyStream(
   platform.auth.getCurrentUser()
 )
 
-const DeviceTokenResponse = z.object({
-  token: z.string(),
-})
-
 onBeforeMount(() => {
   initializeApp()
 })
@@ -94,6 +90,10 @@ onBeforeMount(() => {
 type LoginConfirmState = "initial" | "loading" | "error" | "done"
 
 const loginConfirmState = ref<LoginConfirmState>("initial")
+
+const DeviceTokenResponse = z.object({
+  access_token: z.string(),
+})
 
 async function proceedLogin() {
   loginConfirmState.value = "loading"
@@ -107,21 +107,25 @@ async function proceedLogin() {
     }
 
     const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API_URL}/user/device-token`,
+      `${import.meta.env.VITE_BACKEND_API_URL}/auth/desktop?redirect_uri=${redirect_uri}`,
       {
-        headers: {
-          ...platform.auth.getBackendHeaders(),
-        },
+        withCredentials: true,
       }
     )
 
+    console.info("res", res)
+
     const parseResult = DeviceTokenResponse.safeParse(res.data)
+
+    console.info("parseResult", parseResult)
 
     if (!parseResult.success) {
       throw new Error("Token data returned from backend was invalid")
     }
 
-    const token = parseResult.data.token
+    const token = parseResult.data.access_token
+
+    console.info("token", token)
 
     await axios.get(`${redirect_uri}?token=${token}`)
 
