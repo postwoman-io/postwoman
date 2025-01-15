@@ -1,5 +1,5 @@
 import { Interceptor, RequestRunResult } from "~/services/interceptor.service"
-import { AxiosRequestConfig, CancelToken } from "axios"
+import { AxiosRequestConfig, AxiosInstance, CancelToken } from "axios"
 import * as E from "fp-ts/Either"
 import { preProcessRequest } from "./helpers"
 import { v4 } from "uuid"
@@ -113,3 +113,58 @@ export const proxyInterceptor: Interceptor = {
     }
   },
 }
+
+interface EnvConfig {
+  USE_PROXY: string;
+  SQUID_PROXY_HOST: string;
+  SQUID_PROXY_PORT: string;
+  SQUID_PROXY_USERNAME?: string;
+  SQUID_PROXY_PASSWORD?: string;
+}
+
+function getEnvConfig(): EnvConfig {
+  return {
+    USE_PROXY: settingsStore.value.USE_PROXY || 'false',
+    SQUID_PROXY_HOST: settingsStore.value.SQUID_PROXY_HOST || '',
+    SQUID_PROXY_PORT: settingsStore.value.SQUID_PROXY_PORT || '3128',
+    SQUID_PROXY_USERNAME: settingsStore.value.SQUID_PROXY_USERNAME,
+    SQUID_PROXY_PASSWORD: settingsStore.value.SQUID_PROXY_PASSWORD,
+  };
+}
+
+function getProxyConfig(): AxiosRequestConfig['proxy'] | false {
+  const env = getEnvConfig();
+  const useProxy = env.USE_PROXY === 'true';
+  
+  if (!useProxy) {
+    return false;
+  }
+
+  return {
+    host: env.SQUID_PROXY_HOST,
+    port: parseInt(env.SQUID_PROXY_PORT),
+    auth: env.SQUID_PROXY_USERNAME && env.SQUID_PROXY_PASSWORD
+      ? {
+          username: env.SQUID_PROXY_USERNAME,
+          password: env.SQUID_PROXY_PASSWORD,
+        }
+      : undefined,
+  };
+}
+
+export function createAxiosInstance(useProxy: boolean = false): AxiosInstance {
+  const config: AxiosRequestConfig = {};
+  
+  if (useProxy) {
+    const proxyConfig = getProxyConfig();
+    if (proxyConfig) {
+      config.proxy = proxyConfig;
+    }
+  }
+
+  return axios.create(config);
+}
+
+export const axiosInstance = createAxiosInstance();
+
+export const getProxiedAxiosInstance = () => createAxiosInstance(true);
