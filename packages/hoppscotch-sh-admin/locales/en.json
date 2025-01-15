@@ -31,6 +31,7 @@
     },
     "confirm_changes": "Hoppscotch server must restart to reflect the new changes. Confirm changes made to the server configurations?",
     "input_empty": "Please fill all the fields before updating the configurations",
+    "input_validation_error": "Some fields have invalid values. Please correct them before updating the configurations",
     "data_sharing": {
       "title": "Data Sharing",
       "description": "Help improve Hoppscotch by sharing anonymous data",
@@ -48,6 +49,7 @@
       "enable_email_auth": "Enable Email based authentication",
       "enable_smtp": "Enable SMTP",
       "host": "MAILER HOST",
+      "input_validation": "SMTP URL should start with smtp(s)://",
       "password": "MAILER PASSWORD",
       "port": "MAILER PORT",
       "secure": "MAILER SECURE",
