@@ -1,21 +1,13 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import {
-  Injectable,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { AccessTokenPayload } from 'src/types/AuthTokens';
 import { UserService } from 'src/user/user.service';
-import { AuthService } from '../auth.service';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import * as O from 'fp-ts/Option';
-import {
-  COOKIES_NOT_FOUND,
-  INVALID_ACCESS_TOKEN,
-  USER_NOT_FOUND,
-} from 'src/errors';
-import { ConfigService } from '@nestjs/config';
+import { COOKIES_NOT_FOUND, INVALID_ACCESS_TOKEN, USER_NOT_FOUND } from 'src/errors';
+import { extractAccessTokensFromHeaders } from 'src/auth/helper';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -26,11 +18,19 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          const ATCookie = request.cookies['access_token'];
-          if (!ATCookie) {
+          if (request.cookies) {
+            const ATCookie = request.cookies['access_token'];
+            if (ATCookie) {
+              return ATCookie;
+            }
+          }
+
+          try {
+            const tokens = extractAccessTokensFromHeaders(request.headers);
+            return tokens.access_token;
+          } catch {
             throw new ForbiddenException(COOKIES_NOT_FOUND);
           }
-          return ATCookie;
         },
       ]),
       secretOrKey: configService.get('JWT_SECRET'),

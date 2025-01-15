@@ -143,9 +143,7 @@ export class KernelInterceptorNativeStore extends Service {
   ): RelayRequest {
     const host = new URL(request.url).host
     const settings = this.getMergedSettings(host)
-    console.log("[NATIVE|STORE]: settings", settings)
     const effective = convertDomainSetting(settings)
-    console.log("[NATIVE|STORE]: effective", effective)
 
     if (E.isLeft(effective)) {
       throw effective.left

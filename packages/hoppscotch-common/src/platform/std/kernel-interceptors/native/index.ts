@@ -70,11 +70,9 @@ export class NativeKernelInterceptorService
   public execute(
     request: RelayRequest
   ): ExecutionResult<KernelInterceptorError> {
-    console.log("[NATIVE]: request", request)
     const effectiveRequest = this.store.completeRequest(
       preProcessRelayRequest(request)
     )
-    console.log("[NATIVE]: effectiveRequest", effectiveRequest)
     const relevantCookies = this.cookieJar.getCookiesForURL(
       new URL(effectiveRequest.url!)
     )
@@ -85,7 +83,6 @@ export class NativeKernelInterceptorService
         .join(";")
     }
 
-    console.log("[NATIVE]: effectiveRequest", effectiveRequest)
     const relayExecution = Relay.execute(effectiveRequest)
 
     const response = pipe(relayExecution.response, (promise) =>

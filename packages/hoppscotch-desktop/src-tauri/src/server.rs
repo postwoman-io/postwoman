@@ -7,25 +7,31 @@ use axum::{
     routing::get,
     Router,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Runtime};
 use tower_http::cors::CorsLayer;
 
-#[derive(Debug, Deserialize)]
-struct TokenQuery {
-    token: String,
+#[derive(Debug, Serialize, Deserialize)]
+struct AuthTokensQuery {
+    access_token: String,
+    refresh_token: String,
 }
 
 async fn device_token<R: Runtime>(
-    Query(token_query): Query<TokenQuery>,
+    Query(token_query): Query<AuthTokensQuery>,
     handle: tauri::AppHandle<R>,
 ) -> Response {
-    tracing::info!(
-        token_length = token_query.token.len(),
-        "Processing device token request"
-    );
+    tracing::info!("Processing device token request");
 
-    match handle.emit("hopp_auth://token", token_query.token.clone()) {
+    let serialized = match serde_json::to_value(token_query) {
+        Ok(val) => val,
+        Err(e) => {
+            tracing::error!("Failed to serialize tokens: {}", e);
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        }
+    };
+
+    match handle.emit("hopp_auth://token", serialized) {
         Ok(_) => tracing::info!("Device token event emitted successfully"),
         Err(e) => tracing::error!(
             error.message = %e,
@@ -33,7 +39,6 @@ async fn device_token<R: Runtime>(
             "Failed to emit device token event"
         ),
     }
-
     StatusCode::OK.into_response()
 }
 

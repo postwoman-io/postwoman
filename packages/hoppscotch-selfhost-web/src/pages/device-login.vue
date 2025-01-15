@@ -93,6 +93,7 @@ const loginConfirmState = ref<LoginConfirmState>("initial")
 
 const DeviceTokenResponse = z.object({
   access_token: z.string(),
+  refresh_token: z.string(),
 })
 
 async function proceedLogin() {
@@ -123,11 +124,11 @@ async function proceedLogin() {
       throw new Error("Token data returned from backend was invalid")
     }
 
-    const token = parseResult.data.access_token
+    const tokens = parseResult.data
 
-    console.info("token", token)
+    console.info("tokens", tokens)
 
-    await axios.get(`${redirect_uri}?token=${token}`)
+    await axios.get(`${redirect_uri}?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`)
 
     loginConfirmState.value = "done"
   } catch (e) {

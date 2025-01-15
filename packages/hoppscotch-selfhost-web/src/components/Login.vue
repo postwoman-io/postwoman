@@ -30,8 +30,14 @@ import { refAutoReset } from "@vueuse/core"
 import { PersistenceService } from "@hoppscotch/common/services/persistence"
 import { useService } from "dioc/vue"
 import { setInitialUser } from '@platform/auth/desktop'
+import { z } from "zod"
 
 const persistenceService = useService(PersistenceService)
+
+const DeviceTokenResponse = z.object({
+    access_token: z.string(),
+    refresh_token: z.string(),
+})
 
 type FlowStates =
     | { type: "loading" }
@@ -65,7 +71,17 @@ onMounted(async () => {
         authFlowState.value = { type: "loading" }
         console.info("hopp_auth://token data", data)
         try {
-            await persistenceService.setLocalConfig("access_token", data.payload)
+            const parseResult = DeviceTokenResponse.safeParse(data.payload)
+            console.info("parseResult", parseResult)
+
+            if (!parseResult.success) {
+                throw new Error("Token data returned from backend was invalid")
+            }
+
+            const tokens = parseResult.data
+
+            await persistenceService.setLocalConfig("access_token", tokens.access_token)
+            await persistenceService.setLocalConfig("refresh_token", tokens.refresh_token)
             await setInitialUser()
         } catch (_) {
             authFlowState.value = { type: "error" }

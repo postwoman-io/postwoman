@@ -6,6 +6,7 @@ import * as cookie from 'cookie';
 import { AUTH_PROVIDER_NOT_SPECIFIED, COOKIES_NOT_FOUND } from 'src/errors';
 import { throwErr } from 'src/utils';
 import { ConfigService } from '@nestjs/config';
+import { IncomingHttpHeaders } from 'http';
 
 enum AuthTokenType {
   ACCESS_TOKEN = 'access_token',
@@ -117,11 +118,82 @@ export function authProviderCheck(
 
   const envVariables = VITE_ALLOWED_AUTH_PROVIDERS
     ? VITE_ALLOWED_AUTH_PROVIDERS.split(',').map((provider) =>
-        provider.trim().toUpperCase(),
-      )
+      provider.trim().toUpperCase(),
+    )
     : [];
 
   if (!envVariables.includes(provider.toUpperCase())) return false;
 
   return true;
 }
+
+/**
+ * Extract auth tokens from the headers of a request
+ * @param headers HTTP request headers containing auth tokens
+ * @returns AuthTokens for JWT strategy to use
+ */
+export const extractAuthTokensFromHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
+
+  if (!cookieHeader) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  const cookieStr = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
+
+  const cookies = cookieStr.split(';')
+    .map(cookie => cookie.trim())
+    .reduce((acc, curr) => {
+      const [key, value] = curr.split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+
+  if (!cookies[AuthTokenType.ACCESS_TOKEN] || !cookies[AuthTokenType.REFRESH_TOKEN]) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  return <AuthTokens>{
+    access_token: cookies[AuthTokenType.ACCESS_TOKEN],
+    refresh_token: cookies[AuthTokenType.REFRESH_TOKEN],
+  };
+};
+
+/**
+ * Extract access tokens from the headers of a request
+ * @param headers HTTP request headers containing access tokens
+ * @returns AccessTokens for JWT strategy to use
+ */
+export const extractAccessTokensFromHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
+
+  if (!cookieHeader) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  const cookieStr = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
+
+  const cookies = cookieStr.split(';')
+    .map(cookie => cookie.trim())
+    .reduce((acc, curr) => {
+      const [key, value] = curr.split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+
+  if (!cookies[AuthTokenType.ACCESS_TOKEN]) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  return {
+    access_token: cookies[AuthTokenType.ACCESS_TOKEN],
+  };
+};
