@@ -133,6 +133,12 @@ export const USER_INVITATION_DELETION_FAILED =
   'user/invitation_deletion_failed' as const;
 
 /**
+ * User already member of the team
+ * (InfraTokenService)
+ */
+export const USER_ALREADY_IN_TEAM = 'user/already_in_team' as const;
+
+/**
  * Teams not found
  * (TeamsService)
  */
