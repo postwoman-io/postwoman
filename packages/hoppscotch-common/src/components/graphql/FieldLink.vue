@@ -31,7 +31,7 @@ const handleClick = (event: MouseEvent) => {
 }
 
 const insertQuery = () => {
-  console.log("Inserting query")
+  console.log("Inserting field")
   handleAddField(props.field)
 }
 </script>

@@ -8,11 +8,18 @@
   </template>
 
   <div v-else class="hopp-doc-explorer-argument">
-    <span>
+    <p class="inline-flex items-center mb-0 gap-1 align-bottom">
+      <span
+        v-if="showAddButton"
+        class="hover:text-accent cursor-pointer"
+        @click="insertQuery"
+      >
+        <icon-lucide-plus-circle />
+      </span>
       <span class="hopp-doc-explorer-argument-name"> {{ arg.name }} </span>:
       <GraphqlTypeLink :type="arg.type" />
       <GraphqlDefaultValue v-if="showDefaultValue !== false" :field="arg" />
-    </span>
+    </p>
 
     <AppMarkdown v-if="arg.description" type="description">
       {{ arg.description }}
@@ -33,6 +40,9 @@
 
 <script setup lang="ts">
 import type { GraphQLArgument } from "graphql"
+import { useQuery } from "~/helpers/graphql/query"
+
+const { handleAddArgument } = useQuery()
 
 interface ArgumentProps {
   /**
@@ -51,10 +61,21 @@ interface ArgumentProps {
    * @default false
    */
   inline?: boolean
+
+  /**
+   * Whether to show the add button or not
+   */
+  showAddButton?: boolean
 }
 
-withDefaults(defineProps<ArgumentProps>(), {
+const props = withDefaults(defineProps<ArgumentProps>(), {
   showDefaultValue: false,
   inline: false,
+  showAddButton: false,
 })
+
+const insertQuery = () => {
+  console.log("Inserting argument")
+  handleAddArgument(props.arg)
+}
 </script>

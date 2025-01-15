@@ -7,6 +7,7 @@ import {
   isObjectType,
   OperationDefinitionNode,
   parse,
+  print,
   visit,
 } from "graphql"
 import { GQLTabService } from "~/services/tab/graphql"

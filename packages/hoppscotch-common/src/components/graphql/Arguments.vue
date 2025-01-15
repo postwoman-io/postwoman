@@ -1,7 +1,12 @@
 <template>
   <template v-if="'args' in field">
     <GraphqlExplorerSection v-if="args.length > 0" title="Arguments">
-      <GraphqlArgument v-for="arg in args" :key="arg.name" :arg="arg" />
+      <GraphqlArgument
+        v-for="arg in args"
+        :key="arg.name"
+        :arg="arg"
+        :show-add-button="true"
+      />
     </GraphqlExplorerSection>
 
     <template v-if="deprecatedArgs.length > 0">
@@ -13,6 +18,7 @@
           v-for="arg in deprecatedArgs"
           :key="arg.name"
           :arg="arg"
+          :show-add-button="true"
         />
       </GraphqlExplorerSection>
 
