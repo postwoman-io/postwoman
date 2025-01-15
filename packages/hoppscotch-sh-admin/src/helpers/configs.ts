@@ -54,6 +54,11 @@ export type ServerConfigs = {
     };
   };
 
+  historyConfig: {
+    name: string;
+    enabled: boolean;
+  };
+
   dataSharingConfigs: {
     name: string;
     enabled: boolean;
@@ -195,6 +200,13 @@ const DATA_SHARING_CONFIGS: Omit<Config, 'key'>[] = [
   },
 ];
 
+export const HISTORY_STORE_CONFIG: Config[] = [
+  {
+    name: InfraConfigEnum.UserHistoryStoreEnabled,
+    key: 'history_store_enabled',
+  },
+];
+
 export const ALL_CONFIGS = [
   GOOGLE_CONFIGS,
   MICROSOFT_CONFIGS,
@@ -202,4 +214,5 @@ export const ALL_CONFIGS = [
   MAIL_CONFIGS,
   CUSTOM_MAIL_CONFIGS,
   DATA_SHARING_CONFIGS,
+  HISTORY_STORE_CONFIG,
 ];

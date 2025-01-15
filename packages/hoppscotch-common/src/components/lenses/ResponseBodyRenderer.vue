@@ -37,6 +37,18 @@
     >
       <HttpTestResult v-model="doc.testResults" />
     </HoppSmartTab>
+    <HoppSmartTab
+      v-if="requestHeaders"
+      id="req-headers"
+      :label="t('response.request_headers')"
+      :info="`${requestHeaders?.length}`"
+      class="flex flex-1 flex-col"
+    >
+      <LensesHeadersRenderer
+        :model-value="requestHeaders"
+        :is-editable="false"
+      />
+    </HoppSmartTab>
   </HoppSmartTabs>
 </template>
 
@@ -50,11 +62,11 @@ import {
 import { useI18n } from "@composables/i18n"
 import { useVModel } from "@vueuse/core"
 import { HoppRequestDocument } from "~/helpers/rest/document"
-import { TestRunnerRequest } from "~/services/test-runner/test-runner.service"
 
 const props = defineProps<{
-  document: HoppRequestDocument | TestRunnerRequest
+  document: HoppRequestDocument
   isEditable: boolean
+  isTestRunner?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -65,7 +77,6 @@ const emit = defineEmits<{
 const doc = useVModel(props, "document", emit)
 
 const isSavable = computed(() => {
-  if (doc.value.type === "test-response") return false
   return doc.value.response?.type === "success" && doc.value.saveContext
 })
 
@@ -104,6 +115,11 @@ const maybeHeaders = computed(() => {
   return doc.value.response.headers
 })
 
+const requestHeaders = computed(() => {
+  if (!props.isTestRunner || !doc.value) return null
+  return doc.value.request.headers
+})
+
 const validLenses = computed(() => {
   if (!doc.value.response) return []
   return getSuitableLenses(doc.value.response)
@@ -120,8 +136,6 @@ watch(
       "results",
     ]
 
-    if (doc.value.type === "test-response") return
-
     const { responseTabPreference } = doc.value
 
     if (
@@ -137,7 +151,7 @@ watch(
 )
 
 watch(selectedLensTab, (newLensID) => {
-  if (doc.value.type === "test-response") return
+  if (props.isTestRunner) return
   doc.value.responseTabPreference = newLensID
 })
 </script>

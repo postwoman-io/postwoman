@@ -470,6 +470,7 @@ const resolveOpenAPIV3SecurityObj = (
           clientSecret: "",
           scopes: _schemeData.join(" "),
           token: "",
+          clientAuthentication: "IN_BODY",
         },
         addTo: "HEADERS",
       }
@@ -616,6 +617,7 @@ const resolveOpenAPIV2SecurityScheme = (
           grantType: "CLIENT_CREDENTIALS",
           scopes: _schemeData.join(" "),
           token: "",
+          clientAuthentication: "IN_BODY",
         },
         addTo: "HEADERS",
       }
@@ -812,7 +814,7 @@ const convertPathToHoppReqs = (
             requestVariables: parseOpenAPIVariables(
               (info.parameters as OpenAPIParamsType[] | undefined) ?? []
             ),
-            v: "2",
+            v: "3",
           }),
         }),
         metadata: {

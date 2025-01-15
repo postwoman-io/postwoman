@@ -131,7 +131,7 @@ const emit = defineEmits<{
 
 // Get Proper Date Formats
 const getCreatedDateAndTime = (date: string) =>
-  format(new Date(date), 'd-MM-yyyy  hh:mm a');
+  format(new Date(date), 'd-MMMM-yyyy , hh:mm a');
 
 // User Info
 const { uid, displayName, email, createdOn, lastActiveOn } = props.user;

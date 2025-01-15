@@ -268,7 +268,10 @@ export class TestRunnerService extends Service {
         error: undefined,
       })
 
-      const results = await runTestRunnerRequest(request)
+      const results = await runTestRunnerRequest(
+        request,
+        options.keepVariableValues
+      )
 
       if (options.stopRef?.value) {
         throw new Error("Test execution stopped")

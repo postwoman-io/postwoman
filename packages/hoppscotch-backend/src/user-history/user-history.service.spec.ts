@@ -493,6 +493,30 @@ describe('UserHistoryService', () => {
       );
     });
   });
+  describe('deleteAllHistories', () => {
+    test('Should resolve right and delete all user history', async () => {
+      mockPrisma.userHistory.deleteMany.mockResolvedValueOnce({
+        count: 2,
+      });
+
+      return expect(await userHistoryService.deleteAllHistories()).toEqualRight(
+        true,
+      );
+    });
+    test('Should publish all user history delete event', async () => {
+      mockPrisma.userHistory.deleteMany.mockResolvedValueOnce({
+        count: 2,
+      });
+
+      await userHistoryService.deleteAllHistories();
+
+      expect(mockPubSub.publish).toHaveBeenCalledTimes(1);
+      return expect(mockPubSub.publish).toHaveBeenCalledWith(
+        `user_history/all/deleted`,
+        true,
+      );
+    });
+  });
   describe('validateReqType', () => {
     test('Should resolve right when a valid REST ReqType is provided', async () => {
       return expect(userHistoryService.validateReqType('REST')).toEqualRight(

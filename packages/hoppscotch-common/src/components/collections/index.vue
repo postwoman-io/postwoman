@@ -109,7 +109,8 @@
       @run-collection="
         runCollectionHandler({
           type: 'team-collections',
-          collectionID: $event,
+          collectionID: $event.collectionID,
+          path: $event.path,
         })
       "
       @share-request="shareRequest"
@@ -2866,8 +2867,28 @@ const setCollectionProperties = (newCollection: {
   displayModalEditProperties(false)
 }
 
-const runCollectionHandler = (payload: CollectionRunnerData) => {
-  collectionRunnerData.value = payload
+const runCollectionHandler = (
+  payload: CollectionRunnerData & {
+    path?: string
+  }
+) => {
+  if (payload.path && collectionsType.value.type === "team-collections") {
+    const inheritedProperties =
+      teamCollectionAdapter.cascadeParentCollectionForHeaderAuth(payload.path)
+
+    if (inheritedProperties) {
+      collectionRunnerData.value = {
+        type: "team-collections",
+        collectionID: payload.collectionID,
+        inheritedProperties: inheritedProperties,
+      }
+    }
+  } else {
+    collectionRunnerData.value = {
+      type: "my-collections",
+      collectionID: payload.collectionID,
+    }
+  }
   showCollectionsRunnerModal.value = true
 }
 

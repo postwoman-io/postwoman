@@ -1,7 +1,8 @@
 <template>
   <div class="flex items-stretch group ml-4 flex-col">
     <button
-      class="w-full rounded px-4 py-3 transition cursor-pointer focus:outline-none hover:active hover:bg-primaryLight hover:text-secondaryDark"
+      class="w-full rounded px-4 py-3 transition cursor-pointer focus:outline-none hover:bg-primaryLight hover:text-secondaryDark"
+      :class="{ 'bg-primaryLight': isSelected }"
       @click="selectRequest()"
     >
       <div class="flex gap-4 mb-1 items-center">

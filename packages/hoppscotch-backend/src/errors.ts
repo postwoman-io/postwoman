@@ -498,7 +498,19 @@ export const USER_ENVIRONMENT_INVALID_ENVIRONMENT_NAME =
  */
 export const USER_HISTORY_NOT_FOUND = 'user_history/history_not_found' as const;
 
-/*
+/**
+ * User history deletion failed
+ * (UserHistoryService)
+ */
+export const USER_HISTORY_DELETION_FAILED =
+  'user_history/deletion_failed' as const;
+
+/**
+ * User history feature flag is disabled
+ * (UserHistoryService)
+ */
+export const USER_HISTORY_FEATURE_FLAG_DISABLED =
+  'user_history/feature_flag_disabled';
 
 /**
  * Invalid Request Type in History

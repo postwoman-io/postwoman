@@ -88,6 +88,15 @@
         </HoppSmartTable>
 
         <div
+          v-if="hasNextPage"
+          class="flex items-center w-28 px-3 py-2 mt-5 mx-auto font-semibold text-secondaryDark bg-divider hover:bg-dividerDark rounded-3xl cursor-pointer"
+          @click="fetchNextInvites"
+        >
+          <span>{{ t('users.show_more') }}</span>
+          <icon-lucide-chevron-down class="ml-2" />
+        </div>
+
+        <div
           v-if="selectedRows.length"
           class="fixed m-2 bottom-0 left-40 right-0 w-min mx-auto shadow-2xl"
         >
@@ -124,13 +133,14 @@
 </template>
 
 <script setup lang="ts">
-import { useMutation, useQuery } from '@urql/vue';
+import { useMutation } from '@urql/vue';
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 import { format } from 'date-fns';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from '~/composables/i18n';
 import { useToast } from '~/composables/toast';
+import { usePagedQuery } from '~/composables/usePagedQuery';
 import { copyToClipboard } from '~/helpers/utils/clipboard';
 import IconTrash from '~icons/lucide/trash';
 import {
@@ -146,15 +156,12 @@ const router = useRouter();
 const breakpoints = useBreakpoints(breakpointsTailwind);
 const lgAndLarger = breakpoints.greater('lg');
 
-// Get Proper Date Formats
-const getCreatedDate = (date: string) => format(new Date(date), 'dd-MM-yyyy');
-const getCreatedTime = (date: string) => format(new Date(date), 'hh:mm a');
+const invitesPerPage = 10;
+const page = ref(1);
 
-// Get Invited Users
-const { fetching, error, data } = useQuery({
-  query: InvitedUsersDocument,
-  variables: {},
-});
+// Get Proper Date Formats
+const getCreatedDate = (date: string) => format(new Date(date), 'dd-MMMM-yyyy');
+const getCreatedTime = (date: string) => format(new Date(date), 'hh:mm a');
 
 // Table Headings
 const headings = [
@@ -164,17 +171,49 @@ const headings = [
   { key: 'action', label: 'Action' },
 ];
 
+// Fetch Invites
+const {
+  fetching,
+  error,
+  refetch,
+  list: invitesList,
+} = usePagedQuery(
+  InvitedUsersDocument,
+  (x) => x.infra.invitedUsers,
+  invitesPerPage,
+  { take: invitesPerPage, skip: (page.value - 1) * invitesPerPage }
+);
+
+const pendingInvites = ref<InvitedUsersQuery['infra']['invitedUsers']>([]);
+
+// Populate pending invites
+watch(
+  invitesList,
+  (newInvitesList) => {
+    if (!newInvitesList) return;
+
+    const newInvites = newInvitesList.filter(
+      (newInvite) =>
+        !pendingInvites.value.some(
+          (existingInvite) =>
+            existingInvite.inviteeEmail === newInvite.inviteeEmail
+        )
+    );
+    pendingInvites.value.push(...newInvites);
+  },
+  { immediate: true, deep: true }
+);
+
+// Pagination
+const hasNextPage = computed(() => invitesList.value.length === invitesPerPage);
+
+const fetchNextInvites = () => {
+  page.value += 1;
+  refetch({ take: invitesPerPage, skip: (page.value - 1) * invitesPerPage });
+};
+
 // Selected Rows
 const selectedRows = ref<InvitedUsersQuery['infra']['invitedUsers']>([]);
-
-// Invited Users
-const pendingInvites = computed({
-  get: () => data.value?.infra.invitedUsers,
-  set: (value) => {
-    if (!value) return;
-    data.value!.infra.invitedUsers = value;
-  },
-});
 
 // Delete Invite
 const confirmDeletion = ref(false);

@@ -69,11 +69,16 @@ const SettingsDefSchema = z.object({
       importCurl: z.boolean().catch(true),
       codeGen: z.boolean().catch(true),
       cookie: z.boolean().catch(true),
+      multipartFormdata: z.boolean().catch(true),
     })
   ),
 
   HAS_OPENED_SPOTLIGHT: z.optional(z.boolean()),
   ENABLE_AI_EXPERIMENTS: z.optional(z.boolean()),
+  AI_REQUEST_NAMING_STYLE: z
+    .string()
+    .optional()
+    .catch("DESCRIPTIVE_WITH_SPACES"),
 })
 
 const HoppRESTRequestSchema = entityReference(HoppRESTRequest)
@@ -536,6 +541,7 @@ export const REST_TAB_STATE_SCHEMA = z
             response: z.nullable(HoppRESTResponseSchema),
             testResults: z.optional(z.nullable(HoppTestResultSchema)),
             isDirty: z.boolean(),
+            inheritedProperties: z.optional(HoppInheritedPropertySchema),
           }),
           z.object({
             // !Versioned entity

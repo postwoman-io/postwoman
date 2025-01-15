@@ -79,6 +79,64 @@
                   {{ t("settings.ai_experiments") }}
                 </HoppSmartToggle>
               </div>
+              <div
+                v-if="hasAIExperimentsSupport && ENABLE_AI_EXPERIMENTS"
+                class="flex items-center"
+              >
+                <div class="flex flex-col space-y-2 w-full">
+                  <label class="text-secondaryLight">{{
+                    t("settings.ai_request_naming_style")
+                  }}</label>
+                  <div class="flex">
+                    <tippy
+                      interactive
+                      trigger="click"
+                      theme="popover"
+                      :on-shown="() => namingStyleTippyActions?.focus()"
+                    >
+                      <HoppSmartSelectWrapper>
+                        <HoppButtonSecondary
+                          class="flex flex-1 !justify-start rounded-none pr-8"
+                          :label="activeNamingStyle?.label"
+                          outline
+                        />
+                      </HoppSmartSelectWrapper>
+                      <template #content="{ hide }">
+                        <div
+                          ref="namingStyleTippyActions"
+                          class="flex flex-col focus:outline-none"
+                          tabindex="0"
+                          @keyup.escape="hide()"
+                        >
+                          <HoppSmartLink
+                            v-for="style in supportedNamingStyles"
+                            :key="style"
+                            class="flex flex-1"
+                            @click="
+                              () => {
+                                AI_REQUEST_NAMING_STYLE = style.id
+                                hide()
+                              }
+                            "
+                          >
+                            <HoppSmartItem
+                              :label="style.label"
+                              :active-info-icon="
+                                AI_REQUEST_NAMING_STYLE === style.id
+                              "
+                              :info-icon="
+                                AI_REQUEST_NAMING_STYLE === style.id
+                                  ? IconDone
+                                  : null
+                              "
+                            />
+                          </HoppSmartLink>
+                        </div>
+                      </template>
+                    </tippy>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
@@ -185,6 +243,7 @@ import { pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as A from "fp-ts/Array"
 import { platform } from "~/platform"
+import IconDone from "~icons/lucide/check"
 
 const t = useI18n()
 const colorMode = useColorMode()
@@ -214,6 +273,32 @@ const TELEMETRY_ENABLED = useSetting("TELEMETRY_ENABLED")
 const EXPAND_NAVIGATION = useSetting("EXPAND_NAVIGATION")
 const SIDEBAR_ON_LEFT = useSetting("SIDEBAR_ON_LEFT")
 const ENABLE_AI_EXPERIMENTS = useSetting("ENABLE_AI_EXPERIMENTS")
+const AI_REQUEST_NAMING_STYLE = useSetting("AI_REQUEST_NAMING_STYLE")
+
+const supportedNamingStyles = [
+  {
+    id: "DESCRIPTIVE_WITH_SPACES" as const,
+    label: t("settings.ai_request_naming_style_descriptive_with_spaces"),
+  },
+  {
+    id: "camelCase" as const,
+    label: t("settings.ai_request_naming_style_camel_case"),
+  },
+  {
+    id: "snake_case" as const,
+    label: t("settings.ai_request_naming_style_snake_case"),
+  },
+  {
+    id: "PascalCase" as const,
+    label: t("settings.ai_request_naming_style_pascal_case"),
+  },
+]
+
+const activeNamingStyle = computed(() =>
+  supportedNamingStyles.find(
+    (style) => style.id === AI_REQUEST_NAMING_STYLE.value
+  )
+)
 
 const hasPlatformTelemetry = Boolean(platform.platformFeatureFlags.hasTelemetry)
 
@@ -253,4 +338,6 @@ const getColorModeName = (colorMode: string) => {
       return "settings.system_mode"
   }
 }
+
+const namingStyleTippyActions = ref<any | null>(null)
 </script>

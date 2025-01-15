@@ -63,7 +63,7 @@ const unsecretEnvironments = (
   }
 }
 
-export const getCombinedEnvVariables = () => {
+export const getCombinedEnvVariables = (temp?: Environment["variables"]) => {
   const reformedVars = unsecretEnvironments(
     getCurrentEnvironment(),
     getGlobalVariables()
@@ -71,6 +71,7 @@ export const getCombinedEnvVariables = () => {
   return {
     global: cloneDeep(reformedVars.global),
     selected: cloneDeep(reformedVars.selected),
+    temp: temp ? cloneDeep(temp) : [],
   }
 }
 
@@ -79,6 +80,7 @@ export const getFinalEnvsFromPreRequest = (
   envs: {
     global: Environment["variables"]
     selected: Environment["variables"]
+    temp: Environment["variables"]
   }
 ): Promise<E.Either<string, TestResult["envs"]>> =>
   runPreRequestScript(script, envs)

@@ -4,7 +4,7 @@ import { z } from "zod"
 import { V4_SCHEMA, v4_baseCollectionSchema } from "./4"
 import { generateUniqueRefId } from "../../utils/collection"
 
-const v5_baseCollectionSchema = v4_baseCollectionSchema.extend({
+export const v5_baseCollectionSchema = v4_baseCollectionSchema.extend({
   v: z.literal(5),
   _ref_id: z.string().optional(),
 })
@@ -17,7 +17,7 @@ type Output = z.output<typeof v5_baseCollectionSchema> & {
   folders: Output[]
 }
 
-const V5_SCHEMA: z.ZodType<Output, z.ZodTypeDef, Input> =
+export const V5_SCHEMA: z.ZodType<Output, z.ZodTypeDef, Input> =
   v5_baseCollectionSchema.extend({
     folders: z.lazy(() => z.array(V5_SCHEMA)),
   })

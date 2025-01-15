@@ -3,7 +3,10 @@ import * as E from "fp-ts/Either"
 export type ExperimentsPlatformDef = {
   aiExperiments?: {
     enableAIExperiments: boolean
-    generateRequestName?: (requestInfo: string) => Promise<
+    generateRequestName?: (
+      requestInfo: string,
+      namingStyle: string
+    ) => Promise<
       E.Either<
         string,
         {
@@ -28,5 +31,17 @@ export type ExperimentsPlatformDef = {
       rating: -1 | 1,
       traceID: string
     ) => Promise<E.Either<string, void>>
+    modifyPreRequestScript?: (
+      requestInfo: string,
+      userPrompt: string
+    ) => Promise<
+      E.Either<string, { modified_script: string; trace_id: string }>
+    >
+    modifyTestScript?: (
+      requestInfo: string,
+      userPrompt: string
+    ) => Promise<
+      E.Either<string, { modified_script: string; trace_id: string }>
+    >
   }
 }

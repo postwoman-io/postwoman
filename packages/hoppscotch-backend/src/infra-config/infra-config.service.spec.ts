@@ -11,15 +11,20 @@ import { ConfigService } from '@nestjs/config';
 import * as helper from './helper';
 import { InfraConfig as dbInfraConfig } from '@prisma/client';
 import { InfraConfig } from './infra-config.model';
+import { PubSubService } from 'src/pubsub/pubsub.service';
+import { ServiceStatus } from './helper';
+import * as E from 'fp-ts/Either';
 
 const mockPrisma = mockDeep<PrismaService>();
 const mockConfigService = mockDeep<ConfigService>();
+const mockPubsub = mockDeep<PubSubService>();
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const infraConfigService = new InfraConfigService(
   mockPrisma,
   mockConfigService,
+  mockPubsub,
 );
 
 const INITIALIZED_DATE_CONST = new Date();
@@ -240,6 +245,61 @@ describe('InfraConfigService', () => {
       const result = await infraConfigService.getMany(allowedNames);
       expect(result).toEqualRight(
         infraConfigs.filter((i) => allowedNames.includes(i.name)),
+      );
+    });
+  });
+
+  describe('toggleServiceStatus', () => {
+    it('should toggle the service status', async () => {
+      const configName = infraConfigs[0].name;
+      const configStatus = ServiceStatus.DISABLE;
+
+      jest
+        .spyOn(infraConfigService, 'update')
+        .mockResolvedValueOnce(
+          E.right({ name: configName, value: configStatus }),
+        );
+
+      expect(
+        await infraConfigService.toggleServiceStatus(configName, configStatus),
+      ).toEqualRight(true);
+    });
+    it('should publish the updated config value', async () => {
+      const configName = infraConfigs[0].name;
+      const configStatus = ServiceStatus.DISABLE;
+
+      jest
+        .spyOn(infraConfigService, 'update')
+        .mockResolvedValueOnce(
+          E.right({ name: configName, value: configStatus }),
+        );
+
+      await infraConfigService.toggleServiceStatus(configName, configStatus);
+
+      expect(mockPubsub.publish).toHaveBeenCalledTimes(1);
+      expect(mockPubsub.publish).toHaveBeenCalledWith(
+        'infra_config/GOOGLE_CLIENT_ID/updated',
+        configStatus,
+      );
+    });
+  });
+
+  describe('isUserHistoryEnabled', () => {
+    it('should return true if the user history is enabled', async () => {
+      const response = {
+        name: InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
+        value: ServiceStatus.ENABLE,
+      };
+
+      jest.spyOn(infraConfigService, 'get').mockResolvedValueOnce(
+        E.right({
+          name: InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
+          value: ServiceStatus.ENABLE,
+        }),
+      );
+
+      expect(await infraConfigService.isUserHistoryEnabled()).toEqualRight(
+        response,
       );
     });
   });

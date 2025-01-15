@@ -182,11 +182,7 @@ import { platform } from "~/platform"
 import { useService } from "dioc/vue"
 import { GQLTabService } from "~/services/tab/graphql"
 import { computed } from "vue"
-import {
-  HoppCollection,
-  HoppGQLRequest,
-  makeGQLRequest,
-} from "@hoppscotch/data"
+import { HoppCollection, HoppGQLRequest } from "@hoppscotch/data"
 import { Picked } from "~/helpers/types/HoppPicked"
 import { HoppInheritedProperty } from "~/helpers/types/HoppInheritedProperties"
 import { updateInheritedPropertiesForAffectedRequests } from "~/helpers/collection/collection"
@@ -539,23 +535,13 @@ const selectRequest = ({
     tabs.setActiveTab(possibleTab.value.id)
     return
   }
-
   tabs.createNewTab({
     saveContext: {
       originLocation: "user-collection",
       folderPath: folderPath,
       requestIndex: requestIndex,
     },
-    request: cloneDeep(
-      makeGQLRequest({
-        name: request.name,
-        url: request.url,
-        query: request.query,
-        headers: request.headers,
-        variables: request.variables,
-        auth: request.auth,
-      })
-    ),
+    request: cloneDeep(request),
     isDirty: false,
     inheritedProperties: {
       auth,

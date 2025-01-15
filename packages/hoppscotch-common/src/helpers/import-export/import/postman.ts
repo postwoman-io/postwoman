@@ -177,7 +177,7 @@ const getHoppResponses = (
             requestVariables: getHoppReqVariables(
               response.originalRequest?.url.variables ?? null
             ),
-            v: "2" as const,
+            v: "3" as const,
           },
         }
         return [response.name, res]

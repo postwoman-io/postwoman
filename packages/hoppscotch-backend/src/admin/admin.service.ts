@@ -31,6 +31,7 @@ import { ShortcodeService } from 'src/shortcode/shortcode.service';
 import { ConfigService } from '@nestjs/config';
 import { OffsetPaginationArgs } from 'src/types/input-types.args';
 import { UserDeletionResult } from 'src/user/user.model';
+import { UserHistoryService } from 'src/user-history/user-history.service';
 
 @Injectable()
 export class AdminService {
@@ -46,6 +47,7 @@ export class AdminService {
     private readonly mailerService: MailerService,
     private readonly shortcodeService: ShortcodeService,
     private readonly configService: ConfigService,
+    private readonly userHistoryService: UserHistoryService,
   ) {}
 
   /**
@@ -646,6 +648,17 @@ export class AdminService {
    */
   async deleteShortcode(shortcodeID: string) {
     const result = await this.shortcodeService.deleteShortcode(shortcodeID);
+
+    if (E.isLeft(result)) return E.left(result.left);
+    return E.right(result.right);
+  }
+
+  /**
+   * Delete all user history
+   * @returns Boolean on successful deletion
+   */
+  async deleteAllUserHistory() {
+    const result = await this.userHistoryService.deleteAllHistories();
 
     if (E.isLeft(result)) return E.left(result.left);
     return E.right(result.right);

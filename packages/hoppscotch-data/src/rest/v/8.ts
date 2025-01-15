@@ -2,12 +2,13 @@ import { defineVersion } from "verzod"
 import { z } from "zod"
 
 import {
-  HoppRESTAuthAPIKey,
   HoppRESTAuthBasic,
   HoppRESTAuthBearer,
   HoppRESTAuthInherit,
   HoppRESTAuthNone,
 } from "./1"
+
+import { HoppRESTAuthAPIKey } from "./4"
 
 import {
   ClientCredentialsGrantTypeParams as ClientCredentialsGrantTypeParamsOld,

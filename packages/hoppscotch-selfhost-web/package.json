@@ -1,7 +1,7 @@
 {
   "name": "@hoppscotch/selfhost-web",
   "private": true,
-  "version": "2024.11.0",
+  "version": "2024.12.1",
   "type": "module",
   "scripts": {
     "dev:vite": "vite",
@@ -37,7 +37,7 @@
     "rxjs": "7.8.1",
     "stream-browserify": "3.0.0",
     "util": "0.12.5",
-    "verzod": "0.2.3",
+    "verzod": "0.2.4",
     "vue": "3.5.12",
     "workbox-window": "7.1.0",
     "zod": "3.23.8"

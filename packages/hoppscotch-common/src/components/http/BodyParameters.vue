@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex flex-col h-full">
     <div
       class="sticky top-upperMobileStickyFold z-10 flex flex-shrink-0 items-center justify-between overflow-x-auto border-b border-dividerLight bg-primary pl-4 sm:top-upperMobileTertiaryStickyFold"
     >
@@ -32,15 +32,34 @@
           @click="clearContent"
         />
         <HoppButtonSecondary
+          v-if="isBulkEditing"
+          v-tippy="{ theme: 'tooltip' }"
+          :title="t('state.linewrap')"
+          :class="{ '!text-accent': wrapLines }"
+          :icon="IconWrapText"
+          @click.prevent="
+            toggleNestedSetting('WRAP_LINES', 'multipartFormdata')
+          "
+        />
+        <HoppButtonSecondary
+          v-tippy="{ theme: 'tooltip' }"
+          :title="t('state.bulk_mode')"
+          :class="{ '!text-accent': isBulkEditing }"
+          :icon="IconBulkEdit"
+          @click="toggleBulkEdit"
+        />
+        <HoppButtonSecondary
           v-tippy="{ theme: 'tooltip' }"
           :title="t('add.new')"
           :icon="IconPlus"
+          :disabled="isBulkEditing"
           @click="addBodyParam"
         />
       </div>
     </div>
 
     <draggable
+      v-if="!isBulkEditing"
       v-model="workingParams"
       item-key="id"
       animation="250"
@@ -190,8 +209,12 @@
       </template>
     </draggable>
 
+    <div v-else-if="isBulkEditing" class="h-full relative flex flex-col flex-1">
+      <div ref="bulkEditor" class="absolute inset-0"></div>
+    </div>
+
     <HoppSmartPlaceholder
-      v-if="workingParams.length === 0"
+      v-if="workingParams.length === 0 && !isBulkEditing"
       :src="`/images/states/${colorMode.value}/upload_single_file.svg`"
       :alt="`${t('empty.body')}`"
       :text="t('empty.body')"
@@ -216,11 +239,17 @@ import IconGripVertical from "~icons/lucide/grip-vertical"
 import IconCheckCircle from "~icons/lucide/check-circle"
 import IconCircle from "~icons/lucide/circle"
 import IconTrash from "~icons/lucide/trash"
-import { ref, watch } from "vue"
+import IconBulkEdit from "~icons/lucide/edit"
+import IconWrapText from "~icons/lucide/wrap-text"
+import { reactive, ref, watch } from "vue"
 import { flow, pipe } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as A from "fp-ts/Array"
-import { FormDataKeyValue, HoppRESTReqBody } from "@hoppscotch/data"
+import {
+  FormDataKeyValue,
+  HoppRESTReqBody,
+  parseRawKeyValueEntriesE,
+} from "@hoppscotch/data"
 import { isEqual, clone } from "lodash-es"
 import draggable from "vuedraggable-es"
 import { pluckRef } from "@composables/ref"
@@ -229,6 +258,11 @@ import { useToast } from "@composables/toast"
 import { useColorMode } from "@composables/theming"
 import { useVModel } from "@vueuse/core"
 import { AggregateEnvironment } from "~/newstore/environments"
+import { useCodemirror } from "~/composables/codemirror"
+import { useNestedSetting } from "~/composables/settings"
+import { toggleNestedSetting } from "~/newstore/settings"
+import * as E from "fp-ts/Either"
+import linter from "~/helpers/editor/linting/rawKeyValue"
 
 type Body = HoppRESTReqBody & { contentType: "multipart/form-data" }
 
@@ -443,6 +477,90 @@ const deleteBodyParam = (index: number) => {
   )
 }
 
+const convertWorkingParamsToBulkEditContent = (
+  params: WorkingFormDataKeyValue[]
+) => {
+  return (
+    params
+      .filter((param) => param.entry.key !== "")
+      // filter out file params
+      .filter((param) => !param.entry.isFile)
+      .map(
+        (param) =>
+          `${!param.entry.active ? "#" : ""}${param.entry.key}: ${param.entry.value}`
+      )
+      .join("\n")
+  )
+}
+
+const bulkEditor = ref<HTMLElement | null>(null)
+const bulkEditContent = ref<string | undefined>(
+  convertWorkingParamsToBulkEditContent(
+    Array.isArray(bodyParams.value)
+      ? bodyParams.value.map((entry) => ({ id: idTicker.value++, entry }))
+      : []
+  )
+)
+const isBulkEditing = ref(body.value.isBulkEditing)
+const wrapLines = useNestedSetting("WRAP_LINES", "multipartFormdata")
+
+watch(isBulkEditing, () => {
+  body.value.isBulkEditing = isBulkEditing.value
+})
+
+// update working params when bulk edit content changes
+watch(bulkEditContent, () => {
+  if (isBulkEditing.value && bulkEditContent.value !== undefined) {
+    const res = parseRawKeyValueEntriesE(bulkEditContent.value)
+
+    if (E.isLeft(res)) {
+      return
+    }
+
+    workingParams.value = [
+      ...res.right.map((entry) => ({
+        id: idTicker.value++,
+        entry: {
+          key: entry.key,
+          value: entry.value,
+          active: entry.active,
+          isFile: false as const,
+        },
+      })),
+      // file params are not supported in bulk edit, so we need to add them back
+      ...workingParams.value.filter((param) => param.entry.isFile),
+    ]
+  }
+})
+
+const toggleBulkEdit = () => {
+  isBulkEditing.value = !isBulkEditing.value
+
+  if (isBulkEditing.value) {
+    bulkEditContent.value = convertWorkingParamsToBulkEditContent(
+      workingParams.value
+    )
+  } else {
+    bulkEditContent.value = undefined
+  }
+}
+
+useCodemirror(
+  bulkEditor,
+  bulkEditContent,
+  reactive({
+    extendedEditorConfig: {
+      mode: "text/x-yaml",
+      placeholder: t("state.bulk_mode_placeholder").toString(),
+      lineWrapping: wrapLines,
+    },
+    linter,
+    completer: null,
+    environmentHighlights: true,
+    predefinedVariablesHighlights: true,
+  })
+)
+
 const clearContent = () => {
   // set params list to the initial state
   workingParams.value = [
@@ -456,6 +574,10 @@ const clearContent = () => {
       },
     },
   ]
+
+  // clear bulk edit content
+  bulkEditContent.value = ""
+  isBulkEditing.value = false
 }
 
 const setRequestAttachment = (

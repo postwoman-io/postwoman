@@ -216,12 +216,15 @@ export const teamCollToHoppRESTColl = (
           headers: [],
         }
 
+  const { auth, headers } = parseCollectionData(data)
+
   return makeCollection({
+    id: coll.id,
     name: coll.title,
     folders: coll.children?.map(teamCollToHoppRESTColl) ?? [],
     requests: coll.requests?.map((x) => x.request) ?? [],
-    auth: data.auth ?? { authType: "inherit", authActive: true },
-    headers: data.headers ?? [],
+    auth: auth ?? { authType: "inherit", authActive: true },
+    headers: headers ?? [],
   })
 }
 

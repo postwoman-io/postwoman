@@ -43,9 +43,10 @@ export type TopicDef = {
     topic: `user_request/${string}/${'created' | 'updated' | 'deleted'}`
   ]: UserRequest;
   [topic: `user_request/${string}/${'moved'}`]: UserRequestReorderData;
-  [
-    topic: `user_history/${string}/${'created' | 'updated' | 'deleted'}`
-  ]: UserHistory;
+  [topic: `user_history/${string}/${'created' | 'updated' | 'deleted'}`]:
+    | UserHistory
+    | boolean;
+  [topic: `user_history/${string}/deleted_many`]: UserHistoryDeletedManyData;
   [
     topic: `user_coll/${string}/${'created' | 'updated' | 'moved'}`
   ]: UserCollection;
@@ -63,7 +64,6 @@ export type TopicDef = {
   [topic: `team_coll/${string}/${'coll_removed'}`]: string;
   [topic: `team_coll/${string}/${'coll_moved'}`]: TeamCollection;
   [topic: `team_coll/${string}/${'coll_order_updated'}`]: CollectionReorderData;
-  [topic: `user_history/${string}/deleted_many`]: UserHistoryDeletedManyData;
   [
     topic: `team_req/${string}/${'req_created' | 'req_updated' | 'req_moved'}`
   ]: TeamRequest;
@@ -74,4 +74,5 @@ export type TopicDef = {
   [
     topic: `shortcode/${string}/${'created' | 'revoked' | 'updated'}`
   ]: Shortcode;
+  [topic: `infra_config/${string}/${'updated'}`]: string;
 };

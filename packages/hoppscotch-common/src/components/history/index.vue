@@ -51,7 +51,11 @@
           <HoppButtonSecondary
             v-tippy="{ theme: 'tooltip' }"
             data-testid="clear_history"
-            :disabled="history.length === 0"
+            :disabled="
+              history.length === 0 ||
+              !isHistoryStoreEnabled ||
+              isFetchingHistoryStoreStatus
+            "
             :icon="IconTrash2"
             :title="t('action.clear_all')"
             @click="confirmRemove = true"
@@ -59,7 +63,10 @@
         </div>
       </div>
     </div>
-    <div class="flex flex-col">
+    <div
+      v-if="isHistoryStoreEnabled && !isFetchingHistoryStoreStatus"
+      class="flex flex-col"
+    >
       <details
         v-for="(
           filteredHistoryGroup, filteredHistoryGroupIndex
@@ -110,11 +117,18 @@
       </details>
     </div>
     <HoppSmartPlaceholder
-      v-if="history.length === 0"
+      v-if="!isHistoryStoreEnabled && !isFetchingHistoryStoreStatus"
+      :src="`/images/states/${colorMode.value}/time.svg`"
+      :alt="`${t('empty.history')}`"
+      :text="t('settings.history_disabled')"
+    />
+    <HoppSmartPlaceholder
+      v-else-if="history.length === 0"
       :src="`/images/states/${colorMode.value}/time.svg`"
       :alt="`${t('empty.history')}`"
       :text="t('empty.history')"
     />
+
     <HoppSmartPlaceholder
       v-else-if="
         Object.keys(filteredHistoryGroups).length === 0 ||
@@ -180,6 +194,7 @@ import HistoryGraphqlCard from "./graphql/Card.vue"
 import { defineActionHandler, invokeAction } from "~/helpers/actions"
 import { useService } from "dioc/vue"
 import { RESTTabService } from "~/services/tab/rest"
+import { platform } from "~/platform"
 
 type HistoryEntry = GQLHistoryEntry | RESTHistoryEntry
 
@@ -204,6 +219,15 @@ const history = useReadonlyStream<RESTHistoryEntry[] | GQLHistoryEntry[]>(
   props.page === "rest" ? restHistory$ : graphqlHistory$,
   []
 )
+
+const { isHistoryStoreEnabled, isFetchingHistoryStoreStatus } =
+  "requestHistoryStore" in platform.sync.history &&
+  platform.sync.history.requestHistoryStore
+    ? platform.sync.history.requestHistoryStore
+    : {
+        isHistoryStoreEnabled: ref(true),
+        isFetchingHistoryStoreStatus: ref(false),
+      }
 
 const deepCheckForRegex = (value: unknown, regExp: RegExp): boolean => {
   if (value === null || value === undefined) return false

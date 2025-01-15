@@ -1,7 +1,7 @@
 {
   "name": "@hoppscotch/common",
   "private": true,
-  "version": "2024.11.0",
+  "version": "2024.12.1",
   "scripts": {
     "dev": "pnpm exec npm-run-all -p -l dev:*",
     "test": "vitest --run",
@@ -94,7 +94,7 @@
     "url": "0.11.4",
     "util": "0.12.5",
     "uuid": "10.0.0",
-    "verzod": "0.2.3",
+    "verzod": "0.2.4",
     "vue": "3.5.12",
     "vue-i18n": "10.0.4",
     "vue-pdf-embed": "2.1.0",

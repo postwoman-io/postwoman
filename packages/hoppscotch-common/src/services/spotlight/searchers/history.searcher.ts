@@ -20,6 +20,7 @@ import { useStreamStatic } from "~/composables/stream"
 import { activeActions$, invokeAction } from "~/helpers/actions"
 import { map } from "rxjs/operators"
 import { HoppRequestDocument } from "~/helpers/rest/document"
+import { platform } from "~/platform"
 
 /**
  * This searcher is responsible for searching through the history.
@@ -47,6 +48,22 @@ export class HistorySpotlightSearcherService
       /* noop */
     }
   )[0]
+
+  private hasHistoryPlatformDef = "requestHistoryStore" in platform.sync.history
+
+  private isHistoryEnabledPlatformRef =
+    platform.sync.history.requestHistoryStore?.isHistoryStoreEnabled
+
+  private clearHistoryActionEnabledCombined = computed(() => {
+    // if the platform has not defined the history store, by default we consider history is enabled
+    if (!this.hasHistoryPlatformDef) return this.clearHistoryActionEnabled.value
+
+    // if the platform has defined the history store, we check the defined values to determine if history is enabled
+    return (
+      this.clearHistoryActionEnabled.value &&
+      this.isHistoryEnabledPlatformRef?.value
+    )
+  })
 
   private restHistoryEntryOpenable = useStreamStatic(
     activeActions$.pipe(
@@ -82,7 +99,7 @@ export class HistorySpotlightSearcherService
     })
 
     const stopWatchHandle = watch(
-      this.clearHistoryActionEnabled,
+      this.clearHistoryActionEnabledCombined,
       (enabled) => {
         if (enabled) {
           if (minisearch.has("clear-history")) return

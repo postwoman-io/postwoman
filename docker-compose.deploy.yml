@@ -26,7 +26,9 @@ services:
       context: .
       target: aio
     environment:
-      - DATABASE_URL=postgresql://postgres:testpass@hoppscotch-db:5432/hoppscotch
+      # DATABASE_URL is read from the .env file to allow the backend to connect with an external database.
+      # This allows the backend to retain existing data and prevents database resets during deployments.
+      # DATABASE_URL=postgresql://postgres:testpass@hoppscotch-db:5432/hoppscotch
       - ENABLE_SUBPATH_BASED_ACCESS=true
     env_file:
       - ./.env

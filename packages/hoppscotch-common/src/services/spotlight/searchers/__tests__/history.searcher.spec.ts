@@ -8,6 +8,7 @@ import { getDefaultRESTRequest } from "~/helpers/rest/default"
 import { HoppAction, HoppActionWithArgs } from "~/helpers/actions"
 import { getDefaultGQLRequest } from "~/helpers/graphql/default"
 import { RESTTabService } from "~/services/tab/rest"
+import { PlatformDef, setPlatformDef } from "~/platform"
 
 async function flushPromises() {
   return await new Promise((r) => setTimeout(r))
@@ -74,6 +75,14 @@ describe("HistorySpotlightSearcherService", () => {
 
     actionsMock.invokeAction.mockReset()
     createNewTabFn.mockReset()
+
+    const platform = {
+      sync: {
+        history: {},
+      },
+    }
+
+    setPlatformDef(platform as PlatformDef)
   })
 
   it("registers with the spotlight service upon initialization", async () => {

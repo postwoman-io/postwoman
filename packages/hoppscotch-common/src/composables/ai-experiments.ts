@@ -49,6 +49,8 @@ export const useRequestNameGeneration = (targetNameRef: Ref<string>) => {
       return
     }
 
+    const namingStyle = useSetting("AI_REQUEST_NAMING_STYLE").value
+
     isGenerateRequestNamePending.value = true
 
     platform.analytics?.logEvent({
@@ -57,7 +59,8 @@ export const useRequestNameGeneration = (targetNameRef: Ref<string>) => {
     })
 
     const result = await generateRequestNameForPlatform(
-      JSON.stringify(requestContext)
+      JSON.stringify(requestContext),
+      namingStyle
     )
 
     if (result && E.isLeft(result)) {
@@ -184,4 +187,125 @@ export const useSubmitFeedback = () => {
     submitFeedback,
     isSubmitFeedbackPending,
   }
+}
+
+export const useModifyPreRequestScript = (
+  currentScript: string,
+  userPromptRef: Ref<string>,
+  generatedScriptRef: Ref<string>,
+  requestInfo: HoppRESTRequest
+) => {
+  const toast = useToast()
+  const t = useI18n()
+  const lastTraceID = ref<string | null>(null)
+  const isModifyPreRequestPending = ref(false)
+
+  const modifyPreRequestScriptForPlatform =
+    platform.experiments?.aiExperiments?.modifyPreRequestScript
+
+  const modifyPreRequestScript = async () => {
+    isModifyPreRequestPending.value = true
+
+    if (!modifyPreRequestScriptForPlatform) {
+      toast.error(t("ai_experiments.modify_prerequest_error"))
+      isModifyPreRequestPending.value = false
+      return
+    }
+
+    const result = await modifyPreRequestScriptForPlatform(
+      buildRequestInfoString(requestInfo, currentScript),
+      userPromptRef.value
+    )
+
+    if (result && E.isLeft(result)) {
+      toast.error(t("ai_experiments.modify_prerequest_error"))
+      isModifyPreRequestPending.value = false
+      return
+    }
+
+    generatedScriptRef.value = result.right.modified_script
+    lastTraceID.value = result.right.trace_id
+
+    isModifyPreRequestPending.value = false
+    return result.right
+  }
+
+  return {
+    modifyPreRequestScript,
+    isModifyPreRequestPending,
+    lastTraceID,
+  }
+}
+
+export const useModifyTestScript = (
+  currentScript: string,
+  userPromptRef: Ref<string>,
+  generatedScriptRef: Ref<string>,
+  requestInfo: HoppRESTRequest
+) => {
+  const toast = useToast()
+  const t = useI18n()
+  const lastTraceID = ref<string | null>(null)
+  const isModifyTestScriptPending = ref(false)
+
+  const modifyTestScriptForPlatform =
+    platform.experiments?.aiExperiments?.modifyTestScript
+
+  const modifyTestScript = async () => {
+    isModifyTestScriptPending.value = true
+
+    if (!modifyTestScriptForPlatform) {
+      toast.error(t("ai_experiments.modify_test_script_error"))
+      isModifyTestScriptPending.value = false
+      return
+    }
+
+    const result = await modifyTestScriptForPlatform(
+      buildRequestInfoString(requestInfo, currentScript),
+      userPromptRef.value
+    )
+
+    if (result && E.isLeft(result)) {
+      toast.error(t("ai_experiments.modify_test_script_error"))
+      isModifyTestScriptPending.value = false
+      return
+    }
+
+    generatedScriptRef.value = result.right.modified_script
+    lastTraceID.value = result.right.trace_id
+
+    isModifyTestScriptPending.value = false
+    return result.right
+  }
+
+  return {
+    modifyTestScript,
+    isModifyTestScriptPending,
+    lastTraceID,
+  }
+}
+
+const buildRequestInfoString = (
+  request: HoppRESTRequest,
+  currentScript: string
+) => {
+  return `
+  METHOD:
+  ${request.method}
+
+  URL:
+  ${request.endpoint}
+
+  BODY:
+  ${JSON.stringify(request.body) ?? ""}
+
+  PARAMS:
+  ${JSON.stringify(request.params, null, 2)}
+
+  HEADERS:
+  ${JSON.stringify(request.headers, null, 2)}
+  
+  EXISTING SCRIPT:
+  ${currentScript}
+  `
 }

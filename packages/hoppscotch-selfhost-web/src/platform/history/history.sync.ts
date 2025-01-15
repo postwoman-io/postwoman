@@ -22,10 +22,16 @@ import {
 } from "./history.api"
 import { ReqType } from "../../api/generated/graphql"
 
+import { isHistoryStoreEnabled } from "./history.platform"
+
 export const restHistoryStoreSyncDefinition: StoreSyncDefinitionOf<
   typeof restHistoryStore
 > = {
   async addEntry({ entry }) {
+    if (!isHistoryStoreEnabled.value) {
+      return
+    }
+
     const res = await createUserHistory(
       JSON.stringify(entry.request),
       JSON.stringify(entry.responseMeta),
@@ -58,6 +64,10 @@ export const gqlHistoryStoreSyncDefinition: StoreSyncDefinitionOf<
   typeof graphqlHistoryStore
 > = {
   async addEntry({ entry }) {
+    if (!isHistoryStoreEnabled.value) {
+      return
+    }
+
     const res = await createUserHistory(
       JSON.stringify(entry.request),
       JSON.stringify(entry.response),

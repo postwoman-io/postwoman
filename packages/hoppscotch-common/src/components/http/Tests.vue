@@ -27,6 +27,13 @@
           :icon="IconWrapText"
           @click.prevent="toggleNestedSetting('WRAP_LINES', 'httpTest')"
         />
+        <HoppButtonSecondary
+          v-if="shouldEnableAIFeatures && currentRequest"
+          v-tippy="{ theme: 'tooltip' }"
+          :title="t('ai_experiments.modify_with_ai')"
+          :icon="IconSparkles"
+          @click="showModifyTestScriptModal"
+        />
       </div>
     </div>
     <div class="flex flex-1 border-b border-dividerLight">
@@ -58,6 +65,13 @@
         </div>
       </div>
     </div>
+    <AiexperimentsModifyTestScriptModal
+      v-if="isModifyTestScriptModalOpen && currentRequest"
+      :current-script="testScript"
+      :request-info="currentRequest"
+      @close-modal="isModifyTestScriptModalOpen = false"
+      @update-script="(updatedScript) => (testScript = updatedScript)"
+    />
   </div>
 </template>
 
@@ -65,7 +79,8 @@
 import IconHelpCircle from "~icons/lucide/help-circle"
 import IconWrapText from "~icons/lucide/wrap-text"
 import IconTrash2 from "~icons/lucide/trash-2"
-import { reactive, ref } from "vue"
+import IconSparkles from "~icons/lucide/sparkles"
+import { reactive, ref, computed } from "vue"
 import testSnippets from "~/helpers/testSnippets"
 import { useCodemirror } from "@composables/codemirror"
 import linter from "~/helpers/editor/linting/testScript"
@@ -74,6 +89,13 @@ import { useI18n } from "@composables/i18n"
 import { useVModel } from "@vueuse/core"
 import { useNestedSetting } from "~/composables/settings"
 import { toggleNestedSetting } from "~/newstore/settings"
+import { useAIExperiments } from "~/composables/ai-experiments"
+import { useService } from "dioc/vue"
+import { RESTTabService } from "~/services/tab/rest"
+import { platform } from "~/platform"
+import { useReadonlyStream } from "~/composables/stream"
+import AiexperimentsModifyTestScriptModal from "@components/aiexperiments/ModifyTestScriptModal.vue"
+import { invokeAction } from "~/helpers/actions"
 
 const t = useI18n()
 
@@ -107,6 +129,29 @@ const useSnippet = (script: string) => {
 
 const clearContent = () => {
   testScript.value = ""
+}
+const tabService = useService(RESTTabService)
+
+const currentRequest = computed(() =>
+  tabService.currentActiveTab.value?.document.type === "request"
+    ? tabService.currentActiveTab.value?.document.request
+    : null
+)
+
+const { shouldEnableAIFeatures } = useAIExperiments()
+const isModifyTestScriptModalOpen = ref(false)
+
+const currentUser = useReadonlyStream(
+  platform.auth.getCurrentUserStream(),
+  platform.auth.getCurrentUser()
+)
+
+const showModifyTestScriptModal = () => {
+  if (!currentUser.value) {
+    invokeAction("modals.login.toggle")
+    return
+  }
+  isModifyTestScriptModalOpen.value = true
 }
 </script>
 

@@ -136,7 +136,12 @@
                     })
               }
             "
-            @run-collection="emit('run-collection', $event)"
+            @run-collection="
+              emit('run-collection', {
+                collectionID: node.data.data.data.id,
+                path: node.id,
+              })
+            "
             @click="
               () => {
                 handleCollectionClick({
@@ -233,7 +238,12 @@
                     })
               }
             "
-            @run-collection="emit('run-collection', $event)"
+            @run-collection="
+              emit('run-collection', {
+                collectionID: node.data.data.data.id,
+                path: node.id,
+              })
+            "
             @click="
               () => {
                 handleCollectionClick({
@@ -662,7 +672,10 @@ const emit = defineEmits<{
   (event: "expand-team-collection", payload: string): void
   (event: "display-modal-add"): void
   (event: "display-modal-import-export"): void
-  (event: "run-collection", collectionID: string): void
+  (
+    event: "run-collection",
+    payload: { collectionID: string; path: string }
+  ): void
 }>()
 
 const getPath = (path: string) => {

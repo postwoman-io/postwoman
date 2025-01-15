@@ -61,10 +61,10 @@
           :request="node.data.data.data"
           :request-i-d="node.id"
           :parent-i-d="node.data.data.parentIndex"
-          :is-selected="node.data.isSelected"
+          :is-selected="node.id === selectedRequestPath"
           :show-selection="showCheckbox"
           :is-last-item="node.data.isLastItem"
-          @select-request="selectRequest(node.data.data.data)"
+          @select-request="selectRequest(node.data.data.data, node.id)"
         />
       </template>
     </HoppSmartTree>
@@ -102,19 +102,22 @@ defineProps<{
   tab: HoppTab<HoppTestRunnerDocument>
   collectionAdapter: SmartTreeAdapter<any>
   isRunning: boolean
+  selectedRequestPath: string
 }>()
 
 const emit = defineEmits<{
   (e: "onSelectRequest", request: TestRunnerRequest): void
   (e: "onChangeTab", event: string): void
+  (e: "requestPath", path: string): void
 }>()
 
 const selectedTestTab = ref<"all" | "passed" | "failed">("all")
 
 const showCheckbox = ref(false)
 
-const selectRequest = (request: TestRunnerRequest) => {
+const selectRequest = (request: TestRunnerRequest, indexPath: string) => {
   emit("onSelectRequest", request)
+  emit("requestPath", indexPath)
 }
 </script>
 

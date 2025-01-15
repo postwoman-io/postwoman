@@ -58,6 +58,16 @@
       "update_failure": "Failed to update smtp configurations!!",
       "user": "MAILER USER"
     },
+    "history_configs": {
+      "description": "Disable or enable tracking history of sent requests from the Hoppscotch app",
+      "title": "History Configurations",
+      "enable_history": "Enable History",
+      "clear_history": "Clear existing history",
+      "clear_failure": "Failed to clear history!!",
+      "clear_success": "History cleared successfully.",
+      "toggle_failure": "Failed to toggle history!!",
+      "clear_confirm": "Are you sure you want to clear all history?"
+    },
     "reset": {
       "confirm_reset": "Hoppscotch server must restart to reflect the new changes. Confirm the reset of server configurations?",
       "description": "Default configurations will be loaded as specified in the environment file",

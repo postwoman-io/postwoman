@@ -262,6 +262,12 @@ export async function getDefaultInfraConfigs(): Promise<DefaultInfraConfig[]> {
       lastSyncedEnvFileValue: null,
       isEncrypted: false,
     },
+    {
+      name: InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
+      value: 'true',
+      lastSyncedEnvFileValue: null,
+      isEncrypted: false,
+    },
   ];
 
   return infraConfigDefaultObjs;

@@ -140,7 +140,7 @@ function exportedCollectionToHoppCollection(
     return {
       id: restCollection.id,
       _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
-      v: 5,
+      v: 6,
       name: restCollection.name,
       folders: restCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -204,7 +204,7 @@ function exportedCollectionToHoppCollection(
     return {
       id: gqlCollection.id,
       _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
-      v: 5,
+      v: 6,
       name: gqlCollection.name,
       folders: gqlCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -383,7 +383,7 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 5,
+                v: 6,
                 _ref_id: data._ref_id,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
@@ -392,7 +392,7 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 5,
+                v: 6,
                 _ref_id: data._ref_id,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
@@ -598,14 +598,15 @@ function setupUserCollectionDuplicatedSubscription() {
         )
 
       // Incoming data transformed to the respective internal representations
-      const { auth, headers, _ref_id } =
+      const { auth, headers } =
         data && data != "null"
           ? JSON.parse(data)
           : {
               auth: { authType: "inherit", authActive: false },
               headers: [],
-              _ref_id: generateUniqueRefId("coll"),
             }
+      // Duplicated collection will have a unique ref id
+      const _ref_id = generateUniqueRefId("coll")
 
       const folders = transformDuplicatedCollections(childCollectionsJSONStr)
 
@@ -619,7 +620,7 @@ function setupUserCollectionDuplicatedSubscription() {
         name,
         folders,
         requests,
-        v: 5,
+        v: 6,
         _ref_id,
         auth,
         headers: addDescriptionField(headers),
@@ -1041,6 +1042,8 @@ function transformDuplicatedCollections(
           ? JSON.parse(data)
           : { auth: { authType: "inherit", authActive: false }, headers: [] }
 
+      const _ref_id = generateUniqueRefId("coll")
+
       const folders = transformDuplicatedCollections(childCollectionsJSONStr)
 
       const requests = transformDuplicatedCollectionRequests(userRequests)
@@ -1050,7 +1053,8 @@ function transformDuplicatedCollections(
         name,
         folders,
         requests,
-        v: 5,
+        _ref_id,
+        v: 6,
         auth,
         headers: addDescriptionField(headers),
       }

@@ -85,7 +85,7 @@ const onSaveAsExample = () => {
     } = response.req
 
     const originalRequest: HoppRESTResponseOriginalRequest = {
-      v: "2",
+      v: "3",
       method,
       endpoint,
       headers,

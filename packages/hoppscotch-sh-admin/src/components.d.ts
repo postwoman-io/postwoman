@@ -45,6 +45,7 @@ declare module 'vue' {
     SettingsAuthProvider: typeof import('./components/settings/AuthProvider.vue')['default']
     SettingsConfigurations: typeof import('./components/settings/Configurations.vue')['default']
     SettingsDataSharing: typeof import('./components/settings/DataSharing.vue')['default']
+    SettingsHistoryConfiguration: typeof import('./components/settings/HistoryConfiguration.vue')['default']
     SettingsReset: typeof import('./components/settings/Reset.vue')['default']
     SettingsServerRestart: typeof import('./components/settings/ServerRestart.vue')['default']
     SettingsSmtpConfiguration: typeof import('./components/settings/SmtpConfiguration.vue')['default']

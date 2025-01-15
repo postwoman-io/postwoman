@@ -14,7 +14,8 @@ export const replaceTemplateStringsInObjectValues = <
   const restTabsService = getService(RESTTabService)
 
   const requestVariables =
-    source === "REST"
+    source === "REST" &&
+    restTabsService.currentActiveTab.value.document.type === "request"
       ? restTabsService.currentActiveTab.value.document.request.requestVariables.map(
           ({ key, value }) => ({
             key,

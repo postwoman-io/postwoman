@@ -54,8 +54,10 @@
         :tab="tab"
         :collection-adapter="collectionAdapter"
         :is-running="tab.document.status === 'running'"
+        :selected-request-path="selectedRequestPath"
         @on-change-tab="showTestsType = $event as 'all' | 'passed' | 'failed'"
         @on-select-request="onSelectRequest"
+        @request-path="onChangeRequestPath"
       />
     </template>
     <template #secondary>
@@ -91,9 +93,9 @@
 
       <HoppSmartPlaceholder
         v-else-if="!selectedRequest"
-        :src="`/images/states/${colorMode.value}/add_files.svg`"
-        :alt="`${t('collection_runner.select_request')}`"
-        :text="`${t('collection_runner.select_request')}`"
+        :src="`/images/states/${colorMode.value}/pack.svg`"
+        :alt="`${t('collection_runner.response_body_lost_rerun')}`"
+        :text="`${t('collection_runner.response_body_lost_rerun')}`"
       >
       </HoppSmartPlaceholder>
     </template>
@@ -120,13 +122,13 @@
 
 <script setup lang="ts">
 import { useI18n } from "@composables/i18n"
-import { HoppCollection } from "@hoppscotch/data"
+import { HoppCollection, HoppRESTHeader } from "@hoppscotch/data"
 import { SmartTreeAdapter } from "@hoppscotch/ui"
 import { useVModel } from "@vueuse/core"
 import { useService } from "dioc/vue"
 import { pipe } from "fp-ts/lib/function"
 import * as TE from "fp-ts/TaskEither"
-import { computed, nextTick, onMounted, ref, watch } from "vue"
+import { computed, nextTick, onMounted, ref } from "vue"
 import { useReadonlyStream } from "~/composables/stream"
 import { useColorMode } from "~/composables/theming"
 import { useToast } from "~/composables/toast"
@@ -174,6 +176,9 @@ const emit = defineEmits<{
 const tabs = useService(RESTTabService)
 const tab = useVModel(props, "modelValue", emit)
 
+const selectedRequestPath = computed(
+  () => tab.value.document.selectedRequestPath
+)
 const duration = computed(() => tab.value.document.testRunnerMeta.totalTime)
 const avgResponseTime = computed(() =>
   calculateAverageTime(
@@ -201,6 +206,10 @@ const onSelectRequest = async (request: TestRunnerRequest) => {
   tab.value.document.request = null
   await nextTick() // HACK: To ensure the request is cleared before setting the new request. there is a bug in the response component that doesn't change to the valid lens when the response is changed.
   tab.value.document.request = request
+}
+
+const onChangeRequestPath = (path: string) => {
+  tab.value.document.selectedRequestPath = path
 }
 
 const collectionName = computed(() =>
@@ -243,16 +252,41 @@ const runTests = async () => {
     collectionType
   )
 
-  const { auth, headers } = collectionInheritedProps ?? {
-    auth: { authActive: true, authType: "none" },
-    headers: [],
-  }
+  let resolvedCollection: HoppCollection = collection.value
 
-  // Accommodate collection properties for personal workspace
-  // TODO: Resolve the collection properties computation for team workspaces
-  const resolvedCollection = isPersonalWorkspace
-    ? { ...collection.value, auth, headers }
-    : collection.value
+  if (!isPersonalWorkspace) {
+    const requestAuth = tab.value.document.inheritedProperties?.auth
+      .inheritedAuth ?? {
+      authActive: true,
+      authType: "none",
+    }
+
+    const requestHeaders = tab.value.document.inheritedProperties?.headers.map(
+      (header) => {
+        if (header.inheritedHeader) {
+          return header.inheritedHeader
+        }
+        return []
+      }
+    )
+
+    resolvedCollection = {
+      ...collection.value,
+      auth: requestAuth,
+      headers: requestHeaders as HoppRESTHeader[],
+    }
+  } else {
+    const { auth, headers } = collectionInheritedProps ?? {
+      auth: { authActive: true, authType: "none" },
+      headers: [],
+    }
+
+    resolvedCollection = {
+      ...collection.value,
+      auth,
+      headers,
+    }
+  }
 
   testRunnerStopRef.value = false // when testRunnerStopRef is false, the test runner will start running
   testRunnerService.runTests(tab, resolvedCollection, {

@@ -108,7 +108,12 @@
 <script setup lang="ts">
 import { useCodemirror } from "@composables/codemirror"
 import { useI18n } from "@composables/i18n"
-import { Environment, makeRESTRequest } from "@hoppscotch/data"
+import {
+  Environment,
+  HoppRESTAuth,
+  HoppRESTHeaders,
+  makeRESTRequest,
+} from "@hoppscotch/data"
 import * as O from "fp-ts/Option"
 import { computed, reactive, ref } from "vue"
 import {
@@ -142,17 +147,29 @@ const t = useI18n()
 
 const tabs = useService(RESTTabService)
 
-// get the current active request if the current active tab is a request else get the original request from the response tab
-const currentActiveRequest = computed(() =>
-  tabs.currentActiveTab.value.document.type === "request"
-    ? tabs.currentActiveTab.value.document.request
-    : makeRESTRequest({
-        ...getDefaultRESTRequest(),
-        ...tabs.currentActiveTab.value.document.response.originalRequest,
-      })
+// Get the current active request if the current active tab is a request else get the original request from the response tab
+const currentActiveRequest = computed(() => {
+  let effectiveRequest = null
+
+  if (currentActiveTabDocument.value.type === "request") {
+    effectiveRequest = currentActiveTabDocument.value.request
+  }
+
+  if (currentActiveTabDocument.value.type === "example-response") {
+    effectiveRequest = makeRESTRequest({
+      ...getDefaultRESTRequest(),
+      ...currentActiveTabDocument.value.response.originalRequest,
+    })
+  }
+
+  return cloneDeep(effectiveRequest) ?? getDefaultRESTRequest()
+})
+
+// Retrieve the document
+const currentActiveTabDocument = computed(() =>
+  cloneDeep(tabs.currentActiveTab.value.document)
 )
 
-const request = computed(() => cloneDeep(currentActiveRequest.value))
 const codegenType = ref<CodegenName>("shell-curl")
 const errorState = ref(false)
 
@@ -168,8 +185,14 @@ const emit = defineEmits<{
 }>()
 
 const requestCode = asyncComputed(async () => {
+  // Generate code snippet action only applies to request documents
+  if (currentActiveTabDocument.value.type !== "request") {
+    errorState.value = true
+    return ""
+  }
+
   const aggregateEnvs = getAggregateEnvs()
-  const requestVariables = request.value.requestVariables.map(
+  const requestVariables = currentActiveRequest.value?.requestVariables.map(
     (requestVariable) => {
       if (requestVariable.active)
         return {
@@ -194,8 +217,32 @@ const requestCode = asyncComputed(async () => {
   // reactivity tracking after the await point
   const lang = codegenType.value
 
+  let requestHeaders: HoppRESTHeaders = []
+  let requestAuth: HoppRESTAuth = { authType: "none", authActive: false }
+
+  // Add inherited headers and auth from the parent
+  const { auth, headers } = currentActiveRequest.value
+  const { inheritedProperties } = currentActiveTabDocument.value
+
+  requestAuth =
+    auth.authType === "inherit" && auth.authActive
+      ? (inheritedProperties?.auth?.inheritedAuth as HoppRESTAuth)
+      : auth
+
+  const inheritedHeaders =
+    inheritedProperties?.headers?.flatMap((header) => header.inheritedHeader) ??
+    []
+
+  requestHeaders = [...inheritedHeaders, ...headers]
+
+  const finalRequest = {
+    ...currentActiveRequest.value,
+    auth: requestAuth,
+    headers: requestHeaders,
+  }
+
   const effectiveRequest = await getEffectiveRESTRequest(
-    request.value,
+    finalRequest,
     env,
     true
   )
@@ -273,7 +320,7 @@ const { downloadIcon, downloadResponse } = useDownloadResponse(
   "",
   requestCode,
   t("filename.codegen", {
-    request_name: request.value.name,
+    request_name: currentActiveRequest.value.name,
   })
 )
 </script>
