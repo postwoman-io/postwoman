@@ -15,6 +15,9 @@
 
 <script setup lang="ts">
 import { type ExplorerFieldDef, useExplorer } from "~/helpers/graphql/explorer"
+import { useQuery } from "~/helpers/graphql/query"
+
+const { handleAddField } = useQuery()
 
 const props = defineProps<{
   field: ExplorerFieldDef
@@ -29,5 +32,6 @@ const handleClick = (event: MouseEvent) => {
 
 const insertQuery = () => {
   console.log("Inserting query")
+  handleAddField(props.field)
 }
 </script>
