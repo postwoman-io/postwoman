@@ -53,8 +53,6 @@ import { useExplorer } from "../../helpers/graphql/explorer"
 
 // Use explorer composable
 const { navStack, currentNavItem, navigateToIndex } = useExplorer()
-
-console.log(navStack, currentNavItem)
 </script>
 
 <style lang="scss">
@@ -63,6 +61,9 @@ a.hopp-doc-explorer-field-name {
   &:hover {
     text-decoration: underline;
   }
+}
+.hopp-doc-explorer-root-type {
+  color: hsl(208, 100%, 72%);
 }
 a.hopp-doc-explorer-type-name {
   color: hsl(30, 100%, 80%);
