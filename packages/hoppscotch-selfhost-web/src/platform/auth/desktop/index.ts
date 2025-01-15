@@ -15,33 +15,27 @@ import { KernelInterceptorService } from "@hoppscotch/common/services/kernel-int
 import Login from "@platform-components/Login.vue"
 import { getAllowedAuthProviders, updateUserDisplayName } from "./api"
 
-export interface HoppUserWithAccessToken {
+export type HoppUserWithRefreshToken = {
   uid: string
   displayName: string | null
   email: string | null
   photoURL: string | null
-  emailVerified: boolean
-  accessToken: string
-}
-
-export interface HoppUser {
-  uid: string
-  displayName: string | null
-  email: string | null
-  photoURL: string | null
+  provider?: string
+  accessToken?: string
+  refreshToken?: string
   emailVerified: boolean
 }
 
 interface GQLResponse {
   data?: {
-    me: HoppUser
+    me: HoppUserWithRefreshToken
   }
   errors?: Array<{ message: string }>
 }
 
 export const authEvents$ = new Subject<AuthEvent>()
-export const currentUser$ = new BehaviorSubject<HoppUserWithAccessToken | null>(null)
-export const probableUser$ = new BehaviorSubject<HoppUserWithAccessToken | null>(null)
+export const currentUser$ = new BehaviorSubject<HoppUserWithRefreshToken | null>(null)
+export const probableUser$ = new BehaviorSubject<HoppUserWithRefreshToken | null>(null)
 
 const isGettingInitialUser: Ref<null | boolean> = ref(null)
 
@@ -82,7 +76,8 @@ async function signInUserWithMicrosoftFB() {
 async function getInitialUserDetails(): Promise<GQLResponse | { error: string }> {
   try {
     const accessToken = await persistenceService.getLocalConfig("access_token")
-    if (!accessToken) return { error: "Access token not found" }
+    const refreshToken = await persistenceService.getLocalConfig("refresh_token")
+    if (!accessToken || !refreshToken) return { error: "Access token not found" }
 
     const { response } = interceptorService.execute({
       id: Date.now(),
@@ -90,19 +85,19 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
       method: "POST",
       version: "HTTP/1.1",
       headers: {
-        "Cookie": `access_token=${accessToken}`,
+        "Cookie": `access_token=${accessToken}; refresh_token=${refreshToken}`,
       },
       content: content.json({
         query: `query Me {
-          me {
-            uid
-            displayName
-            email
-            photoURL
-            isAdmin
-            createdOn
-          }
-        }`
+         me {
+           uid
+           displayName
+           email
+           photoURL
+           isAdmin
+           createdOn
+         }
+       }`
       })
     })
 
@@ -112,14 +107,25 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
     }
 
     const res = parseBodyAsJSON<GQLResponse>(responseBytes.right.body)
-    if (res._tag == "Some") return res.value
+    if (res._tag == "Some" && res.value.data?.me) {
+      return {
+        data: {
+          me: {
+            ...res.value.data.me,
+            refreshToken,
+            accessToken,
+            emailVerified: true
+          }
+        }
+      }
+    }
     return { error: "auth/cookies_not_found" }
   } catch (error) {
     return { error: "auth/cookies_not_found" }
   }
 }
 
-async function setUser(user: HoppUserWithAccessToken | null) {
+async function setUser(user: HoppUserWithRefreshToken | null) {
   const accessToken = await persistenceService.getLocalConfig("access_token")
   if (!accessToken) return null
 
@@ -165,7 +171,7 @@ export async function setInitialUser() {
       return
     }
 
-    const HoppUserWithAccessToken: HoppUserWithAccessToken = {
+    const HoppUserWithRefreshToken: HoppUserWithRefreshToken = {
       uid: hoppBackendUser.uid,
       displayName: hoppBackendUser.displayName,
       email: hoppBackendUser.email,
@@ -174,12 +180,12 @@ export async function setInitialUser() {
       accessToken,
     }
 
-    await setUser(HoppUserWithAccessToken)
+    await setUser(HoppUserWithRefreshToken)
     isGettingInitialUser.value = false
 
     authEvents$.next({
       event: "login",
-      user: HoppUserWithAccessToken,
+      user: HoppUserWithRefreshToken,
     })
   }
 }
@@ -195,7 +201,7 @@ async function refreshToken() {
       method: "GET",
       version: "HTTP/1.1",
       headers: {
-        "Cookie": `refresh_token=${refreshToken}`
+        "Cookie": `refresh_token=${refreshToken}`,
       }
     })
 
@@ -265,11 +271,9 @@ async function setAuthCookies(headers: Headers) {
 
 export const def: AuthPlatformDef = {
   customLoginSelectorUI: Login,
-
   getCurrentUserStream: () => currentUser$,
   getAuthEventsStream: () => authEvents$,
   getProbableUserStream: () => probableUser$,
-
   getCurrentUser: () => currentUser$.value,
   getProbableUser: () => probableUser$.value,
 
@@ -279,15 +283,24 @@ export const def: AuthPlatformDef = {
 
   getBackendHeaders() {
     const accessToken = currentUser$.value?.accessToken
-    return accessToken ? { Cookie: `access_token=${accessToken}` } : {} as Record<string, string>
+    const refreshToken = currentUser$.value?.refreshToken
+
+    return accessToken && refreshToken ? {
+      Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
+    } : {} as Record<string, string>
   },
 
   getGQLClientOptions() {
     const accessToken = currentUser$.value?.accessToken
+    const refreshToken = currentUser$.value?.refreshToken
     return {
+      connectionParams: accessToken && refreshToken ? {
+        Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
+      } : undefined,
       fetchOptions: {
-        credentials: "include",
-        headers: (accessToken ? { Cookie: `access_token=${accessToken}` } : {}) as Record<string, string>
+        headers: accessToken && refreshToken ? {
+          Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
+        } : undefined
       }
     }
   },
