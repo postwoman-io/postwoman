@@ -1,0 +1,8 @@
+apiVersion: v2
+appVersion: "2023.8.2"
+description: A free, fast and beautiful API request builder
+name: hoppscotch
+version: 0.4.0
+home: https://github.com/hoppscotch/hoppscotch
+sources:
+  - https://github.com/hoppscotch/hoppscotch

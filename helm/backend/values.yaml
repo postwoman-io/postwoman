@@ -1,0 +1,51 @@
+replicaCount: 1
+
+image:
+  repository: hoppscotch/hoppscotch-backend
+  tag: latest
+  pullPolicy: Always
+#  pullSecret: regcred
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  containerPort: 3170
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: backhopp.hoppscotch
+      paths: ["/"]
+  tls: []
+
+extra_labels:
+  exposed-by-ingress: 'true'
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1536Mi
+  requests:
+    cpu: 500m
+    memory: 1536Mi
+
+
+probes:
+  readinessProbe_path: /ping
+  readinessProbe_type: httpGet
+  readinessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 20
+
+  livenessProbe_type: httpGet
+  livenessProbe_path: /ping
+  livenessProbe:
+    initialDelaySeconds: 100
+    periodSeconds: 30
+    failureThreshold: 10

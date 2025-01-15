@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hoppscotch.fullname" . }}
+  labels:
+{{ include "hoppscotch.labels" . | indent 4 }}
+{{ include "hoppscotch.extra_labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hoppscotch.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hoppscotch.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "hoppscotch.extra_labels" . | indent 8 }}
+    spec:
+      {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env: {{- include "env" . | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+          {{- if .Values.probes }}
+          {{- if .Values.probes.readinessProbe }}
+          readinessProbe:
+            {{ .Values.probes.readinessProbe_type }}:
+              path: {{ .Values.probes.readinessProbe_path }}
+              port: {{ .Values.service.containerPort }}
+            {{- toYaml .Values.probes.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.probes.livenessProbe }}
+          livenessProbe:
+            {{ .Values.probes.livenessProbe_type }}:
+              path: {{ .Values.probes.livenessProbe_path }}
+              port: {{ .Values.service.containerPort }}
+              {{- toYaml .Values.probes.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

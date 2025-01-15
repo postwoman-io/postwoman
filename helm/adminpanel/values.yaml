@@ -1,0 +1,51 @@
+replicaCount: 1
+
+image:
+  repository: hoppscotch/hoppscotch-admin
+  tag: latest
+  pullPolicy: Always
+# pullSecret: regcred 
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  containerPort: 8080
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: admin.hoppscotch
+      paths: ["/"]
+  tls: []
+
+extra_labels:
+  exposed-by-ingress: 'true'
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+
+probes:
+  readinessProbe_path: /
+  readinessProbe_type: httpGet
+  readinessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 15
+
+  livenessProbe_type: httpGet
+  livenessProbe_path: /
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    failureThreshold: 10
