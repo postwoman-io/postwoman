@@ -27,7 +27,7 @@
     </div>
     <div class="hopp-doc-explorer-header px-3 mt-4" v-if="navStack.length > 1">
       <div class="hopp-doc-explorer-header-content mb-2">
-        <div class="hopp-doc-explorer-title text-xl font-bold">
+        <div class="hopp-doc-explorer-title text-xl font-bold break-words">
           {{ currentNavItem.name }}
         </div>
       </div>

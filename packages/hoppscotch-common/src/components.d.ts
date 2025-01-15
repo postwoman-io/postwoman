@@ -103,6 +103,7 @@ declare module 'vue' {
     GraphqlDirectives: typeof import('./components/graphql/Directives.vue')['default']
     GraphqlDoc: typeof import('./components/graphql/Doc.vue')['default']
     GraphqlDocExplorer: typeof import('./components/graphql/DocExplorer.vue')['default']
+    GraphqlEnumValues: typeof import('./components/graphql/EnumValues.vue')['default']
     GraphqlExplorerSection: typeof import('./components/graphql/ExplorerSection.vue')['default']
     GraphqlField: typeof import('./components/graphql/Field.vue')['default']
     GraphqlFieldDocumentation: typeof import('./components/graphql/FieldDocumentation.vue')['default']
