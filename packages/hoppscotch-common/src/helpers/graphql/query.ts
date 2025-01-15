@@ -1,4 +1,5 @@
 import { useService } from "dioc/vue"
+import { ref } from "vue"
 import {
   getNamedType,
   GraphQLField,
@@ -10,6 +11,9 @@ import {
 } from "graphql"
 import { GQLTabService } from "~/services/tab/graphql"
 import { mutationFields, queryFields, subscriptionFields } from "./connection"
+
+const updatedQuery = ref("")
+const cursorPosition = ref({ line: 0, ch: 0 })
 
 export function useQuery() {
   const tabs = useService(GQLTabService)
@@ -217,29 +221,56 @@ export function useQuery() {
     }
   }
 
+  function getCursorPositionFromIndex(query: string, index: number) {
+    const lines = query.slice(0, index).split("\n")
+    return {
+      line: lines.length - 1,
+      ch: lines[lines.length - 1].length,
+    }
+  }
+
   const handleAddField = (field: any) => {
-    console.log("queryeditor", queryEditor.value)
     const currentTab = tabs.currentActiveTab.value
     if (!currentTab) return
 
-    currentTab.document.request.query = insertGraphQLField(
-      currentTab.document.request.query || "",
-      field
-    )
+    const currentQuery = currentTab.document.request.query || ""
+    const newQuery = insertGraphQLField(currentQuery, field)
+
+    // Calculate cursor position - assuming we want to place it after the inserted field
+    const fieldNameIndex = newQuery.lastIndexOf(field.name)
+    if (fieldNameIndex !== -1) {
+      cursorPosition.value = getCursorPositionFromIndex(
+        newQuery,
+        fieldNameIndex + field.name.length
+      )
+    }
+
+    updatedQuery.value = newQuery
   }
 
   const handleAddArgument = (arg: any) => {
     const currentTab = tabs.currentActiveTab.value
     if (!currentTab) return
 
-    currentTab.document.request.query = insertGraphQLField(
-      currentTab.document.request.query || "",
-      arg
-    )
+    const currentQuery = currentTab.document.request.query || ""
+    const newQuery = insertGraphQLField(currentQuery, arg)
+
+    // Calculate cursor position
+    const argNameIndex = newQuery.lastIndexOf(arg.name)
+    if (argNameIndex !== -1) {
+      cursorPosition.value = getCursorPositionFromIndex(
+        newQuery,
+        argNameIndex + arg.name.length
+      )
+    }
+
+    updatedQuery.value = newQuery
   }
 
   return {
     handleAddField,
     handleAddArgument,
+    updatedQuery,
+    cursorPosition,
   }
 }

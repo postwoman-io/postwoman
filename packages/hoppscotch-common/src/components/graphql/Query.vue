@@ -93,7 +93,7 @@ import IconCheck from "~icons/lucide/check"
 import IconInfo from "~icons/lucide/info"
 import IconWand from "~icons/lucide/wand"
 import IconWrapText from "~icons/lucide/wrap-text"
-import { onMounted, reactive, ref, markRaw } from "vue"
+import { onMounted, reactive, ref, markRaw, watch, nextTick } from "vue"
 import { copyToClipboard } from "@helpers/utils/clipboard"
 import { useCodemirror } from "@composables/codemirror"
 import { useI18n } from "@composables/i18n"
@@ -114,6 +114,7 @@ import {
 } from "~/helpers/graphql/connection"
 import { useNestedSetting } from "~/composables/settings"
 import { toggleNestedSetting } from "~/newstore/settings"
+import { useQuery } from "~/helpers/graphql/query"
 
 // Template refs
 const queryEditor = ref<any | null>(null)
@@ -181,7 +182,7 @@ onMounted(() => {
   } catch (error) {}
 })
 
-useCodemirror(
+const cmQueryEditor = useCodemirror(
   queryEditor,
   gqlQueryString,
   reactive({
@@ -197,6 +198,23 @@ useCodemirror(
     onUpdate: debouncedOnUpdateQueryState,
   })
 )
+
+// Add useQuery
+const { updatedQuery, cursorPosition } = useQuery()
+
+// Add watcher for query updates
+watch(updatedQuery, async (newQuery) => {
+  if (newQuery) {
+    gqlQueryString.value = newQuery
+
+    await nextTick()
+
+    // Update cursor position
+    if (cursorPosition.value) {
+      cmQueryEditor.cursor.value = cursorPosition.value
+    }
+  }
+})
 
 // operations on graphql query string
 // const operations = useReadonlyStream(props.request.operations$, [])
