@@ -443,6 +443,50 @@ export const createExpectation = (
     return undefined
   }
 
+  const toCompareFn = (
+    comparison: (a: any, b: any) => boolean,
+    comparisonName: string
+  ) => (expectedVal: any) => {
+    let assertion = comparison(resolvedExpectVal, expectedVal)
+
+    if (negated) {
+      assertion = !assertion
+    }
+
+    const status = assertion ? "pass" : "fail"
+    const message = `Expected '${resolvedExpectVal}' to${
+      negated ? " not" : ""
+    } be ${comparisonName} '${expectedVal}'`
+
+    currTestStack[currTestStack.length - 1].expectResults.push({
+      status,
+      message,
+    })
+
+    return undefined
+  }
+
+
+  const toBeGreaterThanFn = toCompareFn(
+    (a, b) => a > b,
+    "greater than"
+  )
+
+  const toBeGreaterThanOrEqualFn = toCompareFn(
+    (a, b) => a >= b,
+    "greater than or equal to"
+  )
+
+  const toBeLessThanFn = toCompareFn(
+    (a, b) => a < b,
+    "less than"
+  )
+
+  const toBeLessThanOrEqualFn = toCompareFn(
+    (a, b) => a <= b,
+    "less than or equal to"
+  )
+
   result.toBe = toBeFn
   result.toBeLevel2xx = toBeLevel2xxFn
   result.toBeLevel3xx = toBeLevel3xxFn
@@ -451,6 +495,11 @@ export const createExpectation = (
   result.toBeType = toBeTypeFn
   result.toHaveLength = toHaveLengthFn
   result.toInclude = toIncludeFn
+  result.toBeGreaterThan = toBeGreaterThanFn
+  result.toBeGreaterThanOrEqual = toBeGreaterThanOrEqualFn
+  result.toBeLessThan = toBeLessThanFn
+  result.toBeLessThanOrEqual = toBeLessThanOrEqualFn
+
 
   Object.defineProperties(result, {
     not: {
