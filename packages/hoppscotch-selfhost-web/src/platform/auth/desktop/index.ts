@@ -6,6 +6,7 @@ import { Ref, ref, watch } from "vue"
 import { content } from "@hoppscotch/kernel"
 
 import { Io } from "@hoppscotch/common/kernel/io"
+import { listen } from "@tauri-apps/api/event"
 import { getService } from "@hoppscotch/common/modules/dioc"
 import { parseBodyAsJSON } from "@hoppscotch/common/helpers/functional/json"
 import { AuthEvent, AuthPlatformDef } from "@hoppscotch/common/platform/auth"
@@ -15,7 +16,7 @@ import { KernelInterceptorService } from "@hoppscotch/common/services/kernel-int
 import Login from "@platform-components/Login.vue"
 import { getAllowedAuthProviders, updateUserDisplayName } from "./api"
 
-export type HoppUserWithRefreshToken = {
+export type HoppUserWithAuthDetail = {
   uid: string
   displayName: string | null
   email: string | null
@@ -28,14 +29,14 @@ export type HoppUserWithRefreshToken = {
 
 interface GQLResponse {
   data?: {
-    me: HoppUserWithRefreshToken
+    me: HoppUserWithAuthDetail
   }
   errors?: Array<{ message: string }>
 }
 
 export const authEvents$ = new Subject<AuthEvent>()
-export const currentUser$ = new BehaviorSubject<HoppUserWithRefreshToken | null>(null)
-export const probableUser$ = new BehaviorSubject<HoppUserWithRefreshToken | null>(null)
+export const currentUser$ = new BehaviorSubject<HoppUserWithAuthDetail | null>(null)
+export const probableUser$ = new BehaviorSubject<HoppUserWithAuthDetail | null>(null)
 
 const isGettingInitialUser: Ref<null | boolean> = ref(null)
 
@@ -85,7 +86,7 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
       method: "POST",
       version: "HTTP/1.1",
       headers: {
-        "Cookie": `access_token=${accessToken}; refresh_token=${refreshToken}`,
+        "Authorization": `Bearer ${accessToken}`,
       },
       content: content.json({
         query: `query Me {
@@ -125,13 +126,16 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
   }
 }
 
-async function setUser(user: HoppUserWithRefreshToken | null) {
+async function setUser(user: HoppUserWithAuthDetail | null) {
   const accessToken = await persistenceService.getLocalConfig("access_token")
-  if (!accessToken) return null
+  const refreshToken = await persistenceService.getLocalConfig("refresh_token")
 
-  const userWithToken = user && accessToken ? {
+  if (!accessToken || !refreshToken) return null
+
+  const userWithToken = user && accessToken && refreshToken ? {
     ...user,
     accessToken,
+    refreshToken,
   } : null
 
   currentUser$.next(userWithToken)
@@ -171,7 +175,7 @@ export async function setInitialUser() {
       return
     }
 
-    const HoppUserWithRefreshToken: HoppUserWithRefreshToken = {
+    const HoppUserWithAuthDetail: HoppUserWithAuthDetail = {
       uid: hoppBackendUser.uid,
       displayName: hoppBackendUser.displayName,
       email: hoppBackendUser.email,
@@ -180,12 +184,12 @@ export async function setInitialUser() {
       accessToken,
     }
 
-    await setUser(HoppUserWithRefreshToken)
+    await setUser(HoppUserWithAuthDetail)
     isGettingInitialUser.value = false
 
     authEvents$.next({
       event: "login",
-      user: HoppUserWithRefreshToken,
+      user: HoppUserWithAuthDetail,
     })
   }
 }
@@ -201,7 +205,7 @@ async function refreshToken() {
       method: "GET",
       version: "HTTP/1.1",
       headers: {
-        "Cookie": `refresh_token=${refreshToken}`,
+        "Authorization": `Bearer ${refreshToken}`,
       }
     })
 
@@ -283,25 +287,33 @@ export const def: AuthPlatformDef = {
 
   getBackendHeaders() {
     const accessToken = currentUser$.value?.accessToken
-    const refreshToken = currentUser$.value?.refreshToken
-
-    return accessToken && refreshToken ? {
-      Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
+    return accessToken ? {
+      Authorization: `Bearer ${accessToken}`
     } : {} as Record<string, string>
   },
 
   getGQLClientOptions() {
     const accessToken = currentUser$.value?.accessToken
-    const refreshToken = currentUser$.value?.refreshToken
     return {
-      connectionParams: accessToken && refreshToken ? {
-        Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
+      // For GraphQL subscriptions via WebSocket
+      connectionParams: accessToken ? {
+        Authorization: `Bearer ${accessToken}`
       } : undefined,
+      // For regular HTTP queries
       fetchOptions: {
-        headers: accessToken && refreshToken ? {
-          Cookie: `access_token=${accessToken}; refresh_token=${refreshToken}`
-        } : undefined
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined
       }
+    }
+  },
+
+  axiosPlatformConfig() {
+    const accessToken = currentUser$.value?.accessToken
+    return {
+      headers: accessToken ? {
+        Authorization: `Bearer ${accessToken}`
+      } : {}
     }
   },
 
@@ -332,13 +344,14 @@ export const def: AuthPlatformDef = {
   },
 
   async performAuthInit() {
-    const probableUser = JSON.parse(await persistenceService.getLocalConfig("login_state") ?? "null")
+    const loginState = await persistenceService.getLocalConfig("login_state")
+    const probableUser = JSON.parse(loginState ?? "null")
     probableUser$.next(probableUser)
     await setInitialUser()
 
-    await Io.listen<string>('scheme-request-received', async (event: { payload: string }) => {
-      let deep_link = event.payload;
-      const params = new URLSearchParams(deep_link.split('?')[1]);
+    await listen<string>('scheme-request-received', async (event: { payload: string }) => {
+      const deepLink = event.payload;
+      const params = new URLSearchParams(deepLink.split('?')[1]);
 
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
@@ -347,7 +360,6 @@ export const def: AuthPlatformDef = {
       if (accessToken && refreshToken) {
         await persistenceService.setLocalConfig("access_token", accessToken);
         await persistenceService.setLocalConfig("refresh_token", refreshToken);
-        window.location.href = "/"
         return;
       }
 
@@ -429,7 +441,6 @@ export const def: AuthPlatformDef = {
 
     await persistenceService.removeLocalConfig("deviceIdentifier")
     await persistenceService.removeLocalConfig("verifyToken")
-    window.location.href = "/"
   },
 
   async setEmailAddress(_email: string) {

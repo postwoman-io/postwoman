@@ -114,11 +114,7 @@ async function proceedLogin() {
       }
     )
 
-    console.info("res", res)
-
     const parseResult = DeviceTokenResponse.safeParse(res.data)
-
-    console.info("parseResult", parseResult)
 
     if (!parseResult.success) {
       throw new Error("Token data returned from backend was invalid")
@@ -128,7 +124,9 @@ async function proceedLogin() {
 
     console.info("tokens", tokens)
 
-    await axios.get(`${redirect_uri}?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`)
+    await axios.get(
+      `${redirect_uri}?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`
+    )
 
     loginConfirmState.value = "done"
   } catch (e) {

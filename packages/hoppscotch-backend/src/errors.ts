@@ -594,6 +594,18 @@ export const TOKEN_EXPIRED = 'auth/token_expired' as const;
 export const MAGIC_LINK_EXPIRED = 'auth/magic_link_expired' as const;
 
 /**
+ * Auth header was NOT found in the auth request
+ * (AuthService)
+ */
+export const AUTH_HEADER_NOT_FOUND = 'auth/auth_header_not_found' as const;
+
+/**
+ * Auth header was found but the format was invalid
+ * (AuthService)
+ */
+export const INVALID_AUTH_HEADER = 'auth/invalid_auth_header' as const;
+
+/**
  * No cookies were found in the auth request
  * (AuthService)
  */
