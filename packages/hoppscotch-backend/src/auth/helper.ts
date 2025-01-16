@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { AuthTokens } from 'src/types/AuthTokens';
 import { Response } from 'express';
 import * as cookie from 'cookie';
-import { AUTH_PROVIDER_NOT_SPECIFIED, COOKIES_NOT_FOUND } from 'src/errors';
+import { AUTH_HEADER_NOT_FOUND, AUTH_PROVIDER_NOT_SPECIFIED, COOKIES_NOT_FOUND, INVALID_AUTH_HEADER } from 'src/errors';
 import { throwErr } from 'src/utils';
 import { ConfigService } from '@nestjs/config';
 import { IncomingHttpHeaders } from 'http';
@@ -128,11 +128,11 @@ export function authProviderCheck(
 }
 
 /**
- * Extract auth tokens from the headers of a request
+ * Extract auth tokens from cookie headers of a request
  * @param headers HTTP request headers containing auth tokens
  * @returns AuthTokens for JWT strategy to use
  */
-export const extractAuthTokensFromHeaders = (headers: IncomingHttpHeaders) => {
+export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
   const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
 
   if (!cookieHeader) {
@@ -164,11 +164,11 @@ export const extractAuthTokensFromHeaders = (headers: IncomingHttpHeaders) => {
 };
 
 /**
- * Extract access tokens from the headers of a request
+ * Extract access tokens from cookie headers of a request
  * @param headers HTTP request headers containing access tokens
  * @returns AccessTokens for JWT strategy to use
  */
-export const extractAccessTokensFromHeaders = (headers: IncomingHttpHeaders) => {
+export const extractAccessTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
   const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
 
   if (!cookieHeader) {
@@ -196,4 +196,29 @@ export const extractAccessTokensFromHeaders = (headers: IncomingHttpHeaders) => 
   return {
     access_token: cookies[AuthTokenType.ACCESS_TOKEN],
   };
+};
+
+/**
+ * Extract access token from authorization header
+ * @param headers HTTP request headers containing bearer token
+ * @returns AccessTokens for JWT strategy
+ */
+export const extractAccessTokenFromAuthRecords = (headers: IncomingHttpHeaders) => {
+  const authHeader = headers['authorization'] || headers['Authorization'];
+  if (!authHeader) {
+    throw new HttpException(AUTH_HEADER_NOT_FOUND, 400, {
+      cause: new Error(AUTH_HEADER_NOT_FOUND),
+    });
+  }
+
+  const headerValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const [bearer, access_token] = headerValue.split(' ');
+
+  if (bearer !== 'Bearer' || !access_token) {
+    throw new HttpException(INVALID_AUTH_HEADER, 400, {
+      cause: new Error(INVALID_AUTH_HEADER),
+    });
+  }
+
+  return access_token;
 };

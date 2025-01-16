@@ -8,7 +8,7 @@ import { UserSettingsModule } from './user-settings/user-settings.module';
 import { UserEnvironmentsModule } from './user-environment/user-environments.module';
 import { UserRequestModule } from './user-request/user-request.module';
 import { UserHistoryModule } from './user-history/user-history.module';
-import { subscriptionContextCookieParser, extractAuthTokensFromHeaders } from './auth/helper';
+import { subscriptionContextCookieParser, extractAccessTokenFromAuthRecords } from './auth/helper';
 import { TeamModule } from './team/team.module';
 import { TeamEnvironmentsModule } from './team-environments/team-environments.module';
 import { TeamCollectionModule } from './team-collection/team-collection.module';
@@ -53,43 +53,28 @@ import { InfraTokenModule } from './infra-token/infra-token.module';
             'subscriptions-transport-ws': {
               path: '/graphql',
               onConnect: (connectionParams, websocket) => {
-                console.info(connectionParams, websocket.upgradeReq.headers);
+                const websocketHeaders = websocket?.upgradeReq?.headers;
 
                 try {
-                  if (!websocket.upgradeReq.headers) {
+                  const accessToken = extractAccessTokenFromAuthRecords(connectionParams);
+                  const authorization = `Bearer ${accessToken}`
+
+                  return { headers: { ...websocketHeaders, authorization } };
+                } catch (authError) {
+                  const cookiesFromHeader = websocketHeaders?.cookie;
+                  const cookies = cookiesFromHeader
+                    ? subscriptionContextCookieParser(cookiesFromHeader)
+                    : null;
+
+                  if (!cookies) {
                     throw new HttpException(COOKIES_NOT_FOUND, 400, {
                       cause: new Error(COOKIES_NOT_FOUND),
                     });
                   }
 
-                  if (websocket.upgradeReq.headers.cookie) {
-                    const cookies = subscriptionContextCookieParser(
-                      websocket.upgradeReq.headers.cookie,
-                    );
-                    return {
-                      headers: { ...websocket?.upgradeReq?.headers, cookies },
-                    };
-                  }
-
-                  if (connectionParams.Cookie) {
-                    const cookies = extractAuthTokensFromHeaders(
-                      connectionParams,
-                    );
-                    return {
-                      headers: { ...websocket?.upgradeReq?.headers, cookies },
-                    };
-                  }
-
-                  const cookies = extractAuthTokensFromHeaders(websocket.upgradeReq.headers);
-                  return {
-                    headers: { ...websocket?.upgradeReq?.headers, cookies },
-                  };
-                } catch (error) {
-                  throw new HttpException(COOKIES_NOT_FOUND, 400, {
-                    cause: new Error(COOKIES_NOT_FOUND),
-                  });
+                  return { headers: { ...websocketHeaders, cookies } };
                 }
-              },
+              }
             },
           },
           context: ({ req, res, connection }) => ({
