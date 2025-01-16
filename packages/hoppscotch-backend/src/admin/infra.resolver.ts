@@ -227,6 +227,13 @@ export class InfraResolver {
   }
 
   @ResolveField(() => Number, {
+    description: 'Return total number of Invited Users in organization',
+  })
+  async invitedUsersCount() {
+    return this.adminService.getInvitedUsersCount();
+  }
+
+  @ResolveField(() => Number, {
     description: 'Return total number of Teams in organization',
   })
   async teamsCount() {

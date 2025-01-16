@@ -183,6 +183,29 @@ export class AdminService {
   }
 
   /**
+   * Fetch the count of invited users by the admin.
+   * @returns a count of invited users
+   */
+  async getInvitedUsersCount() {
+    const userEmailObjs = await this.prisma.user.findMany({
+      select: { email: true },
+    });
+
+    const pendingInvitedUsersCount = await this.prisma.invitedUsers.count({
+      where: {
+        NOT: {
+          inviteeEmail: {
+            in: userEmailObjs.map((user) => user.email),
+            mode: 'insensitive',
+          },
+        },
+      },
+    });
+
+    return pendingInvitedUsersCount;
+  }
+
+  /**
    * Fetch the list of invited users by the admin.
    * @returns an Either of array of `InvitedUser` object or error
    */
