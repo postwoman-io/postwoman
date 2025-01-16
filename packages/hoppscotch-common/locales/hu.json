@@ -117,6 +117,7 @@
     "login": "Bejelentkezés",
     "login_success": "Sikeresen bejelentkezett",
     "login_to_hoppscotch": "Bejelentkezés a Hoppscotch szolgáltatásba",
+    "change_accounts": "fiókot váltani",
     "logout": "Kijelentkezés",
     "re_enter_email": "E-mail-cím ismételt megadása",
     "send_magic_link": "Mágikus hivatkozás küldése",

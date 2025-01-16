@@ -117,6 +117,7 @@
     "login": "Авторизоваться",
     "login_success": "Успешный вход в систему",
     "login_to_hoppscotch": "Войти в Hoppscotch",
+    "change_accounts": "менять аккаунты",
     "logout": "Выйти",
     "re_enter_email": "Введите адрес электронной почты еще раз",
     "send_magic_link": "Отправить волшебную ссылку",

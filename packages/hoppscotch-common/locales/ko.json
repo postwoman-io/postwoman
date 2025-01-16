@@ -117,6 +117,7 @@
     "login": "로그인",
     "login_success": "로그인 성공",
     "login_to_hoppscotch": "홉스카치에 로그인",
+    "change_accounts": "계정 변경",
     "logout": "로그아웃",
     "re_enter_email": "이메일을 다시 입력하세요",
     "send_magic_link": "매직 링크 보내기",

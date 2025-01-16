@@ -117,6 +117,7 @@
     "login": "ログイン",
     "login_success": "正常にログインしました",
     "login_to_hoppscotch": "Hoppscotchにログインする",
+    "change_accounts": "アカウントを変更する",
     "logout": "ログアウト",
     "re_enter_email": "メールアドレスを再入力してください",
     "send_magic_link": "マジックリンクを送る",

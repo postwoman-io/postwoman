@@ -151,6 +151,7 @@
     "login": "Login",
     "login_success": "Successfully logged in",
     "login_to_hoppscotch": "Login to Hoppscotch",
+    "change_accounts": "Change Accounts",
     "logout": "Logout",
     "re_enter_email": "Re-enter email",
     "send_magic_link": "Send a magic link",

@@ -165,6 +165,7 @@
                     tabindex="0"
                     @keyup.p="profile.$el.click()"
                     @keyup.s="settings.$el.click()"
+                    @keyup.c="switch_users.$el.click()"
                     @keyup.l="logout.$el.click()"
                     @keyup.escape="hide()"
                   >
@@ -197,6 +198,11 @@
                       :label="t('navigation.settings')"
                       :shortcut="['S']"
                       @click="hide()"
+                    />
+                    <FirebaseSwitch
+                      ref="switch_users"
+                      :shortcut="['C']"
+                      @confirm-switch="hide()"
                     />
                     <FirebaseLogout
                       ref="logout"
@@ -458,6 +464,7 @@ const tippyActions = ref<any | null>(null)
 const profile = ref<any | null>(null)
 const settings = ref<any | null>(null)
 const logout = ref<any | null>(null)
+const switch_users = ref<any | null>(null)
 const accountActions = ref<any | null>(null)
 
 defineActionHandler("modals.team.edit", handleTeamEdit)

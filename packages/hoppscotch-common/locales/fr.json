@@ -117,6 +117,7 @@
     "login": "Connexion",
     "login_success": "Connexion réussie",
     "login_to_hoppscotch": "Connectez-vous à Hoppscotch",
+    "change_accounts": "changer de compte",
     "logout": "Se déconnecter",
     "re_enter_email": "Re-saisir l'e-mail",
     "send_magic_link": "Envoyer un lien magique",

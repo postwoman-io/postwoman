@@ -67,9 +67,11 @@ export type HoppAction =
   | "response.save" // Save response
   | "response.save-as-example" // Save response as example
   | "modals.login.toggle" // Login to Hoppscotch
+  | "modals.switch.toggle" // Switch user account
   | "history.clear" // Clear REST History
   | "user.login" // Login to Hoppscotch
   | "user.logout" // Log out of Hoppscotch
+  | "user.switch" // Switch user account
   | "editor.format" // Format editor content
   | "modals.team.delete" // Delete team
   | "workspace.switch" // Switch workspace

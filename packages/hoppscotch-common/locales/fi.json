@@ -117,6 +117,7 @@
     "login": "Kirjaudu sisään",
     "login_success": "Kirjautuminen onnistui",
     "login_to_hoppscotch": "Kirjaudu Hoppscotchiin",
+    "change_accounts": "vaihtaa tilejä",
     "logout": "Kirjautua ulos",
     "re_enter_email": "Syötä sähköpostiosoite uudestaan",
     "send_magic_link": "Lähetä maaginen linkki",

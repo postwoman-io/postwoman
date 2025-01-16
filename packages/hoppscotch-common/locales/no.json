@@ -117,6 +117,7 @@
     "login": "Logg inn",
     "login_success": "Logget på",
     "login_to_hoppscotch": "Logg inn i Hoppscotch",
+    "change_accounts": "bytte konto",
     "logout": "Logg ut",
     "re_enter_email": "Skriv inn e-post på nytt",
     "send_magic_link": "Send en magisk lenke",

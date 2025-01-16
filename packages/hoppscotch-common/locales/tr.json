@@ -117,6 +117,7 @@
     "login": "Giriş",
     "login_success": "Başarıyla giriş yapıldı",
     "login_to_hoppscotch": "Hoppscotch'a giriş yapın",
+    "change_accounts": "hesapları değiştir",
     "logout": "Çıkış",
     "re_enter_email": "E-mail adresinizi yeniden girin",
     "send_magic_link": "Sihirli bir bağlantı gönder",
