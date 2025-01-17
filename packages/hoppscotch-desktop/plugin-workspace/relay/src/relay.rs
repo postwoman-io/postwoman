@@ -38,6 +38,31 @@ fn execute_request(request: &Request, cancel_token: &CancellationToken) -> Resul
     let mut curl_request = CurlRequest::new(&mut handle, request);
     curl_request.prepare()?;
 
+    tracing::debug!(
+        request_id = ?request.id,
+        method = ?request.method,
+        url = ?request.url,
+        headers = ?request.headers,
+        body = ?request.content,
+        "Full request details before sending"
+    );
+
+    handle.verbose(true).map_err(|e| RelayError::Network {
+        message: "Failed to set verbose mode".into(),
+        cause: Some(e.to_string()),
+    })?;
+
+    handle
+        .debug_function(|info_type, data| {
+            if let Ok(s) = std::str::from_utf8(data) {
+                tracing::debug!(info_type = ?info_type, s = ?s, "cURL debug fn");
+            }
+        })
+        .map_err(|e| RelayError::Network {
+            message: "Failed to set debug function".into(),
+            cause: Some(e.to_string()),
+        })?;
+
     let mut transfer_handler = TransferHandler::new();
     transfer_handler.handle_transfer(&mut handle, cancel_token)?;
 

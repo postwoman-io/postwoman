@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
+use bytes::Bytes;
 use http::{Method, StatusCode, Version};
 use serde::{Deserialize, Serialize};
-use strum::Display;
+use strum::{Display, EnumString};
 use time::OffsetDateTime;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Display)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Display, EnumString)]
 pub enum MediaType {
     #[serde(rename = "text/plain")]
     #[strum(to_string = "text/plain")]
@@ -52,8 +53,7 @@ pub enum FormValue {
     File {
         filename: String,
         content_type: MediaType,
-        #[serde(with = "serde_bytes")]
-        data: Vec<u8>,
+        data: Bytes,
     },
 }
 
@@ -84,8 +84,7 @@ pub enum ContentType {
     },
     #[serde(rename_all = "camelCase")]
     Binary {
-        #[serde(with = "serde_bytes")]
-        content: Vec<u8>,
+        content: Bytes,
         media_type: MediaType,
         filename: Option<String>,
     },
@@ -190,17 +189,8 @@ pub enum DigestQop {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum CertificateType {
-    Pem {
-        #[serde(with = "serde_bytes")]
-        cert: Vec<u8>,
-        #[serde(with = "serde_bytes")]
-        key: Vec<u8>,
-    },
-    Pfx {
-        #[serde(with = "serde_bytes")]
-        data: Vec<u8>,
-        password: String,
-    },
+    Pem { cert: Bytes, key: Bytes },
+    Pfx { data: Bytes, password: String },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -217,7 +207,7 @@ pub struct SecurityConfig {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CertificateConfig {
     pub client: Option<CertificateType>,
-    pub ca: Option<Vec<Vec<u8>>>,
+    pub ca: Option<Vec<Bytes>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -228,12 +218,19 @@ pub struct Request {
     pub method: Method,
     #[serde(with = "http_serde::version")]
     pub version: Version,
-    pub headers: Option<HashMap<String, Vec<String>>>,
-    pub params: Option<HashMap<String, Vec<String>>>,
+    pub headers: Option<HashMap<String, String>>,
+    pub params: Option<HashMap<String, String>>,
     pub content: Option<ContentType>,
     pub auth: Option<AuthType>,
     pub security: Option<SecurityConfig>,
     pub proxy: Option<ProxyConfig>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ResponseBody {
+    pub body: Bytes,
+    pub media_type: MediaType,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -245,9 +242,9 @@ pub struct Response {
     pub status_text: String,
     #[serde(with = "http_serde::version")]
     pub version: Version,
-    pub headers: HashMap<String, Vec<String>>,
+    pub headers: HashMap<String, String>,
     pub cookies: Option<Vec<Cookie>>,
-    pub content: ContentType,
+    pub body: ResponseBody,
     pub meta: ResponseMeta,
 }
 

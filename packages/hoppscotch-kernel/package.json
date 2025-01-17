@@ -57,6 +57,6 @@
     "@tauri-apps/plugin-dialog": "2.0.1",
     "@tauri-apps/plugin-fs": "2.0.2",
     "@tauri-apps/plugin-store": "2.2.0",
-    "@hoppscotch/plugin-relay": "github:CuriousCorrelation/tauri-plugin-hoppscotch-relay"
+    "@hoppscotch/plugin-relay": "github:CuriousCorrelation/tauri-plugin-relay"
   }
 }

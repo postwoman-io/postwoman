@@ -68,11 +68,7 @@ impl<'a> CurlRequest<'a> {
             }
         })?;
 
-        if let Some(ref headers) = self.request.headers {
-            tracing::trace!(headers = ?headers, "Adding request headers");
-            HeadersBuilder::new(self.handle).add_headers(Some(headers))?;
-        }
-
+        tracing::debug!("Basic request parameters set successfully");
         Ok(())
     }
 
@@ -81,9 +77,11 @@ impl<'a> CurlRequest<'a> {
         tracing::debug!("Preparing request");
         self.setup_basics()?;
 
+        HeadersBuilder::new(self.handle).add_headers(self.request.headers.as_ref())?;
+
         if let Some(ref content) = self.request.content {
             tracing::trace!(content_type = ?content, "Setting request content");
-            ContentHandler::new(self.handle).set_content(content)?;
+            ContentHandler::new(self.handle, self.request.headers.as_ref()).set_content(content)?;
         }
 
         if let Some(ref auth) = self.request.auth {

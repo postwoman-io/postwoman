@@ -1,19 +1,20 @@
 use std::collections::HashMap;
 
+use bytes::{Bytes, BytesMut};
 use curl::easy::Easy;
 use tokio_util::sync::CancellationToken;
 
 use crate::error::{RelayError, Result};
 
 pub(crate) struct TransferHandler {
-    body: Vec<u8>,
-    headers: HashMap<String, Vec<String>>,
+    body: BytesMut,
+    headers: HashMap<String, String>,
 }
 
 impl TransferHandler {
     pub(crate) fn new() -> Self {
         Self {
-            body: Vec::new(),
+            body: BytesMut::new(),
             headers: HashMap::new(),
         }
     }
@@ -52,7 +53,7 @@ impl TransferHandler {
                         let key = key.trim().to_string();
                         let value = value[1..].trim().to_string();
 
-                        headers.entry(key).or_insert_with(Vec::new).push(value);
+                        headers.entry(key).or_insert(value);
                     }
                 }
                 true
@@ -94,7 +95,7 @@ impl TransferHandler {
         Ok(())
     }
 
-    pub(crate) fn into_parts(self) -> (Vec<u8>, HashMap<String, Vec<String>>) {
-        (self.body, self.headers)
+    pub(crate) fn into_parts(self) -> (Bytes, HashMap<String, String>) {
+        (self.body.into(), self.headers)
     }
 }

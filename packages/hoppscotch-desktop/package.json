@@ -19,7 +19,7 @@
     "@tauri-apps/plugin-shell": "^2",
     "@tauri-apps/plugin-store": "2.2.0",
     "@vueuse/core": "11.1.0",
-    "@hoppscotch/plugin-appload": "github:CuriousCorrelation/tauri-plugin-hoppscotch-appload",
+    "@hoppscotch/plugin-appload": "github:CuriousCorrelation/tauri-plugin-appload",
     "fp-ts": "2.16.9",
     "vue": "^3.3.4",
     "vue-router": "4.4.5",

@@ -17,7 +17,7 @@ export default defineConfig({
         '@tauri-apps/plugin-dialog',
         '@tauri-apps/plugin-fs',
         '@tauri-apps/plugin-shell',
-        'tauri-plugin-hoppscotch-relay-api',
+        'tauri-plugin-relay-api',
         'axios',
         'fp-ts'
       ]

@@ -15,7 +15,7 @@
     "dialog:default",
     "fs:allow-write-text-file",
     "deep-link:default",
-    "hoppscotch-appload:default",
-    "hoppscotch-relay:default"
+    "appload:default",
+    "relay:default"
   ]
 }

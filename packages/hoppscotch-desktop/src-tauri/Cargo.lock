@@ -2016,11 +2016,11 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-plugin-appload",
  "tauri-plugin-deep-link",
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
- "tauri-plugin-hoppscotch-appload",
- "tauri-plugin-hoppscotch-relay",
+ "tauri-plugin-relay",
  "tauri-plugin-shell",
  "tauri-plugin-store",
  "tokio",
@@ -4865,6 +4865,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-appload"
+version = "0.1.0"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-appload#3350d71548bbfbef3d49721fc6e807a794107584"
+dependencies = [
+ "base64 0.22.1",
+ "blake3",
+ "chrono",
+ "cocoa",
+ "dashmap",
+ "ed25519-dalek",
+ "flate2",
+ "futures",
+ "hex",
+ "hex_color",
+ "humantime-serde",
+ "lru",
+ "mime-infer",
+ "mime_guess",
+ "objc",
+ "rand 0.8.5",
+ "rayon",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sys-info",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.7",
+ "tokio",
+ "tracing",
+ "url",
+ "windows 0.58.0",
+ "winver",
+ "zip",
+]
+
+[[package]]
 name = "tauri-plugin-deep-link"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4926,47 +4964,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-hoppscotch-appload"
+name = "tauri-plugin-relay"
 version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-appload#d7c3cbabb7bef24fb9d534c6296eaa861b5b5d85"
-dependencies = [
- "base64 0.22.1",
- "blake3",
- "chrono",
- "cocoa",
- "dashmap",
- "ed25519-dalek",
- "flate2",
- "futures",
- "hex",
- "hex_color",
- "humantime-serde",
- "lru",
- "mime-infer",
- "mime_guess",
- "objc",
- "rand 0.8.5",
- "rayon",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "sys-info",
- "tauri",
- "tauri-plugin",
- "thiserror 2.0.7",
- "tokio",
- "tracing",
- "url",
- "windows 0.58.0",
- "winver",
- "zip",
-]
-
-[[package]]
-name = "tauri-plugin-hoppscotch-relay"
-version = "0.1.0"
-source = "git+https://github.com/CuriousCorrelation/tauri-plugin-hoppscotch-relay#5b82ace02419a0170e5bf45908e3b8a26d11a99a"
+source = "git+https://github.com/CuriousCorrelation/tauri-plugin-relay#ae33545cfa6ba30496c9c0c19f0e961868f1cc00"
 dependencies = [
  "relay",
  "serde",
