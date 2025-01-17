@@ -108,7 +108,7 @@ export type AuthPlatformDef = {
    * Called by Common when it is time to perform initialization activities for authentication.
    * (This is the best place to do init work for the auth subsystem in the platform).
    */
-  performAuthInit: () => void
+  performAuthInit: () => Promise<void>
 
   /**
    * Returns the headers that should be applied by the backend GQL API client (see GQLClient)

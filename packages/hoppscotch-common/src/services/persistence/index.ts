@@ -16,6 +16,8 @@ import {
   translateToNewRESTCollection,
 } from "@hoppscotch/data"
 
+import { StoreError } from "@hoppscotch/kernel"
+
 import { Store } from "~/kernel/store"
 import { GQLTabService } from "~/services/tab/graphql"
 import { RESTTabService } from "~/services/tab/rest"
@@ -180,15 +182,16 @@ export class PersistenceService extends Service {
     )
   }
 
-  async init(): Promise<void> {
+  async init(): Promise<E.Either<StoreError, void>> {
     const initResult = await Store.init()
     if (E.isLeft(initResult)) {
       console.error(
         "[PersistenceService] Failed to initialize store:",
         initResult.left
       )
-      return
+      return initResult
     }
+    return initResult
   }
 
   // Using `ZodType<any>` because there's little to be gained in making it generic over `T`
@@ -558,30 +561,33 @@ export class PersistenceService extends Service {
     })
   }
 
-  public async setupLocalPersistence() {
+  public async setupFirst() {
     await this.init()
     await this.runMigrations()
     await this.checkAndMigrateOldSettings()
+  }
 
-    await this.setupLocalStatePersistence()
-    await this.setupSettingsPersistence()
+  public async setupLater() {
+    await Promise.all([
+      this.setupLocalStatePersistence(),
 
-    await this.setupHistoryPersistence()
-    await this.setupCollectionsPersistence()
+      this.setupSettingsPersistence(),
+      this.setupHistoryPersistence(),
+      this.setupCollectionsPersistence(),
 
-    await this.setupGlobalEnvsPersistence()
-    await this.setupEnvironmentsPersistence()
+      this.setupEnvironmentsPersistence(),
+      this.setupGlobalEnvsPersistence(),
+      this.setupSelectedEnvPersistence(),
 
-    await this.setupSelectedEnvPersistence()
+      this.setupWebsocketPersistence(),
+      this.setupSocketIOPersistence(),
+      this.setupSSEPersistence(),
+      this.setupMQTTPersistence(),
+      this.setupRESTTabsPersistence(),
+      this.setupGQLTabsPersistence(),
 
-    await this.setupWebsocketPersistence()
-    await this.setupSocketIOPersistence()
-    await this.setupSSEPersistence()
-    await this.setupMQTTPersistence()
-    await this.setupRESTTabsPersistence()
-    await this.setupGQLTabsPersistence()
-
-    await this.setupSecretEnvironmentsPersistence()
+      this.setupSecretEnvironmentsPersistence(),
+    ])
   }
 
   /**

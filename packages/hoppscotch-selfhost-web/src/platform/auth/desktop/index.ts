@@ -78,7 +78,10 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
   try {
     const accessToken = await persistenceService.getLocalConfig("access_token")
     const refreshToken = await persistenceService.getLocalConfig("refresh_token")
-    if (!accessToken || !refreshToken) return { error: "Access token not found" }
+
+    if (!accessToken || !refreshToken) {
+      return { error: "auth/cookies_not_found" }
+    }
 
     const { response } = interceptorService.execute({
       id: Date.now(),
@@ -103,6 +106,7 @@ async function getInitialUserDetails(): Promise<GQLResponse | { error: string }>
     })
 
     const responseBytes = await response
+
     if (E.isLeft(responseBytes)) {
       return { error: "auth/cookies_not_found" }
     }

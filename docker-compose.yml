@@ -14,7 +14,7 @@
 # - admin: The self-host admin dashboard only
 # - webapp: The static web app server only
 # - database: Just the PostgreSQL database
-# - except-webapp: All services except webapp for local development
+# - just-backend: All services except webapp for local development
 # - deprecated: All deprecated services (not recommended)
 
 # USAGE:
@@ -22,7 +22,7 @@
 # To run the default setup: docker compose --profile default up
 # To run without database: docker compose --profile default-no-db up
 # To run specific components: docker compose --profile backend up
-# To run all except webapp: docker compose --profile except-webapp up
+# To run all except webapp: docker compose --profile just-backend up
 # To run deprecated services: docker compose --profile deprecated up
 
 # NOTE: The default and default-no-db profiles should not be mixed with individual service
@@ -31,7 +31,7 @@
 services:
   # This service runs the backend app in the port 3170
   hoppscotch-backend:
-    profiles: ["backend", "except-webapp"]
+    profiles: ["backend", "just-backend"]
     container_name: hoppscotch-backend
     build:
       dockerfile: prod.Dockerfile
@@ -129,7 +129,7 @@ services:
   # you are using an external postgres instance
   # This will be exposed at port 5432
   hoppscotch-db:
-    profiles: ["default", "database", "except-webapp"]
+    profiles: ["default", "database", "just-backend"]
     image: postgres:15
     ports:
       - "5432:5432"
@@ -152,7 +152,7 @@ services:
 
   # Auto-migration service - handles database migrations automatically
   hoppscotch-migrate:
-    profiles: ["default", "except-webapp"]
+    profiles: ["default", "just-backend"]
     build:
       dockerfile: prod.Dockerfile
       context: .
@@ -233,7 +233,7 @@ services:
 #    docker compose --profile database up # Just the database
 #
 # 4. Development deployment:
-#    docker compose --profile except-webapp up  # All services except webapp
+#    docker compose --profile just-backend up  # All services except webapp
 #
 # 5. Deprecated services:
 #    docker compose --profile deprecated up

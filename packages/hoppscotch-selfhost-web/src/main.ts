@@ -56,48 +56,52 @@ const getInterceptors = (mode: Platform) =>
     service
   }))
 
-createHoppApp("#app", {
-  ui: {
-    additionalFooterMenuItems: stdFooterItems,
-    additionalSupportOptionsMenuItems: stdSupportOptionItems,
-    appHeader: {
-      paddingLeft: headerPaddingLeft,
-      paddingTop: headerPaddingTop,
+async function initApp() {
+  await createHoppApp("#app", {
+    ui: {
+      additionalFooterMenuItems: stdFooterItems,
+      additionalSupportOptionsMenuItems: stdSupportOptionItems,
+      appHeader: {
+        paddingLeft: headerPaddingLeft,
+        paddingTop: headerPaddingTop,
+      },
     },
-  },
-  auth: platformDefs.auth.get(kernelMode),
-  kernelIO,
-  sync: {
-    environments: platformDefs.environments.get(kernelMode),
-    collections: platformDefs.collections.get(kernelMode),
-    settings: platformDefs.settings.get(kernelMode),
-    history: platformDefs.history.get(kernelMode),
-  },
-  kernelInterceptors: {
-    default: kernelMode === "desktop" ? "native" : "browser",
-    interceptors: getInterceptors(kernelMode),
-  },
-  platformFeatureFlags: {
-    exportAsGIST: false,
-    hasTelemetry: false,
-  },
-  limits: {
-    collectionImportSizeLimit: 50,
-  },
-  infra: InfraPlatform,
-})
-
-if (kernelMode === "desktop") {
-  listen("will-enter-fullscreen", () => {
-    headerPaddingTop.value = "0px"
-    headerPaddingLeft.value = "0px"
+    auth: platformDefs.auth.get(kernelMode),
+    kernelIO,
+    sync: {
+      environments: platformDefs.environments.get(kernelMode),
+      collections: platformDefs.collections.get(kernelMode),
+      settings: platformDefs.settings.get(kernelMode),
+      history: platformDefs.history.get(kernelMode),
+    },
+    kernelInterceptors: {
+      default: kernelMode === "desktop" ? "native" : "browser",
+      interceptors: getInterceptors(kernelMode),
+    },
+    platformFeatureFlags: {
+      exportAsGIST: false,
+      hasTelemetry: false,
+    },
+    limits: {
+      collectionImportSizeLimit: 50,
+    },
+    infra: InfraPlatform,
   })
 
-  listen("will-exit-fullscreen", () => {
+  if (kernelMode === "desktop") {
+    listen("will-enter-fullscreen", () => {
+      headerPaddingTop.value = "0px"
+      headerPaddingLeft.value = "0px"
+    })
+
+    listen("will-exit-fullscreen", () => {
+      headerPaddingTop.value = "2px"
+      headerPaddingLeft.value = "70px"
+    })
+
     headerPaddingTop.value = "2px"
     headerPaddingLeft.value = "70px"
-  })
-
-  headerPaddingTop.value = "2px"
-  headerPaddingLeft.value = "70px"
+  }
 }
+
+initApp().catch(console.error)
