@@ -1,3 +1,0 @@
-[default]
-description = "Default permissions for Hoppscotch AppLoad plugin"
-permissions = ["allow-load", "allow-download"]

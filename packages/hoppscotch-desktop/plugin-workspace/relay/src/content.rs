@@ -10,11 +10,35 @@ use crate::{
 
 pub(crate) struct ContentHandler<'a> {
     handle: &'a mut Easy,
+    original_headers: HashMap<String, String>,
 }
 
 impl<'a> ContentHandler<'a> {
-    pub(crate) fn new(handle: &'a mut Easy) -> Self {
-        Self { handle }
+    pub(crate) fn new(handle: &'a mut Easy, headers: Option<&HashMap<String, String>>) -> Self {
+        tracing::debug!(
+            "Creating new ContentHandler with original headers: {:?}",
+            headers
+        );
+        Self {
+            handle,
+            original_headers: headers.cloned().unwrap_or_default(),
+        }
+    }
+
+    fn merge_and_commit_headers(&mut self, new_headers: HashMap<String, String>) -> Result<()> {
+        let mut merged = self.original_headers.clone();
+        tracing::info!(
+            original_headers = ?self.original_headers,
+            new_headers = ?new_headers,
+            "Merging headers"
+        );
+
+        for (key, value) in new_headers {
+            merged.insert(key, value);
+        }
+
+        tracing::info!(merged_headers = ?merged, "Committing merged headers");
+        HeadersBuilder::new(self.handle).add_headers(Some(&merged))
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
@@ -24,21 +48,21 @@ impl<'a> ContentHandler<'a> {
                 content,
                 media_type,
             } => {
-                tracing::trace!(content_length = content.len(), "Setting text content");
+                tracing::info!(content_length = content.len(), "Setting text content");
                 self.set_text_content(content, media_type)
             }
             ContentType::Json {
                 content,
                 media_type,
             } => {
-                tracing::trace!("Setting JSON content");
+                tracing::info!("Setting JSON content");
                 self.set_json_content(content, media_type)
             }
             ContentType::Form {
                 content,
                 media_type,
             } => {
-                tracing::trace!(field_count = content.len(), "Setting form content");
+                tracing::info!(field_count = content.len(), "Setting form content");
                 self.set_form_content(content, media_type)
             }
             ContentType::Binary {
@@ -46,9 +70,8 @@ impl<'a> ContentHandler<'a> {
                 media_type,
                 filename,
             } => {
-                tracing::trace!(
+                tracing::info!(
                     content_length = content.len(),
-                    media_type = ?media_type,
                     filename = ?filename,
                     "Setting binary content"
                 );
@@ -58,35 +81,44 @@ impl<'a> ContentHandler<'a> {
                 content,
                 media_type,
             } => {
-                tracing::trace!(field_count = content.len(), "Setting multipart content");
+                tracing::info!(field_count = content.len(), "Setting multipart content");
                 self.set_multipart_content(content, media_type)
             }
             ContentType::Xml {
                 content,
                 media_type,
             } => {
-                tracing::trace!("Setting XML content");
-                self.set_xml_content(content, media_type)
+                tracing::info!("Setting XML content");
+                self.set_text_content(content, media_type)
             }
             ContentType::Urlencoded {
                 content,
                 media_type,
             } => {
-                tracing::trace!(field_count = content.len(), "Setting URL-encoded content");
+                tracing::info!(field_count = content.len(), "Setting URL-encoded content");
                 self.set_urlencoded_content(content, media_type)
             }
         }
     }
 
     fn set_text_content(&mut self, content: &str, media_type: &MediaType) -> Result<()> {
-        HeadersBuilder::new(self.handle).add_content_type(&media_type.to_string())?;
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_string(), media_type.to_string());
+
+        self.merge_and_commit_headers(headers)?;
 
         self.handle
             .post_fields_copy(content.as_bytes())
-            .map_err(|e| RelayError::Network {
-                message: "Failed to set text content".into(),
-                cause: Some(e.to_string()),
-            })
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to set text content");
+                RelayError::Network {
+                    message: "Failed to set text content".into(),
+                    cause: Some(e.to_string()),
+                }
+            })?;
+
+        tracing::debug!("Text content set successfully");
+        Ok(())
     }
 
     fn set_json_content(
@@ -94,19 +126,31 @@ impl<'a> ContentHandler<'a> {
         content: &serde_json::Value,
         media_type: &MediaType,
     ) -> Result<()> {
-        HeadersBuilder::new(self.handle).add_content_type(&media_type.to_string())?;
-
-        let json_str = serde_json::to_string(content).map_err(|e| RelayError::Parse {
-            message: "Failed to serialize JSON".into(),
-            cause: Some(e.to_string()),
+        let json_str = serde_json::to_string(content).map_err(|e| {
+            tracing::error!(error = %e, "Failed to serialize JSON");
+            RelayError::Parse {
+                message: "Failed to serialize JSON".into(),
+                cause: Some(e.to_string()),
+            }
         })?;
+
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_string(), media_type.to_string());
+
+        self.merge_and_commit_headers(headers)?;
 
         self.handle
             .post_fields_copy(json_str.as_bytes())
-            .map_err(|e| RelayError::Network {
-                message: "Failed to set JSON content".into(),
-                cause: Some(e.to_string()),
-            })
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to set JSON content");
+                RelayError::Network {
+                    message: "Failed to set JSON content".into(),
+                    cause: Some(e.to_string()),
+                }
+            })?;
+
+        tracing::debug!("JSON content set successfully");
+        Ok(())
     }
 
     fn set_binary_content(
@@ -115,29 +159,35 @@ impl<'a> ContentHandler<'a> {
         media_type: &MediaType,
         filename: Option<&str>,
     ) -> Result<()> {
+        let mut headers = HashMap::new();
+
         if let Some(name) = filename {
             let safe_name = Path::new(name)
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or(name);
 
-            HeadersBuilder::new(self.handle).add_headers(Some(&HashMap::from([
-                ("Content-Type".to_string(), vec![media_type.to_string()]),
-                (
-                    "Content-Disposition".to_string(),
-                    vec![format!("attachment; filename=\"{}\"", safe_name)],
-                ),
-            ])))?;
+            headers.insert("Content-Type".to_string(), media_type.to_string());
+            headers.insert(
+                "Content-Disposition".to_string(),
+                format!("attachment; filename=\"{}\"", safe_name),
+            );
         } else {
-            HeadersBuilder::new(self.handle).add_content_type(&media_type.to_string())?;
+            headers.insert("Content-Type".to_string(), media_type.to_string());
         }
 
-        self.handle
-            .post_fields_copy(content)
-            .map_err(|e| RelayError::Network {
+        self.merge_and_commit_headers(headers)?;
+
+        self.handle.post_fields_copy(content).map_err(|e| {
+            tracing::error!(error = %e, "Failed to set binary content");
+            RelayError::Network {
                 message: "Failed to set binary content".into(),
                 cause: Some(e.to_string()),
-            })
+            }
+        })?;
+
+        tracing::debug!("Binary content set successfully");
+        Ok(())
     }
 
     fn set_form_content(
@@ -145,18 +195,27 @@ impl<'a> ContentHandler<'a> {
         content: &HashMap<String, Vec<FormValue>>,
         media_type: &MediaType,
     ) -> Result<()> {
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_string(), media_type.to_string());
+
+        self.merge_and_commit_headers(headers)?;
+
         let mut form = curl::easy::Form::new();
 
         for (key, values) in content {
             for value in values {
                 match value {
                     FormValue::Text(text) => {
+                        tracing::debug!(key = %key, text_length = text.len(), "Adding form text field");
                         form.part(key)
                             .contents(text.as_bytes())
                             .add()
-                            .map_err(|e| RelayError::Network {
-                                message: "Failed to add form text field".into(),
-                                cause: Some(e.to_string()),
+                            .map_err(|e| {
+                                tracing::error!(error = %e, key = %key, "Failed to add form text field");
+                                RelayError::Network {
+                                    message: format!("Failed to add form text field: {}", key),
+                                    cause: Some(e.to_string()),
+                                }
                             })?;
                     }
                     FormValue::File {
@@ -164,25 +223,47 @@ impl<'a> ContentHandler<'a> {
                         content_type,
                         data,
                     } => {
+                        tracing::debug!(
+                            key = %key,
+                            filename = %filename,
+                            content_type = ?content_type,
+                            data_length = data.len(),
+                            "Adding form file field"
+                        );
                         form.part(key)
                             .buffer(&filename, data.to_vec())
                             .content_type(&content_type.to_string())
                             .add()
-                            .map_err(|e| RelayError::Network {
-                                message: "Failed to add form file field".into(),
-                                cause: Some(e.to_string()),
+                            .map_err(|e| {
+                                tracing::error!(
+                                    error = %e,
+                                    key = %key,
+                                    filename = %filename,
+                                    "Failed to add form file field"
+                                );
+                                RelayError::Network {
+                                    message: format!(
+                                        "Failed to add form file field: {} ({})",
+                                        key, filename
+                                    ),
+                                    cause: Some(e.to_string()),
+                                }
                             })?;
                     }
                 }
             }
         }
 
-        HeadersBuilder::new(self.handle).add_content_type(&media_type.to_string())?;
+        self.handle.httppost(form).map_err(|e| {
+            tracing::error!(error = %e, "Failed to set form data");
+            RelayError::Network {
+                message: "Failed to set form data".into(),
+                cause: Some(e.to_string()),
+            }
+        })?;
 
-        self.handle.httppost(form).map_err(|e| RelayError::Network {
-            message: "Failed to set form data".into(),
-            cause: Some(e.to_string()),
-        })
+        tracing::debug!("Form content set successfully");
+        Ok(())
     }
 
     fn set_multipart_content(
@@ -193,16 +274,15 @@ impl<'a> ContentHandler<'a> {
         self.set_form_content(content, media_type)
     }
 
-    fn set_xml_content(&mut self, content: &str, media_type: &MediaType) -> Result<()> {
-        self.set_text_content(content, media_type)
-    }
-
     fn set_urlencoded_content(
         &mut self,
         content: &HashMap<String, String>,
         media_type: &MediaType,
     ) -> Result<()> {
-        HeadersBuilder::new(self.handle).add_content_type(&media_type.to_string())?;
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_string(), media_type.to_string());
+
+        self.merge_and_commit_headers(headers)?;
 
         let encoded: String = content
             .iter()
@@ -210,11 +290,19 @@ impl<'a> ContentHandler<'a> {
             .collect::<Vec<_>>()
             .join("&");
 
+        tracing::debug!(encoded_length = encoded.len(), "Encoded form data");
+
         self.handle
             .post_fields_copy(encoded.as_bytes())
-            .map_err(|e| RelayError::Network {
-                message: "Failed to set urlencoded content".into(),
-                cause: Some(e.to_string()),
-            })
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to set urlencoded content");
+                RelayError::Network {
+                    message: "Failed to set urlencoded content".into(),
+                    cause: Some(e.to_string()),
+                }
+            })?;
+
+        tracing::debug!("URL-encoded content set successfully");
+        Ok(())
     }
 }

@@ -14,30 +14,41 @@ impl<'a> HeadersBuilder<'a> {
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
-    pub(crate) fn add_headers(
-        &mut self,
-        headers: Option<&HashMap<String, Vec<String>>>,
-    ) -> Result<()> {
+    pub(crate) fn add_headers(&mut self, headers: Option<&HashMap<String, String>>) -> Result<()> {
         let Some(headers) = headers else {
-            tracing::trace!("No headers to add");
+            tracing::debug!("No headers provided");
             return Ok(());
         };
 
-        let mut list = List::new();
-        for (key, values) in headers {
-            for value in values {
-                list.append(&format!("{}: {}", key, value)).map_err(|e| {
-                    tracing::error!(error = %e, key = %key, "Failed to append header");
+        let header_count = headers.len();
+        tracing::info!(header_count, "Building header list");
+
+        let list = headers
+            .iter()
+            .map(|(key, value)| {
+                tracing::debug!(
+                    ?key,
+                    value_count = value.len(),
+                    ?value,
+                    "Processing headers"
+                );
+                let header = format!("{key}: {value}");
+                tracing::debug!(%header, "Adding header");
+                header
+            })
+            .try_fold(List::new(), |mut list, header| {
+                list.append(&header).map_err(|e| {
+                    tracing::error!(%e, "Failed to append header: {header}");
                     RelayError::Network {
-                        message: "Failed to append header".into(),
+                        message: format!("Failed to append header: {header}"),
                         cause: Some(e.to_string()),
                     }
                 })?;
-            }
-        }
+                Ok(list)
+            })?;
 
         self.handle.http_headers(list).map_err(|e| {
-            tracing::error!(error = %e, "Failed to set headers");
+            tracing::error!(%e, "Failed to set headers");
             RelayError::Network {
                 message: "Failed to set headers".into(),
                 cause: Some(e.to_string()),
@@ -47,23 +58,9 @@ impl<'a> HeadersBuilder<'a> {
 
     #[tracing::instrument(skip(self), level = "debug")]
     pub(crate) fn add_content_type(&mut self, content_type: &str) -> Result<()> {
-        tracing::trace!(content_type = %content_type, "Setting content type header");
-        let mut list = List::new();
-        list.append(&format!("Content-Type: {}", content_type))
-            .map_err(|e| {
-                tracing::error!(error = %e, "Failed to set content type");
-                RelayError::Network {
-                    message: "Failed to set content type".into(),
-                    cause: Some(e.to_string()),
-                }
-            })?;
-
-        self.handle.http_headers(list).map_err(|e| {
-            tracing::error!(error = %e, "Failed to set content type header");
-            RelayError::Network {
-                message: "Failed to set content type header".into(),
-                cause: Some(e.to_string()),
-            }
-        })
+        tracing::info!(content_type = %content_type, "Adding content-type header");
+        let mut headers = HashMap::new();
+        headers.insert("Content-Type".to_string(), content_type.to_string());
+        self.add_headers(Some(&headers))
     }
 }
