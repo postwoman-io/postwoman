@@ -41,7 +41,7 @@ import type {
 } from "graphql"
 import { isObjectType, isInterfaceType, isInputObjectType } from "graphql"
 import { useI18n } from "vue-i18n"
-import { useExplorer } from "~/helpers/graphql/explorer"
+import { ExplorerNavStackItem, useExplorer } from "~/helpers/graphql/explorer"
 import { schema } from "~/helpers/graphql/connection"
 
 // Types
@@ -57,7 +57,7 @@ type SearchResult = {
 
 // Composables
 const { t } = useI18n()
-const { navStack, push } = useExplorer()
+const { navStack, push, pop } = useExplorer()
 
 // Refs
 const searchText = ref("")
@@ -76,7 +76,9 @@ const generateSearchResults = () => {
   const withinType = navItem.def
 
   const typeMap = schema.value.getTypeMap()
-  const typeNames = Object.keys(typeMap)
+  const typeNames = Object.keys(typeMap).filter(
+    (name) => !name.startsWith("__")
+  ) // Filter out __ types
 
   for (const typeName of typeNames) {
     if (results.length >= 100) break
@@ -104,6 +106,9 @@ const generateSearchResults = () => {
     // Search fields
     const fields = type.getFields()
     for (const fieldName in fields) {
+      // Skip fields starting with __
+      if (fieldName.startsWith("__")) continue
+
       const field = fields[fieldName]
 
       // Field name match
@@ -139,11 +144,75 @@ const filteredResults = computed(() =>
 )
 
 // Methods
+const buildNavigationPath = (result: SearchResult) => {
+  const path: ExplorerNavStackItem[] = []
+
+  if (result.type === "Type") {
+    // For type results, just push the type itself
+    path.push({
+      name: result.def.name,
+      def: result.def as GraphQLNamedType,
+    })
+  } else if (result.type.startsWith("Field in")) {
+    // For fields, push both the parent type and the field
+    const parentTypeName = result.type.replace("Field in ", "")
+    const parentType = schema.value?.getType(parentTypeName)
+
+    if (parentType) {
+      path.push({
+        name: parentType.name,
+        def: parentType,
+      })
+      path.push({
+        name: result.name,
+        def: result.def,
+      })
+    }
+  } else if (result.type.startsWith("Argument in")) {
+    // For arguments, push the parent type, the field, and the argument
+    const field = result.def as GraphQLArgument
+    const parentField = navStack.value.find(
+      (item) => item.def && "args" in item.def && item.def.args.includes(field)
+    )
+
+    if (parentField && parentField.def) {
+      const parentType = schema.value?.getType(
+        ("type" in parentField.def && parentField.def.type.toString()) || ""
+      )
+
+      if (parentType) {
+        path.push({
+          name: parentType.name,
+          def: parentType,
+        })
+        path.push({
+          name: parentField.name,
+          def: parentField.def,
+        })
+        path.push({
+          name: result.name,
+          def: result.def,
+        })
+      }
+    }
+  }
+
+  return path
+}
+
 const selectSearchResult = (result: SearchResult) => {
-  push({
-    name: "name" in result.def ? result.def.name : result.name,
-    def: result.def,
+  const navigationPath = buildNavigationPath(result)
+
+  // Reset to root
+  while (navStack.value.length > 1) {
+    pop()
+  }
+
+  // Push each item in the path
+  navigationPath.forEach((item) => {
+    push(item)
   })
+
   showSearchResults.value = false
   searchText.value = ""
   currentResultIndex.value = -1
