@@ -1,5 +1,5 @@
 import { useService } from "dioc/vue"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import {
   getNamedType,
   GraphQLField,
@@ -15,14 +15,27 @@ import { mutationFields, queryFields, subscriptionFields } from "./connection"
 
 const updatedQuery = ref("")
 const cursorPosition = ref({ line: 0, ch: 0 })
+const operations = ref<OperationDefinitionNode[]>([])
 
 export function useQuery() {
   const tabs = useService(GQLTabService)
+
+  const getOperation = (cursorPosition: number) => {
+    return operations.value.find((operation) => {
+      const start = operation.loc?.start
+      const end = operation.loc?.end
+      return start && end && cursorPosition >= start && cursorPosition <= end
+    })
+  }
+
+  const getSelectedOperation = () =>
+    getOperation(tabs.currentActiveTab.value.document.cursorPosition)
 
   function insertGraphQLField(
     currentQuery = "",
     field: GraphQLField<any, any>
   ): string {
+    console.log("currentQuery", currentQuery, operations.value)
     if (!currentQuery.trim()) return createNewQuery(field)
 
     try {
@@ -106,28 +119,6 @@ export function useQuery() {
     const fieldName = field.name
     const fieldType = getNamedType(field.type)
 
-    // Check if the field has a complex type that needs nested selection
-    if (
-      fieldType.name !== "String" &&
-      fieldType.name !== "Int" &&
-      fieldType.name !== "Float" &&
-      fieldType.name !== "Boolean"
-    ) {
-      return {
-        kind: "Field",
-        name: { kind: "Name", value: fieldName },
-        selectionSet: {
-          kind: "SelectionSet",
-          selections: [
-            {
-              kind: "Field",
-              name: { kind: "Name", value: "id" },
-            },
-          ],
-        },
-      }
-    }
-
     // Handle fields with arguments
     if (field.args.length > 0) {
       const argStrings = field.args.map(
@@ -147,6 +138,15 @@ export function useQuery() {
             value: arg.split(":")[1].trim(),
           },
         })),
+      }
+    }
+
+    console.log("fieldType", fieldType, fieldName)
+    // Add empty parentheses for object types
+    if (isObjectType(fieldType)) {
+      return {
+        kind: "Field",
+        name: { kind: "Name", value: `${fieldName}{}` },
       }
     }
 
@@ -184,7 +184,6 @@ export function useQuery() {
   function createNewQuery(field: GraphQLField<any, any>): string {
     const operationType = getOperationType(field)
     const operationName = `${operationType.toLowerCase()}Operation`
-    const fieldType = getNamedType(field.type)
 
     const argParts = field.args.length
       ? `(${field.args.map((arg) => `$${arg.name}: ${arg.type}`).join(", ")})`
@@ -194,14 +193,8 @@ export function useQuery() {
       ? `(${field.args.map((arg) => `${arg.name}: $${arg.name}`).join(", ")})`
       : ""
 
-    const fieldSelection = isObjectType(fieldType)
-      ? `{\n  ${Object.values(fieldType.getFields())
-          .map((subField: any) => subField.name)
-          .join("\n  ")}\n}`
-      : ""
-
     return `${operationType.toLowerCase()} ${operationName}${argParts} {
-  ${field.name}${variableParts} ${fieldSelection}
+  ${field.name}${variableParts}
 }`
   }
 
@@ -235,18 +228,25 @@ export function useQuery() {
     if (!currentTab) return
 
     const currentQuery = currentTab.document.request.query || ""
-    const newQuery = insertGraphQLField(currentQuery, field)
 
-    // Calculate cursor position - assuming we want to place it after the inserted field
-    const fieldNameIndex = newQuery.lastIndexOf(field.name)
-    if (fieldNameIndex !== -1) {
-      cursorPosition.value = getCursorPositionFromIndex(
-        newQuery,
-        fieldNameIndex + field.name.length
-      )
-    }
+    console.log(
+      "currentQuery",
+      currentTab.document.cursorPosition,
+      getSelectedOperation(currentTab.document.cursorPosition)
+    )
 
-    updatedQuery.value = newQuery
+    // const newQuery = insertGraphQLField(currentQuery, field)
+
+    // // Calculate cursor position - assuming we want to place it after the inserted field
+    // const fieldNameIndex = newQuery.lastIndexOf(field.name)
+    // if (fieldNameIndex !== -1) {
+    //   cursorPosition.value = getCursorPositionFromIndex(
+    //     newQuery,
+    //     fieldNameIndex + field.name.length
+    //   )
+    // }
+
+    // updatedQuery.value = newQuery
   }
 
   const handleAddArgument = (arg: any) => {
@@ -273,5 +273,6 @@ export function useQuery() {
     handleAddArgument,
     updatedQuery,
     cursorPosition,
+    operationDefinitions: operations,
   }
 }

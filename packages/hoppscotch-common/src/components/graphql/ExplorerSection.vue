@@ -1,7 +1,7 @@
 <template>
   <div class="mb-6">
-    <div class="hopp-doc-explorer-section-title flex gap-2 mb-2">
-      <component :is="iconComponent" />
+    <div class="hopp-doc-explorer-section-title flex gap-2 mb-2 font-bold">
+      <!-- <component :is="iconComponent" /> -->
       {{ title }}
     </div>
     <div class="hopp-doc-explorer-section-content">

@@ -5,17 +5,29 @@
     </AppMarkdown>
 
     <GraphqlExplorerSection title="Root Types">
-      <div v-if="queryType">
+      <div
+        v-if="queryType"
+        @click="handleTypeClick(queryType)"
+        class="hopp-doc-explorer-root-wrapper"
+      >
         <span class="hopp-doc-explorer-root-type">query</span>
         {{ ": " }}
         <GraphqlTypeLink :type="queryType" />
       </div>
-      <div v-if="mutationType">
+      <div
+        v-if="mutationType"
+        class="hopp-doc-explorer-root-wrapper"
+        @click="handleTypeClick(mutationType)"
+      >
         <span class="hopp-doc-explorer-root-type">mutation</span>
         {{ ": " }}
         <GraphqlTypeLink :type="mutationType" />
       </div>
-      <div v-if="subscriptionType">
+      <div
+        v-if="subscriptionType"
+        class="hopp-doc-explorer-root-wrapper"
+        @click="handleTypeClick(subscriptionType)"
+      >
         <span class="hopp-doc-explorer-root-type">subscription</span>
         {{ ": " }}
         <GraphqlTypeLink :type="subscriptionType" />
@@ -23,7 +35,7 @@
     </GraphqlExplorerSection>
     <GraphqlExplorerSection title="All Schema Types">
       <div v-if="filteredTypes">
-        <div v-for="type in filteredTypes" :key="type.name">
+        <div v-for="type in filteredTypes" :key="type.name" class="px-2">
           <GraphqlTypeLink :type="type" />
         </div>
       </div>
@@ -33,7 +45,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import type { GraphQLSchema } from "graphql"
+import type { GraphQLNamedType, GraphQLSchema } from "graphql"
+import { useExplorer } from "~/helpers/graphql/explorer"
 
 const props = defineProps<{
   schema: GraphQLSchema
@@ -49,6 +62,12 @@ const schemaDescription = computed(
     props.schema.description ||
     "A GraphQL schema provides a root type for each kind of operation."
 )
+
+const { push } = useExplorer()
+
+const handleTypeClick = (namedType: GraphQLNamedType) => {
+  push({ name: namedType.name, def: namedType })
+}
 
 const ignoreTypesInAllSchema = computed(() => [
   queryType?.name,
@@ -66,3 +85,9 @@ const filteredTypes = computed(() => {
   )
 })
 </script>
+
+<style scoped lang="scss">
+.hopp-doc-explorer-root-wrapper {
+  @apply cursor-pointer py-1 px-2 hover:bg-primaryLight;
+}
+</style>

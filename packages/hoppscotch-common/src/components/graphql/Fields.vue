@@ -13,17 +13,12 @@ import {
   isInterfaceType,
   isObjectType,
 } from "graphql"
-import { computed, ref } from "vue"
+import { computed } from "vue"
 import { ExplorerFieldDef } from "~/helpers/graphql/explorer"
 
 const props = defineProps<{
   type: GraphQLNamedType
 }>()
-
-const showDeprecated = ref(false)
-const handleShowDeprecated = () => {
-  showDeprecated.value = true
-}
 
 const fieldMap = computed(() => {
   if (

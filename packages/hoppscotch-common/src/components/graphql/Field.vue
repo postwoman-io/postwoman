@@ -1,5 +1,5 @@
 <template>
-  <div class="hopp-doc-explorer-item">
+  <div class="hopp-doc-explorer-item" @click="handleClick">
     <div class="flex">
       <div
         :class="{
@@ -47,11 +47,17 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { ExplorerFieldDef } from "~/helpers/graphql/explorer"
+import { ExplorerFieldDef, useExplorer } from "~/helpers/graphql/explorer"
 
 const props = defineProps<{
   field: ExplorerFieldDef
 }>()
+
+const { push } = useExplorer()
+
+const handleClick = () => {
+  push({ name: props.field.name, def: props.field })
+}
 
 const args = computed(() =>
   "args" in props.field
@@ -59,3 +65,9 @@ const args = computed(() =>
     : []
 )
 </script>
+
+<style scoped lang="scss">
+.hopp-doc-explorer-item {
+  @apply cursor-pointer py-1 px-2 hover:bg-primaryLight;
+}
+</style>

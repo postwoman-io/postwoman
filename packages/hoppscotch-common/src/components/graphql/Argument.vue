@@ -8,7 +8,7 @@
   </template>
 
   <div v-else class="hopp-doc-explorer-argument">
-    <p class="inline-flex items-center mb-0 gap-1 align-bottom">
+    <p class="inline-flex items-center mb-0 gap-2 align-bottom">
       <span
         v-if="showAddButton"
         class="hover:text-accent cursor-pointer"
@@ -21,9 +21,9 @@
       <GraphqlDefaultValue v-if="showDefaultValue !== false" :field="arg" />
     </p>
 
-    <AppMarkdown v-if="arg.description" type="description">
+    <!-- <AppMarkdown v-if="arg.description" type="description">
       {{ arg.description }}
-    </AppMarkdown>
+    </AppMarkdown> -->
 
     <div
       v-if="arg.deprecationReason"
@@ -79,3 +79,9 @@ const insertQuery = () => {
   handleAddArgument(props.arg)
 }
 </script>
+
+<style scoped lang="scss">
+.hopp-doc-explorer-argument {
+  @apply cursor-pointer py-1 px-2 hover:bg-primaryLight;
+}
+</style>

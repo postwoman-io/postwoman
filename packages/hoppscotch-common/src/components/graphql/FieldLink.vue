@@ -1,15 +1,14 @@
 <template>
-  <p class="inline-flex items-center mb-0 gap-1 align-bottom">
+  <p class="inline-flex items-center mb-0 gap-2 align-bottom">
     <span class="hover:text-accent cursor-pointer" @click="insertQuery">
       <icon-lucide-plus-circle />
     </span>
-    <a
-      href="#"
+    <span
       class="hopp-doc-explorer-field-name [text-decoration:inherit]"
-      @click="handleClick"
+      @click="clickable ? handleClick : undefined"
     >
       {{ field.name }}
-    </a>
+    </span>
   </p>
 </template>
 
@@ -21,6 +20,7 @@ const { handleAddField } = useQuery()
 
 const props = defineProps<{
   field: ExplorerFieldDef
+  clickable?: boolean
 }>()
 
 const { push } = useExplorer()
@@ -31,7 +31,6 @@ const handleClick = (event: MouseEvent) => {
 }
 
 const insertQuery = () => {
-  console.log("Inserting field")
   handleAddField(props.field)
 }
 </script>

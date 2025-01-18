@@ -42,20 +42,16 @@ export function useExplorer(initialSchema?: GraphQLSchema) {
 
   const currentNavItem = computed(() => {
     const lastItem = navStack.value[navStack.value.length - 1]
-    console.log("currentNavItem", lastItem)
     return lastItem
   })
 
   function push(item: ExplorerNavStackItem) {
-    console.log("pushing", item)
     const lastItem = navStack.value[navStack.value.length - 1]
 
     // Avoid pushing duplicate items
     if (lastItem.def === item.def) return
 
     navStack.value.push(item)
-
-    console.log("navStack", navStack.value)
   }
 
   function pop() {

@@ -11,6 +11,7 @@ import { renderType, useExplorer } from "~/helpers/graphql/explorer"
 
 const props = defineProps<{
   type: GraphQLType
+  clickable?: boolean
 }>()
 
 const { push } = useExplorer()
@@ -28,11 +29,11 @@ const renderedComponent = computed(() => {
 
   return renderType(props.type, (namedType: GraphQLNamedType) => {
     return h(
-      "a",
+      "span",
       {
         class: "hopp-doc-explorer-type-name",
-        href: "#",
-        onClick: (event: MouseEvent) => handleTypeClick(event, namedType),
+        onClick: (event: MouseEvent) =>
+          props.clickable ? handleTypeClick(event, namedType) : undefined,
       },
       namedType.name
     )

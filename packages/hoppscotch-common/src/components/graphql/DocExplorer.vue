@@ -25,18 +25,23 @@
         </template>
       </div>
     </div>
-    <div class="hopp-doc-explorer-header px-3 mt-4" v-if="navStack.length > 1">
+    <!-- <div class="hopp-doc-explorer-header px-3 mt-4" v-if="navStack.length > 1">
       <div class="hopp-doc-explorer-header-content mb-2">
         <div class="hopp-doc-explorer-title text-xl font-bold break-words">
           {{ currentNavItem.name }}
         </div>
       </div>
-    </div>
+    </div> -->
     <div class="hopp-doc-explorer-content mt-4">
       <template v-if="navStack.length === 1">
         <GraphqlSchemaDocumentation :schema="schema" />
       </template>
       <template v-else-if="isType(currentNavItem.def)">
+        <div
+          class="hopp-doc-explorer-title text-xl font-bold break-words px-3 mb-4"
+        >
+          {{ currentNavItem.name }}
+        </div>
         <GraphqlTypeDocumentation :type="currentNavItem.def" />
       </template>
       <template v-else-if="currentNavItem.def">
@@ -76,12 +81,9 @@ a.hopp-doc-explorer-field-name {
 .hopp-doc-explorer-root-type {
   color: hsl(208, 100%, 72%);
 }
-a.hopp-doc-explorer-type-name {
+.hopp-doc-explorer-type-name {
   color: hsl(30, 100%, 80%);
   cursor: pointer;
-  &:hover {
-    text-decoration: underline;
-  }
 }
 
 .hopp-doc-explorer-argument-name {
@@ -97,9 +99,5 @@ a.hopp-doc-explorer-type-name {
   padding: 0.5rem;
   background-color: hsl(0, 100%, 90%);
   border-radius: 0.25rem;
-}
-
-.hopp-doc-explorer-item {
-  @apply py-1;
 }
 </style>
