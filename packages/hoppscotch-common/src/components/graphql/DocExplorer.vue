@@ -72,18 +72,14 @@ const { navStack, currentNavItem, navigateToIndex } = useExplorer()
 </script>
 
 <style lang="scss">
-a.hopp-doc-explorer-field-name {
+.hopp-doc-explorer-field-name {
   color: hsl(208, 100%, 72%);
-  &:hover {
-    text-decoration: underline;
-  }
 }
 .hopp-doc-explorer-root-type {
   color: hsl(208, 100%, 72%);
 }
 .hopp-doc-explorer-type-name {
   color: hsl(30, 100%, 80%);
-  cursor: pointer;
 }
 
 .hopp-doc-explorer-argument-name {

@@ -6,7 +6,7 @@
           '!line-through': field.deprecationReason,
         }"
       >
-        <GraphqlFieldLink :field="field" />
+        <GraphqlFieldLink :field="field" @add-field="insertQuery" />
         <template v-if="args.length > 0">
           (<span>
             <template v-for="arg in args" :key="arg.name">
@@ -48,15 +48,21 @@
 <script setup lang="ts">
 import { computed } from "vue"
 import { ExplorerFieldDef, useExplorer } from "~/helpers/graphql/explorer"
+import { useQuery } from "~/helpers/graphql/query"
 
 const props = defineProps<{
   field: ExplorerFieldDef
 }>()
 
 const { push } = useExplorer()
+const { handleAddField } = useQuery()
 
-const handleClick = () => {
+const handleClick = ($event: ExplorerFieldDef) => {
   push({ name: props.field.name, def: props.field })
+}
+
+const insertQuery = () => {
+  handleAddField(props.field, true)
 }
 
 const args = computed(() =>

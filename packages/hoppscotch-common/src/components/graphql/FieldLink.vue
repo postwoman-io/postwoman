@@ -1,6 +1,9 @@
 <template>
   <p class="inline-flex items-center mb-0 gap-2 align-bottom">
-    <span class="hover:text-accent cursor-pointer" @click="insertQuery">
+    <span
+      class="hover:text-accent cursor-pointer"
+      @click.stop="emit('add-field', field)"
+    >
       <icon-lucide-plus-circle />
     </span>
     <span
@@ -14,13 +17,14 @@
 
 <script setup lang="ts">
 import { type ExplorerFieldDef, useExplorer } from "~/helpers/graphql/explorer"
-import { useQuery } from "~/helpers/graphql/query"
-
-const { handleAddField } = useQuery()
 
 const props = defineProps<{
   field: ExplorerFieldDef
   clickable?: boolean
+}>()
+
+const emit = defineEmits<{
+  (event: "add-field", field: ExplorerFieldDef): void
 }>()
 
 const { push } = useExplorer()
@@ -28,9 +32,5 @@ const { push } = useExplorer()
 const handleClick = (event: MouseEvent) => {
   event.preventDefault()
   push({ name: props.field.name, def: props.field })
-}
-
-const insertQuery = () => {
-  handleAddField(props.field)
 }
 </script>

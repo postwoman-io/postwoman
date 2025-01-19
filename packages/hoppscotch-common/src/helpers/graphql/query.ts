@@ -1,5 +1,4 @@
 import { useService } from "dioc/vue"
-import { computed, ref } from "vue"
 import {
   getNamedType,
   GraphQLField,
@@ -10,8 +9,10 @@ import {
   print,
   visit,
 } from "graphql"
+import { ref } from "vue"
 import { GQLTabService } from "~/services/tab/graphql"
 import { mutationFields, queryFields, subscriptionFields } from "./connection"
+import { ExplorerFieldDef, useExplorer } from "./explorer"
 
 const updatedQuery = ref("")
 const cursorPosition = ref({ line: 0, ch: 0 })
@@ -19,6 +20,7 @@ const operations = ref<OperationDefinitionNode[]>([])
 
 export function useQuery() {
   const tabs = useService(GQLTabService)
+  const { navStack, push } = useExplorer()
 
   const getOperation = (cursorPosition: number) => {
     return operations.value.find((operation) => {
@@ -223,17 +225,24 @@ export function useQuery() {
     }
   }
 
-  const handleAddField = (field: any) => {
+  const handleAddField = (field: ExplorerFieldDef, addToNav = false) => {
+    if (addToNav)
+      push({
+        name: field.name,
+        def: field,
+      })
+
     const currentTab = tabs.currentActiveTab.value
     if (!currentTab) return
 
     const currentQuery = currentTab.document.request.query || ""
 
-    console.log(
-      "currentQuery",
-      currentTab.document.cursorPosition,
-      getSelectedOperation(currentTab.document.cursorPosition)
-    )
+    // console.log("currentQuery", recursiveQueryFields(navStack.value))
+
+    if (!currentQuery.trim()) {
+    }
+
+    // const selectedOperation = getSelectedOperation()
 
     // const newQuery = insertGraphQLField(currentQuery, field)
 
@@ -249,24 +258,7 @@ export function useQuery() {
     // updatedQuery.value = newQuery
   }
 
-  const handleAddArgument = (arg: any) => {
-    const currentTab = tabs.currentActiveTab.value
-    if (!currentTab) return
-
-    const currentQuery = currentTab.document.request.query || ""
-    const newQuery = insertGraphQLField(currentQuery, arg)
-
-    // Calculate cursor position
-    const argNameIndex = newQuery.lastIndexOf(arg.name)
-    if (argNameIndex !== -1) {
-      cursorPosition.value = getCursorPositionFromIndex(
-        newQuery,
-        argNameIndex + arg.name.length
-      )
-    }
-
-    updatedQuery.value = newQuery
-  }
+  const handleAddArgument = (arg: any) => {}
 
   return {
     handleAddField,
