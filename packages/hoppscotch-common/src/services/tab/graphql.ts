@@ -19,6 +19,7 @@ export class GQLTabService extends TabService<HoppGQLDocument> {
         request: getDefaultGQLRequest(),
         isDirty: false,
         optionTabPreference: "query",
+        cursorPosition: 0,
       },
     })
 

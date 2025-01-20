@@ -13,6 +13,7 @@
         v-model="request.query"
         @run-query="runQuery"
         @save-request="saveRequest"
+        @cursor-position="updateCursorPos"
       />
     </HoppSmartTab>
     <HoppSmartTab
@@ -243,6 +244,10 @@ watch(
   },
   { deep: true }
 )
+
+const updateCursorPos = (pos: number) => {
+  tabs.currentActiveTab.value.document.cursorPosition = pos
+}
 
 const hideRequestModal = () => {
   showSaveRequestModal.value = false

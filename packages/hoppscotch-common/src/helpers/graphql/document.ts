@@ -53,6 +53,8 @@ export type HoppGQLDocument = {
    */
   isDirty: boolean
 
+  cursorPosition: number
+
   /**
    * Info about where this request should be saved.
    * This contains where the request is originated from basically.
