@@ -42,7 +42,7 @@
 import type { GraphQLArgument } from "graphql"
 import { useQuery } from "~/helpers/graphql/query"
 
-const { handleAddArgument } = useQuery()
+const { handleAddArgument, handleAddField } = useQuery()
 
 interface ArgumentProps {
   /**
@@ -75,7 +75,7 @@ const props = withDefaults(defineProps<ArgumentProps>(), {
 })
 
 const insertQuery = () => {
-  handleAddArgument(props.arg)
+  handleAddField(props.arg, false)
 }
 </script>
 

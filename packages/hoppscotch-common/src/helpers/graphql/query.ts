@@ -8,12 +8,17 @@ import {
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
-  parse,
   print,
+  SelectionNode,
 } from "graphql"
 import { ref } from "vue"
 import { GQLTabService } from "~/services/tab/graphql"
-import { ExplorerFieldDef, ExplorerNavStack, useExplorer } from "./explorer"
+import {
+  ExplorerFieldDef,
+  ExplorerNavStack,
+  ExplorerNavStackItem,
+  useExplorer,
+} from "./explorer"
 
 const updatedQuery = ref("")
 const cursorPosition = ref({ line: 0, ch: 0 })
@@ -58,7 +63,7 @@ export function useQuery() {
         : OperationTypeNode.SUBSCRIPTION
   }
 
-  function buildQueryAst(navStack: ExplorerNavStack): DocumentNode {
+  function buildOperationNode(navStack: ExplorerNavStackItem[]): DocumentNode {
     // skip root and query/mutation/subscription
     const queryPath = navStack.slice(2)
 
@@ -138,43 +143,49 @@ export function useQuery() {
   }
 
   function hasField(
-    selections: readonly FieldNode[] | undefined,
+    selections: readonly SelectionNode[] | undefined,
     fieldName: string
   ): FieldNode | undefined {
     if (!selections) return undefined
     return selections.find(
       (selection) =>
         selection.kind === Kind.FIELD && selection.name.value === fieldName
-    )
+    ) as FieldNode | undefined
   }
 
   function hasArgument(
-    args: readonly ArgumentNode[],
+    args: readonly ArgumentNode[] | undefined,
     argName: string
   ): boolean {
+    if (!args) return false
     return args.some((arg) => arg.name.value === argName)
   }
 
-  function handleMergeAst(
-    navStack: ExplorerNavStack,
-    ast: OperationDefinitionNode
-  ): DocumentNode {
+  function mergeAndBuildOperationNode(
+    navStack: ExplorerNavStackItem[],
+    operation: OperationDefinitionNode
+  ): OperationDefinitionNode {
     const queryPath = navStack.slice(2)
-    let currentSelectionSet = ast.selectionSet
+    let currentSelectionSet = operation.selectionSet
 
     // Build the path from top to bottom
     for (let i = 0; i < queryPath.length; i++) {
       const item = queryPath[i]
-      const existingField = hasField(currentSelectionSet.selections, item.name)
+      console.log("item", item.def)
+      let existingField = hasField(currentSelectionSet.selections, item.name)
 
       if (existingField) {
         // If field exists but doesn't have a selection set, create one
         if (!existingField.selectionSet) {
-          existingField.selectionSet = {
-            kind: Kind.SELECTION_SET,
-            selections: [],
+          existingField = {
+            ...existingField,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: [],
+            },
           }
         }
+        console.log("existingField", item.def)
         // Add any missing arguments
         if (item.def?.args) {
           const newArgs: ArgumentNode[] = []
@@ -193,9 +204,12 @@ export function useQuery() {
               })
             }
           }
-          existingField.arguments = [...existingField.arguments, ...newArgs]
+          existingField = {
+            ...existingField,
+            arguments: [...(existingField.arguments || []), ...newArgs],
+          }
         }
-        currentSelectionSet = existingField.selectionSet
+        currentSelectionSet = existingField.selectionSet!
       } else {
         // Create new field with arguments
         const arguments_: ArgumentNode[] = []
@@ -233,19 +247,23 @@ export function useQuery() {
           ...currentSelectionSet.selections,
           newField,
         ]
-        currentSelectionSet = newField.selectionSet
+        currentSelectionSet = newField.selectionSet!
       }
     }
 
-    return ast
+    return operation
   }
 
   const handleAddField = (field: ExplorerFieldDef, addToNav = false) => {
-    if (addToNav)
+    if (addToNav) {
       push({
         name: field.name,
         def: field,
       })
+    }
+
+    const navItems: ExplorerNavStackItem[] = []
+    navItems.push(...(navStack.value as ExplorerNavStack))
 
     const currentTab = tabs.currentActiveTab.value
     if (!currentTab) return
@@ -253,7 +271,7 @@ export function useQuery() {
     const currentQuery = currentTab.document.request.query || ""
 
     if (!currentQuery.trim()) {
-      const q = buildQueryAst(navStack.value)
+      const q = buildOperationNode(navItems)
       const query = print(q)
       updatedQuery.value = query
       return
@@ -262,13 +280,13 @@ export function useQuery() {
     const selectedOperation = getSelectedOperation()
 
     if (!selectedOperation) {
-      const q = buildQueryAst(navStack.value)
+      const q = buildOperationNode(navItems)
       const query = print(q)
       updatedQuery.value = `${currentQuery}\n${query}`
       return
     }
 
-    const queryAst = handleMergeAst(navStack.value, selectedOperation)
+    const queryAst = mergeAndBuildOperationNode(navItems, selectedOperation)
     const query = print(queryAst)
     console.log("queryAst", query)
 
