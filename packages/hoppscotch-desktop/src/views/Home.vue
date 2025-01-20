@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col space-y-6 w-full max-w-md">
-    <!-- Header -->
     <div class="flex flex-col items-center space-y-4">
       <img src="/logo.svg" alt="Hoppscotch" class="h-16 w-16" />
       <div class="flex flex-col items-center">
@@ -9,7 +8,6 @@
       </div>
     </div>
 
-    <!-- Connection Form -->
     <form @submit.prevent="handleConnect" class="flex flex-col space-y-4">
       <div class="flex flex-col space-y-2">
         <HoppSmartInput
@@ -41,7 +39,6 @@
         class="h-10"
       />
 
-      <!-- Recent Connections -->
       <div v-if="recentUrls.length" class="flex flex-col">
         <div class="flex items-center gap-2 my-4">
           <div class="h-px bg-divider flex-1" />
@@ -81,7 +78,6 @@
           </div>
         </div>
 
-        <!-- Clear Unpinned -->
         <div v-if="hasUnpinnedUrls" class="flex justify-end mt-4">
           <HoppButtonSecondary
             :icon="IconLucideTrash2"
@@ -95,17 +91,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
-import { Store } from '@tauri-apps/plugin-store'
-import { download, load } from "@hoppscotch/plugin-appload"
-import { toast } from "@hoppscotch/ui"
-import { pipe } from 'fp-ts/function'
-import * as E from 'fp-ts/Either'
-import * as O from 'fp-ts/Option'
-import * as TE from 'fp-ts/TaskEither'
-import * as A from 'fp-ts/Array'
-import { HoppSmartInput } from "@hoppscotch/ui"
-import { HoppButtonPrimary, HoppButtonSecondary } from "@hoppscotch/ui"
+import { ref, computed, onMounted } from "vue";
+import { LazyStore } from '@tauri-apps/plugin-store';
+import { download, load } from "@hoppscotch/plugin-appload";
+import { pipe } from 'fp-ts/function';
+import * as E from 'fp-ts/Either';
+
 import IconLucideGlobe from "~icons/lucide/globe"
 import IconLucideCheck from "~icons/lucide/check"
 import IconLucideServer from "~icons/lucide/server"
@@ -113,230 +104,126 @@ import IconLucidePin from "~icons/lucide/pin"
 import IconLucidePinOff from "~icons/lucide/pin-off"
 import IconLucideTrash2 from "~icons/lucide/trash2"
 
-const STORE_PATH = "hopp.store.json"
-const MAX_HISTORY = 10
+const STORE_PATH = "hopp.store.json";
+const MAX_HISTORY = 10;
 
-type RecentUrl = {
-  url: string
-  lastUsed: string
-  version?: string
-  pinned: boolean
+interface RecentUrl {
+  url: string;
+  lastUsed: string;
+  version: string;
+  pinned: boolean;
 }
 
-// State
-const store = ref<O.Option<Store>>(O.none)
-const recentUrls = ref<RecentUrl[]>([])
-const appUrl = ref("")
-const error = ref("")
-const isLoading = ref(false)
+const store = new LazyStore(STORE_PATH);
+const recentUrls = ref<RecentUrl[]>([]);
+const appUrl = ref("");
+const error = ref("");
+const isLoading = ref(false);
 
 const hasUnpinnedUrls = computed(() =>
   recentUrls.value.some(item => !item.pinned)
-)
+);
 
-// Utils
 const normalizeUrl = (url: string): E.Either<Error, string> => pipe(
   E.tryCatch(
     () => {
-      const withProtocol = url.startsWith("http") ? url : `http://${url}`
-      const parsedUrl = new URL(withProtocol)
-      if (!parsedUrl.port) parsedUrl.port = "3200"
-      return parsedUrl.toString()
+      const withProtocol = url.startsWith("http") ? url : `http://${url}`;
+      const parsedUrl = new URL(withProtocol);
+      if (!parsedUrl.port) parsedUrl.port = "3200";
+      return parsedUrl.toString();
     },
-    E.toError
+    (e) => e instanceof Error ? e : new Error(String(e))
   )
-)
+);
 
-const formatDate = (date: string): string => {
-  const days = Math.ceil((new Date(date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(days, "day")
-}
+const formatDate = (date: string): string => pipe(
+  new Date(date).getTime() - Date.now(),
+  diff => Math.ceil(diff / (1000 * 60 * 60 * 24)),
+  days => new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(days, "day")
+);
 
-// Store Operations
-const initStore = (): TE.TaskEither<Error, Store> => pipe(
-  TE.tryCatch(
-    async () => {
-      const store = await Store.load(STORE_PATH)
-      return store
-    },
-    E.toError
-  )
-)
+const loadRecentUrls = async () => {
+  const urls = await store.get<RecentUrl[]>("recentUrls") || [];
+  recentUrls.value = urls.sort((a, b) =>
+    b.pinned === a.pinned ? new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime() :
+    b.pinned ? 1 : -1
+  );
+};
 
-const loadRecentUrls = (storeInstance: Store): TE.TaskEither<Error, RecentUrl[]> => pipe(
-  TE.tryCatch(
-    () => storeInstance.get<RecentUrl[]>('recentUrls'),
-    E.toError
-  ),
-  TE.map(urls => urls ?? [])
-)
+const saveRecentUrls = async () => {
+  await store.set("recentUrls", recentUrls.value);
+  await store.save();
+};
 
-const saveRecentUrls = (storeInstance: Store, urls: RecentUrl[]): TE.TaskEither<Error, RecentUrl[]> => pipe(
-  TE.tryCatch(
-    async () => {
-      await storeInstance.set('recentUrls', urls)
-      await storeInstance.save()
-      return urls
-    },
-    E.toError
-  )
-)
+const updateRecentUrl = (url: string, version: string) => {
+  const existingIndex = recentUrls.value.findIndex(item => item.url === url);
+  const newEntry: RecentUrl = {
+    url,
+    lastUsed: new Date().toISOString(),
+    version,
+    pinned: existingIndex >= 0 ? recentUrls.value[existingIndex].pinned : false
+  };
 
-const addToHistory = (storeInstance: Store, url: string, version?: string): TE.TaskEither<Error, void> => {
-  const timestamp = new Date().toISOString()
-  const currentUrls = recentUrls.value
-  const existingIndex = currentUrls.findIndex(item => item.url === url)
-
-  const newUrls = existingIndex !== -1
-    ? pipe(
-        currentUrls,
-        urls => {
-          const updated = [...urls]
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            lastUsed: timestamp,
-            version: version ?? updated[existingIndex].version
-          }
-          return updated
-        }
-      )
-    : pipe(
-        [
-          { url, lastUsed: timestamp, version, pinned: false },
-          ...currentUrls
-        ],
-        urls => urls.length > MAX_HISTORY
-          ? pipe(
-              urls,
-              A.filter((_, i) => i < MAX_HISTORY)
-            )
-          : urls
-      )
-
-  return pipe(
-    saveRecentUrls(storeInstance, newUrls),
-    TE.map(urls => {
-      recentUrls.value = urls
-    })
-  )
-}
-
-const togglePin = async (url: string) => {
-  await pipe(
-    store.value,
-    O.fold(
-      () => TE.left(new Error("Store not initialized")),
-      storeInstance => pipe(
-        recentUrls.value,
-        urls => urls.map(item =>
-          item.url === url ? { ...item, pinned: !item.pinned } : item
-        ),
-        urls => saveRecentUrls(storeInstance, urls),
-        TE.map(urls => {
-          recentUrls.value = urls
-          const isPinned = urls.find(i => i.url === url)?.pinned
-          toast.success(isPinned ? "Connection pinned" : "Connection unpinned")
-        })
-      )
-    ),
-    TE.mapLeft(err => {
-      console.error('Failed to toggle pin:', err)
-      toast.error('Failed to toggle pin')
-    })
-  )()
-}
-
-const clearUnpinned = async () => {
-  await pipe(
-    store.value,
-    O.fold(
-      () => TE.left(new Error("Store not initialized")),
-      storeInstance => pipe(
-        recentUrls.value,
-        urls => urls.filter(item => item.pinned),
-        urls => saveRecentUrls(storeInstance, urls),
-        TE.map(urls => {
-          recentUrls.value = urls
-          toast.success('Cleared unpinned connections')
-        })
-      )
-    ),
-    TE.mapLeft(err => {
-      console.error('Failed to clear unpinned:', err)
-      toast.error('Failed to clear unpinned')
-    })
-  )()
-}
-
-const handleConnect = async () => {
-  if (!appUrl.value) {
-    error.value = "Please enter a server URL"
-    return
+  if (existingIndex >= 0) {
+    recentUrls.value.splice(existingIndex, 1);
   }
 
-  isLoading.value = true
-  error.value = ""
+  recentUrls.value.unshift(newEntry);
 
-  await pipe(
-    normalizeUrl(appUrl.value),
-    TE.fromEither,
-    TE.chain(url => TE.tryCatch(
-      () => download({ serverUrl: url }),
-      E.toError
-    )),
-    TE.chain(downloadRes => pipe(
-      TE.tryCatch(
-        () => load({
-          bundleName: downloadRes.bundleName,
-          inline: false,
-          window: {
-            title: "Hoppscotch",
-            width: 1200,
-            height: 800,
-            resizable: true
-          }
-        }),
-        E.toError
-      ),
-      TE.chain(loadRes => pipe(
-        store.value,
-        O.fold(
-          () => TE.left(new Error("Store not initialized")),
-          storeInstance => loadRes.success
-            ? pipe(
-                addToHistory(storeInstance, appUrl.value, downloadRes.version),
-                TE.map(() => {
-                  appUrl.value = ""
-                  error.value = ""
-                })
-              )
-            : TE.left(new Error("Failed to load app"))
-        )
-      ))
-    )),
-    TE.mapLeft(err => {
-      error.value = err.message
-      toast.error(error.value)
-    })
-  )()
+  if (!newEntry.pinned && recentUrls.value.length > MAX_HISTORY) {
+    const unpinnedUrls = recentUrls.value.filter(item => !item.pinned);
+    if (unpinnedUrls.length > MAX_HISTORY) {
+      const lastUnpinned = unpinnedUrls[unpinnedUrls.length - 1];
+      const lastIndex = recentUrls.value.findIndex(item => item.url === lastUnpinned.url);
+      recentUrls.value.splice(lastIndex, 1);
+    }
+  }
+};
 
-  isLoading.value = false
-}
+const togglePin = async (url: string) => {
+  const index = recentUrls.value.findIndex(item => item.url === url);
+  if (index >= 0) {
+    recentUrls.value[index].pinned = !recentUrls.value[index].pinned;
+    await saveRecentUrls();
+  }
+};
 
-onMounted(() => {
-  pipe(
-    initStore(),
-    TE.chain(storeInstance => pipe(
-      loadRecentUrls(storeInstance),
-      TE.map(urls => {
-        store.value = O.some(storeInstance)
-        recentUrls.value = urls
-      })
-    )),
-    TE.mapLeft(err => {
-      console.error('Failed to initialize store:', err)
-      toast.error('Failed to load connection history')
-    })
-  )()
-})
+const clearUnpinned = async () => {
+  recentUrls.value = recentUrls.value.filter(item => item.pinned);
+  await saveRecentUrls();
+};
+
+const handleConnect = async () => {
+  if (!appUrl.value || isLoading.value) return;
+
+  isLoading.value = true;
+  error.value = "";
+
+  try {
+    const normalizedUrl = pipe(
+      appUrl.value,
+      normalizeUrl,
+      E.getOrElseW(err => { throw err })
+    );
+
+    const downloadResp = await download({ serverUrl: normalizedUrl });
+    if (!downloadResp.success) throw new Error("Failed to download bundle");
+
+    const loadResp = await load({ bundleName: downloadResp.bundleName, window: { title: "Hoppscotch" } });
+    if (!loadResp.success) throw new Error("Failed to load bundle");
+
+    updateRecentUrl(normalizedUrl, downloadResp.version);
+    await saveRecentUrls();
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(async () => {
+  await store.init();
+  await loadRecentUrls();
+});
 </script>
