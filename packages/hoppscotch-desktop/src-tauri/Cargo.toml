@@ -34,3 +34,6 @@ axum = "0.8.1"
 tower-http = { version = "0.6.2", features = ["cors"] }
 portpicker = "0.1.1"
 tokio = "1.43.0"
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2.3.1"

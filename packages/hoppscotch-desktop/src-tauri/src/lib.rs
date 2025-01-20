@@ -20,6 +20,11 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
+            let _ = app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
+            Ok(())
+        })
+        .setup(|app| {
             let handle = app.handle().clone();
             tracing::info!(app_name = %app.package_info().name, "Configuring deep link handler");
 
