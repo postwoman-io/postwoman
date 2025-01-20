@@ -75,7 +75,6 @@ const props = withDefaults(defineProps<ArgumentProps>(), {
 })
 
 const insertQuery = () => {
-  console.log("Inserting argument")
   handleAddArgument(props.arg)
 }
 </script>
