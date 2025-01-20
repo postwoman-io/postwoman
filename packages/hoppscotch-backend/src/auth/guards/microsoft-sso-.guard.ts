@@ -37,6 +37,7 @@ export class MicrosoftSSOGuard
     const req = context.switchToHttp().getRequest();
 
     return {
+      prompt: this.configService.get('INFRA.MICROSOFT_PROMPT'),
       state: {
         redirect_uri: req.query.redirect_uri,
       },

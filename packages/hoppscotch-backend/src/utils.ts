@@ -207,6 +207,15 @@ export const validateUrl = (url: string) => {
 };
 
 /**
+ * Check to see if "prompt" has an allowed value.
+ * @param prompt The prompt value
+ * @returns boolean
+ */
+export const validatePrompt = (prompt: string) => {
+  return ['none', 'login', 'consent', 'select_account'].includes(prompt);
+}
+
+/**
  * String to JSON parser
  * @param {str} str The string to parse
  * @returns {E.Right<T> | E.Left<"json_invalid">} An Either of the parsed JSON

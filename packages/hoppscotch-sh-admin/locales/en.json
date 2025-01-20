@@ -26,6 +26,7 @@
       "provider_not_specified": "Please enable at least one authentication provider",
       "scope": "SCOPE",
       "tenant": "TENANT",
+      "prompt": "PROMPT",
       "title": "Authentication Providers",
       "update_failure": "Failed to update authentication provider configurations!!"
     },
