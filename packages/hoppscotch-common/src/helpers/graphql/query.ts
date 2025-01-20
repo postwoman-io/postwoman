@@ -1,10 +1,15 @@
 import { useService } from "dioc/vue"
 import {
+  ArgumentNode,
+  DocumentNode,
+  FieldNode,
   getNamedType,
   GraphQLField,
   GraphQLType,
   isObjectType,
+  Kind,
   OperationDefinitionNode,
+  OperationTypeNode,
   parse,
   print,
   visit,
@@ -12,7 +17,7 @@ import {
 import { ref } from "vue"
 import { GQLTabService } from "~/services/tab/graphql"
 import { mutationFields, queryFields, subscriptionFields } from "./connection"
-import { ExplorerFieldDef, useExplorer } from "./explorer"
+import { ExplorerFieldDef, ExplorerNavStack, useExplorer } from "./explorer"
 
 const updatedQuery = ref("")
 const cursorPosition = ref({ line: 0, ch: 0 })
@@ -24,9 +29,8 @@ export function useQuery() {
 
   const getOperation = (cursorPosition: number) => {
     return operations.value.find((operation) => {
-      const start = operation.loc?.start
-      const end = operation.loc?.end
-      return start && end && cursorPosition >= start && cursorPosition <= end
+      const { start, end } = operation.loc!
+      return cursorPosition >= start && cursorPosition <= end
     })
   }
 
@@ -225,6 +229,92 @@ export function useQuery() {
     }
   }
 
+  function buildQueryAst(navStack: ExplorerNavStack): DocumentNode {
+    // Start from the actual query part (skip Root and Query)
+    const queryPath = navStack.slice(2)
+    const operationTypeNode =
+      navStack[1].name === "Query"
+        ? OperationTypeNode.QUERY
+        : navStack[1].name === "Mutation"
+          ? OperationTypeNode.MUTATION
+          : OperationTypeNode.SUBSCRIPTION
+
+    // Build the selections from inside out
+    let currentSelection: FieldNode = {
+      kind: Kind.FIELD,
+      name: {
+        kind: Kind.NAME,
+        value: queryPath[queryPath.length - 1].name,
+      },
+      arguments: [],
+      directives: [],
+    }
+
+    // Work backwards through the path (excluding the last item as we already processed it)
+    for (let i = queryPath.length - 2; i >= 0; i--) {
+      const item = queryPath[i]
+      const arguments_: ArgumentNode[] = []
+
+      // Add arguments if defined in the schema
+      if (item.def?.args) {
+        for (const arg of item.def.args) {
+          // For this example, we'll add a dummy ID for teamID
+          if (arg.name === "teamID") {
+            arguments_.push({
+              kind: Kind.ARGUMENT,
+              name: {
+                kind: Kind.NAME,
+                value: arg.name,
+              },
+              value: {
+                kind: Kind.STRING,
+                value: "team123",
+              },
+            })
+          }
+        }
+      }
+
+      // Wrap the current selection in a new field
+      currentSelection = {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: item.name,
+        },
+        arguments: arguments_,
+        directives: [],
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [currentSelection],
+        },
+      }
+    }
+
+    // Create the final document
+    const operation: OperationDefinitionNode = {
+      kind: Kind.OPERATION_DEFINITION,
+      operation: operationTypeNode,
+      name: {
+        kind: Kind.NAME,
+        value: navStack[navStack.length - 1].name,
+      },
+      variableDefinitions: [],
+      directives: [],
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections: [currentSelection],
+      },
+    }
+
+    const document: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [operation],
+    }
+
+    return document
+  }
+
   const handleAddField = (field: ExplorerFieldDef, addToNav = false) => {
     if (addToNav)
       push({
@@ -237,12 +327,15 @@ export function useQuery() {
 
     const currentQuery = currentTab.document.request.query || ""
 
-    // console.log("currentQuery", recursiveQueryFields(navStack.value))
-
     if (!currentQuery.trim()) {
+      const q = buildQueryAst(navStack.value)
+      const query = print(q)
+      updatedQuery.value = query
+      return
     }
 
-    // const selectedOperation = getSelectedOperation()
+    const selectedOperation = getSelectedOperation()
+    console.log("selectedOperation", selectedOperation)
 
     // const newQuery = insertGraphQLField(currentQuery, field)
 
@@ -255,7 +348,7 @@ export function useQuery() {
     //   )
     // }
 
-    // updatedQuery.value = newQuery
+    // updatedQuery.value = query.query
   }
 
   const handleAddArgument = (arg: any) => {}
