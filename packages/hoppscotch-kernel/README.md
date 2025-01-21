@@ -4,9 +4,9 @@ Cross-platform abstraction kernel for Hoppscotch, a unified interface between ap
 
 ## Architecture
 
-The kernel acts as a thin abstraction layer, mediating between high-level application logic and low-level platform implementations, The Hoppscotch kernel functions as a thin abstraction layer between application logic and platform-specific implementations, similar to how operating system kernels abstract hardware details. This helps Hoppscotch remain platform-agnostic while maintaining near native performance.
+The kernel acts as a thin abstraction layer, mediating between high-level application logic and low-level platform implementations, similar to how operating system kernels abstract over hardware details. This helps the core Hoppscotch app be platform-agnostic while maintaining near native performance.
 
-It is minimal by design, providing just the building blocks for construction features. If possible always try composition before modifing the kernel directly.
+This codebase is minimal by design, providing just the building blocks for constructing features. If possible, always try composition before modifying the kernel directly.
 
 ## Modules
 
