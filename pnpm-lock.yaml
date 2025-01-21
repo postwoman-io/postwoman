@@ -412,8 +412,8 @@ importers:
         specifier: 6.13.0
         version: 6.13.0
       verzod:
-        specifier: 0.2.3
-        version: 0.2.3(zod@3.23.8)
+        specifier: 0.2.4
+        version: 0.2.4(zod@3.23.8)
       xmlbuilder2:
         specifier: 3.1.1
         version: 3.1.1
@@ -692,8 +692,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       verzod:
-        specifier: 0.2.3
-        version: 0.2.3(zod@3.23.8)
+        specifier: 0.2.4
+        version: 0.2.4(zod@3.23.8)
       vue:
         specifier: 3.5.12
         version: 3.5.12(typescript@5.3.3)
@@ -933,8 +933,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       verzod:
-        specifier: 0.2.3
-        version: 0.2.3(zod@3.23.8)
+        specifier: 0.2.4
+        version: 0.2.4(zod@3.23.8)
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -1279,8 +1279,8 @@ importers:
         specifier: 0.12.5
         version: 0.12.5
       verzod:
-        specifier: 0.2.3
-        version: 0.2.3(zod@3.22.4)
+        specifier: 0.2.4
+        version: 0.2.4(zod@3.22.4)
       vue:
         specifier: 3.5.12
         version: 3.5.12(typescript@4.9.5)
@@ -1475,8 +1475,8 @@ importers:
         specifier: 0.12.5
         version: 0.12.5
       verzod:
-        specifier: 0.2.3
-        version: 0.2.3(zod@3.23.8)
+        specifier: 0.2.4
+        version: 0.2.4(zod@3.23.8)
       vue:
         specifier: 3.5.12
         version: 3.5.12(typescript@5.3.3)
@@ -12290,8 +12290,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  verzod@0.2.3:
-    resolution: {integrity: sha512-fARgs0c/TNNtbo83/5LjriJEb3QMwBN8Ju2+BcVdiI7Y2NOa5Yhq+CrQ8UH43h0BRXcgb2JQABjkgrRCWybEtQ==}
+  verzod@0.2.4:
+    resolution: {integrity: sha512-xli0iwB1nxtWiJTjekTuPm9DuHXU8zdu6vKG2QXT0ZYKn9HanS/azJDSvbvT5IQ5HHltoV9h2Jf4Y+dwk8Fa5Q==}
     engines: {node: '>=16'}
     peerDependencies:
       zod: ^3.22.0
@@ -26887,11 +26887,11 @@ snapshots:
 
   vary@1.1.2: {}
 
-  verzod@0.2.3(zod@3.22.4):
+  verzod@0.2.4(zod@3.22.4):
     dependencies:
       zod: 3.22.4
 
-  verzod@0.2.3(zod@3.23.8):
+  verzod@0.2.4(zod@3.23.8):
     dependencies:
       zod: 3.23.8
 
