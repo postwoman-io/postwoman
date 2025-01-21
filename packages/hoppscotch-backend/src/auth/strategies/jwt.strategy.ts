@@ -58,10 +58,6 @@ const extractToken = (request: Request): E.Either<Error, string> =>
     // Neither `Authorization` header nor `Cookie` were found with the request,
     // `COOKIES_NOT_FOUND` for backwards compatibility.
     E.fromOption(() => {
-      console.error('request.cookie', request['cookie']);
-      console.error('request.cookies', request.cookies);
-      console.error('request.headers', request.headers);
-      console.error('request.authorization', request['authorization']);
       return new ForbiddenException(COOKIES_NOT_FOUND);
     })
   );
