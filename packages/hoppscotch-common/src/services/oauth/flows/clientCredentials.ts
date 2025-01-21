@@ -193,7 +193,6 @@ const getPayloadForViaBasicAuthHeader = (
       ...(scopes && { scope: scopes }),
     }),
   }
-
 }
 
 const getPayloadForViaBody = (
