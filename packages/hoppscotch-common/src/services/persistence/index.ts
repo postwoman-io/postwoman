@@ -92,9 +92,9 @@ import {
   WEBSOCKET_REQUEST_SCHEMA,
 } from "./validation-schemas"
 
-const STORE_NAMESPACE = "persistence.v1"
+export const STORE_NAMESPACE = "persistence.v1"
 
-const STORE_KEYS = {
+export const STORE_KEYS = {
   VUEX: "vuex",
   SETTINGS: "settings",
   LOCAL_STATE: "localState",
@@ -219,7 +219,15 @@ export class PersistenceService extends Service {
     const result = pipe(
       loadResult,
       E.fold(
-        () => defaultValue,
+        (err) => {
+          console.error(err)
+          this.showErrorToast(STORE_KEYS[key])
+          console.error(
+            `Failed parsing persisted ${key} state, state:`,
+            localStorage.getItem(`${STORE_NAMESPACE}:${STORE_KEYS[key]}`)
+          )
+          return defaultValue
+        },
         (data) =>
           pipe(
             data,
@@ -243,8 +251,12 @@ export class PersistenceService extends Service {
           : schemaResult.data
         if (onLoad) onLoad(transformedData)
       } else {
-        this.showErrorToast(key)
+        this.showErrorToast(STORE_KEYS[key])
         await Store.set(STORE_NAMESPACE, `${STORE_KEYS[key]}-backup`, result)
+        console.error(
+          `Failed parsing persisted ${key} state, state:`,
+          JSON.stringify(result)
+        )
       }
     }
 
