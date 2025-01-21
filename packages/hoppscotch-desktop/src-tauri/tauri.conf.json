@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Hoppscotch",
+  "version": "25.1.0-0",
+  "identifier": "io.hoppscotch.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "hoppscotch-desktop",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' customprotocol: asset:",
+        "script-src": "* 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'",
+        "connect-src": "ipc: http://ipc.localhost https://api.hoppscotch.io *",
+        "font-src": "https://fonts.gstatic.com data: 'self' *",
+        "img-src": "'self' asset: http://asset.localhost blob: data: customprotocol: *",
+        "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com data: asset: *",
+        "worker-src": "* 'self' data: 'unsafe-eval' blob:"
+      }
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["io.hoppscotch.desktop"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": ["https://releases.hoppscotch.com/hoppscotch-desktop.json"],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYwOURFNEY4RDRGMDQxNTgKUldSWVFmRFUrT1NkWUc1RDM0Z2ZjTHE2dG52Q3ZlYzg3ZXVpZU9KaENPWTBMd3MwY0hWa1lreDcK"
+    }
+  }
+}

@@ -156,7 +156,8 @@ const invokeSetupLocalPersistence = (
   serviceBindMock?: Record<string, unknown>
 ) => {
   const service = bindPersistenceService(serviceBindMock)
-  service.setupLocalPersistence()
+  service.setupFirst()
+  service.setupLater()
 }
 
 describe("PersistenceService", () => {
@@ -168,7 +169,7 @@ describe("PersistenceService", () => {
     vi.restoreAllMocks()
   })
 
-  describe("setupLocalPersistence", () => {
+  describe("setup", () => {
     describe("Check and migrate old settings", () => {
       // Set of keys read from localStorage across test cases
       const bgColorKey = "BG_COLOR"

@@ -9,11 +9,12 @@ import {
 import { z } from "zod"
 import { getService } from "~/modules/dioc"
 import * as E from "fp-ts/Either"
-import { InterceptorService } from "~/services/interceptor.service"
+import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 import { AuthCodeGrantTypeParams } from "@hoppscotch/data"
+import { content } from "@hoppscotch/kernel"
 
 const persistenceService = getService(PersistenceService)
-const interceptorService = getService(InterceptorService)
+const interceptorService = getService(KernelInterceptorService)
 
 const AuthCodeOauthFlowParamsSchema = AuthCodeGrantTypeParams.pick({
   authEndpoint: true,
@@ -119,7 +120,7 @@ const initAuthCodeOauthFlow = async ({
   }
 
   const localOAuthTempConfig =
-    persistenceService.getLocalConfig("oauth_temp_config")
+    await persistenceService.getLocalConfig("oauth_temp_config")
 
   const persistedOAuthConfig: PersistedOAuthConfig = localOAuthTempConfig
     ? { ...JSON.parse(localOAuthTempConfig) }
@@ -129,7 +130,7 @@ const initAuthCodeOauthFlow = async ({
 
   // persist the state so we can compare it when we get redirected back
   // also persist the grant_type,tokenEndpoint and clientSecret so we can use them when we get redirected back
-  persistenceService.setLocalConfig(
+  await persistenceService.setLocalConfig(
     "oauth_temp_config",
     JSON.stringify(<PersistedOAuthConfig>{
       ...persistedOAuthConfig,
@@ -205,25 +206,25 @@ const handleRedirectForAuthCodeOauthFlow = async (localConfig: string) => {
   }
 
   // exchange the code for a token
-  const formData = new URLSearchParams()
-  formData.append("grant_type", "authorization_code")
-  formData.append("code", code)
-  formData.append("client_id", decodedLocalConfig.data.clientID)
-  formData.append("client_secret", decodedLocalConfig.data.clientSecret)
-  formData.append("redirect_uri", OauthAuthService.redirectURI)
-
-  if (decodedLocalConfig.data.codeVerifier) {
-    formData.append("code_verifier", decodedLocalConfig.data.codeVerifier)
-  }
-
-  const { response } = interceptorService.runRequest({
+  const { response } = interceptorService.execute({
+    id: Date.now(),
     url: decodedLocalConfig.data.tokenEndpoint,
     method: "POST",
+    version: "HTTP/1.1",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
     },
-    data: formData.toString(),
+    content: content.urlencoded({
+      code,
+      grant_type: "authorization_code",
+      client_id: decodedLocalConfig.data.clientID,
+      client_secret: decodedLocalConfig.data.clientSecret,
+      redirect_uri: OauthAuthService.redirectURI,
+      ...(decodedLocalConfig.data.codeVerifier && {
+        code_verifier: decodedLocalConfig.data.codeVerifier,
+      }),
+    }),
   })
 
   const res = await response
@@ -298,22 +299,22 @@ const refreshToken = async ({
   refreshToken,
   clientSecret,
 }: AuthCodeOauthRefreshParams) => {
-  const formData = new URLSearchParams()
-  formData.append("grant_type", "refresh_token")
-  formData.append("refresh_token", refreshToken)
-  formData.append("client_id", clientID)
-  if (clientSecret) {
-    formData.append("client_secret", clientSecret)
-  }
-
-  const { response } = interceptorService.runRequest({
+  const { response } = interceptorService.execute({
+    id: Date.now(),
     url: tokenEndpoint,
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
     },
-    data: formData.toString(),
+    content: content.urlencoded({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: clientID,
+      ...(clientSecret && {
+        client_secret: clientSecret,
+      }),
+    }),
   })
 
   const res = await response

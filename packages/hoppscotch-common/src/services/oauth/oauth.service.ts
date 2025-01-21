@@ -1,12 +1,18 @@
+import { pipe } from "fp-ts/function"
+import * as O from "fp-ts/Option"
+import * as E from "fp-ts/Either"
 import { Service } from "dioc"
 import { PersistenceService } from "../persistence"
 import { ZodType, z } from "zod"
-import * as E from "fp-ts/Either"
 import authCode, { AuthCodeOauthFlowParams } from "./flows/authCode"
 import implicit, { ImplicitOauthFlowParams } from "./flows/implicit"
 import { getService } from "~/modules/dioc"
 import { HoppCollection } from "@hoppscotch/data"
 import { TeamCollection } from "~/helpers/backend/graphql"
+import { parseBytesToJSON } from "~/helpers/functional/json"
+import { MediaType } from "@hoppscotch/kernel"
+
+const persistenceService = getService(PersistenceService)
 
 export type PersistedOAuthConfig = {
   source: "REST" | "GraphQL"
@@ -25,14 +31,12 @@ export type PersistedOAuthConfig = {
   refresh_token?: string
 }
 
-const persistenceService = getService(PersistenceService)
-
 export const grantTypesInvolvingRedirect = ["AUTHORIZATION_CODE", "IMPLICIT"]
 
 export const routeOAuthRedirect = async () => {
   // get the temp data from the local storage
   const localOAuthTempConfig =
-    persistenceService.getLocalConfig("oauth_temp_config")
+    await persistenceService.getLocalConfig("oauth_temp_config")
 
   if (!localOAuthTempConfig) {
     return E.left("INVALID_STATE")
@@ -102,17 +106,17 @@ export function createFlowConfig<
   }
 }
 
-export const decodeResponseAsJSON = (response: { data: any }) => {
-  try {
-    const responsePayload = new TextDecoder("utf-8")
-      .decode(response.data as any)
-      .replaceAll("\x00", "")
-
-    return E.right(JSON.parse(responsePayload) as Record<string, unknown>)
-  } catch (error) {
-    return E.left("AUTH_TOKEN_REQUEST_FAILED" as const)
-  }
-}
+export const decodeResponseAsJSON = (response: {
+  body: { body: Uint8Array; mediaType: MediaType }
+}): E.Either<"AUTH_TOKEN_REQUEST_FAILED", Record<string, unknown>> =>
+  pipe(
+    response.body.body,
+    parseBytesToJSON<Record<string, unknown>>,
+    O.fold(
+      () => E.left("AUTH_TOKEN_REQUEST_FAILED" as const),
+      (data) => E.right(data)
+    )
+  )
 
 export class OauthAuthService extends Service {
   public static readonly ID = "OAUTH_AUTH_SERVICE"

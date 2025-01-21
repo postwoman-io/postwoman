@@ -172,3 +172,13 @@ tests/*/videos
 
 # GQL SDL generated for the frontends
 gql-gen/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml

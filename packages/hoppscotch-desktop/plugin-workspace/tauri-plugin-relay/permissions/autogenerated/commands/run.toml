@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-run"
+description = "Enables the run command without any pre-configured scope."
+commands.allow = ["run"]
+
+[[permission]]
+identifier = "deny-run"
+description = "Denies the run command without any pre-configured scope."
+commands.deny = ["run"]

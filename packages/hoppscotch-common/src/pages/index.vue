@@ -144,15 +144,13 @@ import { platform } from "~/platform"
 import { useReadonlyStream } from "~/composables/stream"
 import { useService } from "dioc/vue"
 import { InspectionService } from "~/services/inspection"
-import { HeaderInspectorService } from "~/services/inspection/inspectors/header.inspector"
+import { RequestInspectorService } from "~/services/inspection/inspectors/request.inspector"
 import { EnvironmentInspectorService } from "~/services/inspection/inspectors/environment.inspector"
-import { InterceptorsInspectorService } from "~/services/inspection/inspectors/interceptors.inspector"
 import { ResponseInspectorService } from "~/services/inspection/inspectors/response.inspector"
 import { cloneDeep } from "lodash-es"
 import { RESTTabService } from "~/services/tab/rest"
 import { HoppTab } from "~/services/tab"
 import { HoppRequestDocument, HoppTabDocument } from "~/helpers/rest/document"
-import { AuthorizationInspectorService } from "~/services/inspection/inspectors/authorization.inspector"
 
 const savingRequest = ref(false)
 const confirmingCloseForTabID = ref<string | null>(null)
@@ -414,11 +412,9 @@ defineActionHandler("tab.close-other", () => {
 })
 defineActionHandler("tab.open-new", addNewTab)
 
-useService(HeaderInspectorService)
+useService(RequestInspectorService)
 useService(EnvironmentInspectorService)
 useService(ResponseInspectorService)
-useService(AuthorizationInspectorService)
-useService(InterceptorsInspectorService)
 
 for (const inspectorDef of platform.additionalInspectors ?? []) {
   useService(inspectorDef.service)

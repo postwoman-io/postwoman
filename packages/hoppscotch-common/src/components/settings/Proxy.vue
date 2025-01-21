@@ -10,13 +10,13 @@
   </div>
   <div class="flex items-center space-x-2 py-4">
     <HoppSmartInput
-      v-model="PROXY_URL"
+      v-model="proxyUrl"
       :autofocus="false"
       styles="flex-1"
-      placeholder=" "
+      :placeholder="' '"
       :label="t('settings.proxy_url')"
       input-styles="input floating-input"
-      :disabled="!proxyEnabled"
+      @change="updateProxyUrl"
     />
     <HoppButtonSecondary
       v-tippy="{ theme: 'tooltip' }"
@@ -24,44 +24,48 @@
       :icon="clearIcon"
       outline
       class="rounded"
-      @click="resetProxy"
+      @click="resetSettings"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from "vue"
 import { refAutoReset } from "@vueuse/core"
+import { useService } from "dioc/vue"
 import { useI18n } from "~/composables/i18n"
-import { useSetting } from "~/composables/settings"
+import { useToast } from "~/composables/toast"
+import { KernelInterceptorProxyStore } from "~/platform/std/kernel-interceptors/proxy/store"
+
 import IconRotateCCW from "~icons/lucide/rotate-ccw"
 import IconCheck from "~icons/lucide/check"
-import { useToast } from "~/composables/toast"
-import { computed } from "vue"
-import { useService } from "dioc/vue"
-import { InterceptorService } from "~/services/interceptor.service"
-import { proxyInterceptor } from "~/platform/std/interceptors/proxy"
 
 const t = useI18n()
 const toast = useToast()
+const store = useService(KernelInterceptorProxyStore)
 
-const interceptorService = useService(InterceptorService)
-
-const PROXY_URL = useSetting("PROXY_URL")
-
-const proxyEnabled = computed(
-  () =>
-    interceptorService.currentInterceptorID.value ===
-    proxyInterceptor.interceptorID
-)
+const proxyUrl = ref("")
 
 const clearIcon = refAutoReset<typeof IconRotateCCW | typeof IconCheck>(
   IconRotateCCW,
   1000
 )
 
-const resetProxy = () => {
-  PROXY_URL.value = "https://proxy.hoppscotch.io/"
-  clearIcon.value = IconCheck
-  toast.success(`${t("state.cleared")}`)
+async function updateProxyUrl() {
+  await store.updateSettings({ proxyUrl: proxyUrl.value })
+  toast.success(t("state.saved"))
 }
+
+async function resetSettings() {
+  await store.resetSettings()
+  const settings = store.getSettings()
+  proxyUrl.value = settings.proxyUrl
+  clearIcon.value = IconCheck
+  toast.success(t("state.cleared"))
+}
+
+onMounted(async () => {
+  const settings = store.getSettings()
+  proxyUrl.value = settings.proxyUrl
+})
 </script>

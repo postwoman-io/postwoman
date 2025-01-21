@@ -27,6 +27,7 @@ export class RTJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
         (request: Request) => {
           const RTCookie = request.cookies['refresh_token'];
           if (!RTCookie) {
+            console.error("`refresh_token` not found")
             throw new ForbiddenException(COOKIES_NOT_FOUND);
           }
           return RTCookie;

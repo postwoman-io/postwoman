@@ -1,0 +1,19 @@
+[package]
+name = "tauri-plugin-relay"
+version = "0.1.0"
+authors = [ "CuriousCorrelation" ]
+description = ""
+edition = "2021"
+rust-version = "1.77.2"
+exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
+links = "tauri-plugin-relay"
+
+[dependencies]
+tauri = { version = "2.1.0" }
+serde = "1.0"
+thiserror = "2"
+tracing = "0.1.41"
+relay = { git = "https://github.com/CuriousCorrelation/relay.git" }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.2", features = ["build"] }

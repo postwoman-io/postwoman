@@ -819,8 +819,6 @@ export class AgentInterceptorService extends Service implements Interceptor {
             },
           })
         } catch (e) {
-          console.log(e)
-
           if (typeof e === "object" && (e as any)["RequestCancelled"]) {
             return E.left("cancellation" as const)
           }

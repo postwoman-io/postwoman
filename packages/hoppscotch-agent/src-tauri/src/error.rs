@@ -8,6 +8,10 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AgentError {
+    #[error("FATAL: No `main` window found")]
+    NoMainWindow,
+    #[error("Tauri error: {0}")]
+    Tauri(#[from] tauri::Error),
     #[error("Invalid Registration")]
     InvalidRegistration,
     #[error("Invalid Client Public Key")]
@@ -45,7 +49,13 @@ pub enum AgentError {
     #[error("Store error: {0}")]
     TauriPluginStore(#[from] tauri_plugin_store::Error),
     #[error("Relay error: {0}")]
-    Relay(#[from] hoppscotch_relay::RelayError),
+    Relay(#[from] relay::error::RelayError),
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Log init error: {0}")]
+    LogInit(#[from] tracing_appender::rolling::InitError),
+    #[error("Log init global error: {0}")]
+    LogInitGlobal(#[from] tracing::subscriber::SetGlobalDefaultError),
 }
 
 impl IntoResponse for AgentError {
@@ -55,7 +65,9 @@ impl IntoResponse for AgentError {
             AgentError::InvalidClientPublicKey => (StatusCode::BAD_REQUEST, self.to_string()),
             AgentError::Unauthorized => (StatusCode::UNAUTHORIZED, self.to_string()),
             AgentError::RequestNotFound => (StatusCode::NOT_FOUND, self.to_string()),
-            AgentError::InternalServerError => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
+            AgentError::InternalServerError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, self.to_string())
+            }
             AgentError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
             AgentError::ClientCertError => (StatusCode::BAD_REQUEST, self.to_string()),
             AgentError::RootCertError => (StatusCode::BAD_REQUEST, self.to_string()),
