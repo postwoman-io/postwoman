@@ -156,7 +156,8 @@ const invokeSetupLocalPersistence = (
   serviceBindMock?: Record<string, unknown>
 ) => {
   const service = bindPersistenceService(serviceBindMock)
-  service.setup()
+  service.setupFirst()
+  service.setupLater()
 }
 
 describe("PersistenceService", () => {
