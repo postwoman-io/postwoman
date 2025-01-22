@@ -8,7 +8,7 @@ import { watchDebounced } from "@vueuse/core"
 import { TestContainer } from "dioc/testing"
 import { cloneDeep } from "lodash-es"
 import superjson from "superjson"
-import { afterAll, describe, expect, it, vi } from "vitest"
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { MQTTRequest$, setMQTTRequest } from "~/newstore/MQTTSession"
 import { SSERequest$, setSSERequest } from "~/newstore/SSESession"
@@ -70,6 +70,7 @@ import {
 } from "./__mocks__"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
 import { getKernelMode, initKernel } from "@hoppscotch/kernel"
+import { Store } from "~/kernel"
 
 initKernel(getKernelMode())
 
@@ -129,6 +130,8 @@ const spyOnGetItem = () => vi.spyOn(Storage.prototype, "getItem")
 const spyOnRemoveItem = () => vi.spyOn(Storage.prototype, "removeItem")
 const spyOnSetItem = () => vi.spyOn(Storage.prototype, "setItem")
 
+const schemaVersionKey = `${STORE_NAMESPACE}:${STORE_KEYS.SCHEMA_VERSION}`
+
 const setStoreItem = async <T>(key: string, value: T) => {
   const storedData = {
     schemaVersion: 1,
@@ -185,6 +188,14 @@ const invokeSetupLocalPersistence = async (
 }
 
 describe("PersistenceService", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  beforeEach(async () => {
+    await Store.remove(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION)
+  })
+
   afterAll(() => {
     // Clear all mocks
     vi.clearAllMocks()
@@ -1488,7 +1499,7 @@ describe("PersistenceService", () => {
 
     describe("setup global environments persistence", () => {
       // Key read from localStorage across test cases
-      const globalEnvKey = "globalEnv"
+      const globalEnvKey = `${STORE_NAMESPACE}:${STORE_KEYS.GLOBAL_ENV}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${globalEnvKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `globalEnv`
@@ -1500,7 +1511,7 @@ describe("PersistenceService", () => {
           },
         ]
 
-        window.localStorage.setItem(globalEnvKey, JSON.stringify(globalEnv))
+        await setStoreItem(globalEnvKey, globalEnv)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1514,7 +1525,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${globalEnvKey}-backup`,
-          JSON.stringify(globalEnv)
+          expect.stringContaining(JSON.stringify(globalEnv))
         )
       })
 
@@ -1529,12 +1540,16 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(globalEnvKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(globalEnvKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`reads the "globalEnv" entry from localStorage, dispatches the new value, subscribes to the "environmentsStore" and updates localStorage entries`, async () => {
         const globalEnv = GLOBAL_ENV_MOCK
-        window.localStorage.setItem(globalEnvKey, JSON.stringify(globalEnv))
+        await setStoreItem(globalEnvKey, globalEnv)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1544,7 +1559,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(globalEnvKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(globalEnvKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setGlobalEnvVariables).toHaveBeenCalledWith(globalEnv)
         expect(globalEnv$.subscribe).toHaveBeenCalledWith(expect.any(Function))

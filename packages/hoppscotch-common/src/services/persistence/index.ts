@@ -11,6 +11,7 @@ import { watchDebounced } from "@vueuse/core"
 import { assign, clone, isEmpty } from "lodash-es"
 
 import {
+  GlobalEnvironment,
   GlobalEnvironmentVariable,
   translateToNewGQLCollection,
   translateToNewRESTCollection,
@@ -463,12 +464,44 @@ export class PersistenceService extends Service {
   }
 
   private async setupGlobalEnvsPersistence() {
-    await this.setupStorage({
-      key: "GLOBAL_ENV",
-      schema: z.any(),
-      defaultValue: { v: 1, variables: [] },
-      onLoad: setGlobalEnvVariables,
-      subscribe: (callback) => globalEnv$.subscribe((state) => callback(state)),
+    const loadResult = await Store.get<GlobalEnvironmentVariable[]>(
+      STORE_NAMESPACE,
+      STORE_KEYS.GLOBAL_ENV
+    )
+
+    const globalEnvData = pipe(
+      loadResult,
+      E.fold(
+        (err) => {
+          console.error(err)
+          this.showErrorToast(STORE_KEYS.GLOBAL_ENV)
+          return [] as GlobalEnvironmentVariable[]
+        },
+        (data) =>
+          pipe(
+            data,
+            O.fromNullable,
+            O.getOrElse(() => [] as GlobalEnvironmentVariable[])
+          )
+      )
+    )
+
+    // Validate the data
+    const result = GlobalEnvironment.safeParse(globalEnvData)
+    if (result.type === "ok") {
+      setGlobalEnvVariables(result.value)
+    } else {
+      this.showErrorToast(STORE_KEYS.GLOBAL_ENV)
+      await Store.set(
+        STORE_NAMESPACE,
+        `${STORE_KEYS.GLOBAL_ENV}-backup`,
+        globalEnvData
+      )
+    }
+
+    // Setup subscription for future changes
+    globalEnv$.subscribe(async (vars) => {
+      await Store.set(STORE_NAMESPACE, STORE_KEYS.GLOBAL_ENV, vars)
     })
   }
 
