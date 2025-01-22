@@ -441,18 +441,15 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("setup local state persistence", () => {
+    describe("Setup local state persistence", () => {
       // Key read from localStorage across test cases
-      const localStateKey = "localState"
+      const localStateKey = `${STORE_NAMESPACE}:${STORE_KEYS.LOCAL_STATE}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${localStateKey}" read from localStorage has a value which is not a "string" or "undefined"`, async () => {
         const localStateData = {
           REMEMBERED_TEAM_ID: null,
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -466,7 +463,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${localStateKey}-backup`,
-          JSON.stringify(localStateData)
+          expect.stringContaining(JSON.stringify(localStateData))
         )
       })
 
@@ -474,10 +471,7 @@ describe("PersistenceService", () => {
         const localStateData = {
           INVALID_KEY: null,
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -491,7 +485,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${localStateKey}-backup`,
-          JSON.stringify(localStateData)
+          expect.stringContaining(JSON.stringify(localStateData))
         )
       })
 
@@ -506,7 +500,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(localStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
       it(`reads the value for "${localStateKey}" key from localStorage, invokes "bulkApplyLocalState" function if a value is yielded and subscribes to "localStateStore" updates`, async () => {
@@ -524,10 +522,7 @@ describe("PersistenceService", () => {
         const localStateData = {
           REMEMBERED_TEAM_ID: "test-id",
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -537,7 +532,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(localStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(bulkApplyLocalState).toHaveBeenCalledWith(localStateData)
         expect(localStateStore.subject$.subscribe).toHaveBeenCalledWith(
@@ -548,16 +547,16 @@ describe("PersistenceService", () => {
 
     describe("setup settings persistence", () => {
       // Key read from localStorage across test cases
-      const settingsKey = "settings"
+      const settingsKey = `${STORE_NAMESPACE}:${STORE_KEYS.SETTINGS}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${settingsKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `settings`
-        // Expected value are booleans
+        // Expected values are booleans
         const settings = {
           EXTENSIONS_ENABLED: "true",
           PROXY_ENABLED: "true",
         }
-        window.localStorage.setItem(settingsKey, JSON.stringify(settings))
+        await setStoreItem(settingsKey, settings)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -571,7 +570,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${settingsKey}-backup`,
-          JSON.stringify(settings)
+          expect.stringContaining(JSON.stringify(settings))
         )
       })
 
@@ -586,7 +585,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(settingsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(settingsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
       it(`reads the value for "${settingsKey}" from localStorage, invokes "performSettingsDataMigrations" and "bulkApplySettings" functions as required and subscribes to "settingsStore" updates`, async () => {
@@ -609,19 +612,21 @@ describe("PersistenceService", () => {
         })
 
         const { settings } = VUEX_DATA_MOCK.postwoman
-        window.localStorage.setItem(settingsKey, JSON.stringify(settings))
+        await setStoreItem(settingsKey, settings)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
         await invokeSetupLocalPersistence()
 
-        // toastErrorFn = vi.fn()
-
         expect(getItemSpy).toHaveBeenCalledWith(settingsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(settingsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(performSettingsDataMigrations).toHaveBeenCalledWith(settings)
         expect(bulkApplySettings).toHaveBeenCalledWith(settings)
