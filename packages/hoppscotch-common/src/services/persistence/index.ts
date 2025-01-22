@@ -155,8 +155,15 @@ const migrations: Migration[] = [
       for (const [oldKey, newKey] of Object.entries(keyMappings)) {
         const data = localStorage.getItem(oldKey)
         if (data) {
-          await Store.set(STORE_NAMESPACE, newKey, JSON.parse(data))
-          localStorage.removeItem(oldKey)
+          try {
+            await Store.set(STORE_NAMESPACE, newKey, JSON.parse(data))
+            localStorage.removeItem(oldKey)
+          } catch (e) {
+            console.error(
+              `Failed parsing persisted ${oldKey}:`,
+              JSON.stringify(data)
+            )
+          }
         }
       }
     },
@@ -178,7 +185,7 @@ export class PersistenceService extends Service {
   private showErrorToast(key: string) {
     const toast = useToast()
     toast.error(
-      `Schema validation failed for ${key}. A backup has been created with suffix '-backup'`
+      `Schema validation failed for ${STORE_NAMESPACE}:${key}. A backup has been created with suffix '-backup'`
     )
   }
 
@@ -223,7 +230,7 @@ export class PersistenceService extends Service {
           console.error(err)
           this.showErrorToast(STORE_KEYS[key])
           console.error(
-            `Failed parsing persisted ${key} state, state:`,
+            `Failed parsing persisted ${key}:`,
             localStorage.getItem(`${STORE_NAMESPACE}:${STORE_KEYS[key]}`)
           )
           return defaultValue
@@ -254,7 +261,7 @@ export class PersistenceService extends Service {
         this.showErrorToast(STORE_KEYS[key])
         await Store.set(STORE_NAMESPACE, `${STORE_KEYS[key]}-backup`, result)
         console.error(
-          `Failed parsing persisted ${key} state, state:`,
+          `Failed parsing persisted ${key}:`,
           JSON.stringify(result)
         )
       }
