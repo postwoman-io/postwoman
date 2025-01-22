@@ -1208,7 +1208,7 @@ describe("PersistenceService", () => {
 
     describe("setup WebSocket persistence", () => {
       // Key read from localStorage across test cases
-      const wsRequestKey = "WebsocketRequest"
+      const wsRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.WEBSOCKET}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${wsRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `WebsocketRequest`
@@ -1218,7 +1218,7 @@ describe("PersistenceService", () => {
           protocols: {},
         }
 
-        window.localStorage.setItem(wsRequestKey, JSON.stringify(request))
+        await setStoreItem(wsRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1232,7 +1232,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${wsRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
@@ -1247,7 +1247,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(wsRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(wsRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`reads the "${wsRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "WSSessionStore" and updates localStorage entries`, async () => {
@@ -1261,7 +1265,7 @@ describe("PersistenceService", () => {
         })
 
         const request = WEBSOCKET_REQUEST_MOCK
-        window.localStorage.setItem(wsRequestKey, JSON.stringify(request))
+        await setStoreItem(wsRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1271,7 +1275,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(wsRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(wsRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setWSRequest).toHaveBeenCalledWith(request)
         expect(WSRequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
