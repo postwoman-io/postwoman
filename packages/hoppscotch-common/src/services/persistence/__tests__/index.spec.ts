@@ -441,7 +441,7 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup local state persistence", () => {
+    describe("setup local state persistence", () => {
       // Key read from localStorage across test cases
       const localStateKey = "localState"
 
@@ -546,7 +546,7 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup settings persistence", () => {
+    describe("setup settings persistence", () => {
       // Key read from localStorage across test cases
       const settingsKey = "settings"
 
@@ -632,7 +632,7 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup history persistence", () => {
+    describe("setup history persistence", () => {
       // Keys read from localStorage across test cases
       const historyKey = "history"
       const graphqlHistoryKey = "graphqlHistory"
@@ -928,9 +928,9 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup environments persistence", () => {
+    describe("setup environments persistence", () => {
       // Key read from localStorage across test cases
-      const environmentsKey = "environments"
+      const environmentsKey = `${STORE_NAMESPACE}:${STORE_KEYS.ENVIRONMENTS}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${environmentsKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `environments`
@@ -944,10 +944,7 @@ describe("PersistenceService", () => {
           },
         ]
 
-        window.localStorage.setItem(
-          environmentsKey,
-          JSON.stringify(environments)
-        )
+        await setStoreItem(environmentsKey, environments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -961,16 +958,13 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${environmentsKey}-backup`,
-          JSON.stringify(environments)
+          expect.stringContaining(JSON.stringify(environments))
         )
       })
 
       it(`separates "globals" entries from "${environmentsKey}", subscribes to the "environmentStore" and updates localStorage entries`, async () => {
         const environments = cloneDeep(ENVIRONMENTS_MOCK)
-        window.localStorage.setItem(
-          "environments",
-          JSON.stringify(environments)
-        )
+        await setStoreItem(environmentsKey, environments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -978,7 +972,6 @@ describe("PersistenceService", () => {
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(environmentsKey)
-
         expect(toastErrorFn).not.toHaveBeenCalledWith(environmentsKey)
         expect(setItemSpy).not.toHaveBeenCalledWith(`${environmentsKey}-backup`)
 
@@ -989,9 +982,10 @@ describe("PersistenceService", () => {
         // Removes `globals` from environments
         environments.splice(0, 1)
 
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
         expect(setItemSpy).toHaveBeenCalledWith(
-          environmentsKey,
-          JSON.stringify(environments)
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
         )
         expect(replaceEnvironments).toBeCalledWith(environments)
         expect(environments$.subscribe).toHaveBeenCalledWith(
