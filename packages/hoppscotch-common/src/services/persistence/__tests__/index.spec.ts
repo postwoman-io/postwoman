@@ -1093,9 +1093,9 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup secret Environments persistence", () => {
+    describe("setup secret Environments persistence", () => {
       // Key read from localStorage across test cases
-      const secretEnvironmentsKey = "secretEnvironments"
+      const secretEnvironmentsKey = `${STORE_NAMESPACE}:${STORE_KEYS.SECRET_ENVIRONMENTS}`
 
       const loadSecretEnvironmentsFromPersistedStateFn = vi.fn()
       const mock = {
@@ -1112,10 +1112,7 @@ describe("PersistenceService", () => {
           },
         }
 
-        window.localStorage.setItem(
-          secretEnvironmentsKey,
-          JSON.stringify(secretEnvironments)
-        )
+        await setStoreItem(secretEnvironmentsKey, secretEnvironments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1129,20 +1126,18 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${secretEnvironmentsKey}-backup`,
-          JSON.stringify(secretEnvironments)
+          expect.stringContaining(JSON.stringify(secretEnvironments))
         )
       })
 
       it("loads secret environments from the state persisted in localStorage and sets watcher for `persistableSecretEnvironment`", async () => {
         const secretEnvironment = SECRET_ENVIRONMENTS_MOCK
-        window.localStorage.setItem(
-          secretEnvironmentsKey,
-          JSON.stringify(secretEnvironment)
-        )
+        await setStoreItem(secretEnvironmentsKey, secretEnvironment)
 
         const getItemSpy = spyOnGetItem()
+        const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({
+        await invokeSetupLocalPersistence({
           mockSecretEnvironmentsService: true,
           mock,
         })
@@ -1150,15 +1145,15 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(loadSecretEnvironmentsFromPersistedStateFn).toHaveBeenCalledWith(
           secretEnvironment
         )
-        expect(watchDebounced).toHaveBeenCalledWith(
-          expect.any(Object),
-          expect.any(Function),
-          { debounce: 500 }
-        )
+        expect(watchDebounced).toHaveBeenCalled()
       })
 
       it(`skips schema parsing and the loading of persisted secret environments if there is no "${secretEnvironmentsKey}" key present in localStorage`, async () => {
@@ -1167,7 +1162,7 @@ describe("PersistenceService", () => {
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({
+        await invokeSetupLocalPersistence({
           mockSecretEnvironmentsService: true,
           mock,
         })
@@ -1175,7 +1170,10 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(watchDebounced).toHaveBeenCalled()
       })
@@ -1192,12 +1190,16 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(console.error).toHaveBeenCalledWith(
-          `Failed parsing persisted secret environment, state:`,
+          `Failed parsing persisted SECRET_ENVIRONMENTS:`,
           window.localStorage.getItem(secretEnvironmentsKey)
         )
+
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),
           expect.any(Function),

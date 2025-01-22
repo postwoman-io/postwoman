@@ -237,10 +237,12 @@ export const REST_TAB_STATE_MOCK: PersistableTabState<HoppRequestDocument> = {
   ],
 }
 
-export const SECRET_ENVIRONMENTS_MOCK: Record<string, SecretVariable> = {
-  clryz7ir7002al4162bsj0azg: {
-    key: "test-key",
-    value: "test-value",
-    varIndex: 1,
-  },
+export const SECRET_ENVIRONMENTS_MOCK: Record<string, SecretVariable[]> = {
+  clryz7ir7002al4162bsj0azg: [
+    {
+      key: "test-key",
+      value: "test-value",
+      varIndex: 1,
+    },
+  ],
 }
