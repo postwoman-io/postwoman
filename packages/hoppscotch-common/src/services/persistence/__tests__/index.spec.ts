@@ -1001,19 +1001,16 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup selected environment persistence", () => {
+    describe("setup selected environment persistence", () => {
       // Key read from localStorage across test cases
-      const selectedEnvIndexKey = "selectedEnvIndex"
+      const selectedEnvIndexKey = `${STORE_NAMESPACE}:${STORE_KEYS.SELECTED_ENV}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${selectedEnvIndexKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `selectedEnvIndex`
         // `index` -> `number`
         const selectedEnvIndex = { ...SELECTED_ENV_INDEX_MOCK, index: "1" }
 
-        window.localStorage.setItem(
-          selectedEnvIndexKey,
-          JSON.stringify(selectedEnvIndex)
-        )
+        await setStoreItem(selectedEnvIndexKey, selectedEnvIndex)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1027,7 +1024,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${selectedEnvIndexKey}-backup`,
-          JSON.stringify(selectedEnvIndex)
+          expect.stringContaining(JSON.stringify(selectedEnvIndex))
         )
       })
 
@@ -1042,16 +1039,17 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`sets it to the store if there is a value associated with the "${selectedEnvIndexKey}" key in localStorage`, async () => {
         const selectedEnvIndex = SELECTED_ENV_INDEX_MOCK
 
-        window.localStorage.setItem(
-          selectedEnvIndexKey,
-          JSON.stringify(selectedEnvIndex)
-        )
+        await setStoreItem(selectedEnvIndexKey, selectedEnvIndex)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1061,7 +1059,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSelectedEnvironmentIndex).toHaveBeenCalledWith(
           selectedEnvIndex
@@ -1082,7 +1084,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSelectedEnvironmentIndex).toHaveBeenCalledWith({
           type: "NO_ENV_SELECTED",
