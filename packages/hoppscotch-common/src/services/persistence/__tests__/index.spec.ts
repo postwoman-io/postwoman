@@ -1353,7 +1353,7 @@ describe("PersistenceService", () => {
 
     describe("setup SSE Persistence", () => {
       // Key read from localStorage across test cases
-      const sseRequestKey = "SSERequest"
+      const sseRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.SSE}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${sseRequestKey}" read from localStorage doesn't match the versioned schema`, async () => {
         // Invalid shape for `SSERequest`
@@ -1363,7 +1363,7 @@ describe("PersistenceService", () => {
           url: "https://express-eventsource.herokuapp.com/events",
         }
 
-        window.localStorage.setItem(sseRequestKey, JSON.stringify(request))
+        await setStoreItem(sseRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1377,7 +1377,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${sseRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
@@ -1392,7 +1392,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(sseRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sseRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`reads the "${sseRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SSESessionStore" and updates localStorage entries`, async () => {
@@ -1406,7 +1410,7 @@ describe("PersistenceService", () => {
         })
 
         const request = SSE_REQUEST_MOCK
-        window.localStorage.setItem(sseRequestKey, JSON.stringify(request))
+        await setStoreItem(sseRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1416,7 +1420,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(sseRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sseRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSSERequest).toHaveBeenCalledWith(request)
         expect(SSERequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
