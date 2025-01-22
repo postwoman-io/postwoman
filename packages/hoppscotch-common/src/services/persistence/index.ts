@@ -297,6 +297,10 @@ export class PersistenceService extends Service {
   }
 
   private async checkAndMigrateOldSettings() {
+    const vuexKey = "vuex"
+    const themeColorKey = "THEME_COLOR"
+    const nuxtColorModeKey = "nuxt-color-mode"
+
     const oldSelectedEnvIndex = window.localStorage.getItem("selectedEnvIndex")
     if (oldSelectedEnvIndex) {
       if (oldSelectedEnvIndex === "-1") {
@@ -312,7 +316,7 @@ export class PersistenceService extends Service {
       window.localStorage.removeItem("selectedEnvIndex")
     }
 
-    const vuexData = JSON.parse(window.localStorage.getItem("vuex") || "{}")
+    const vuexData = JSON.parse(window.localStorage.getItem(vuexKey) || "{}")
     if (!isEmpty(vuexData)) {
       const result = VUEX_SCHEMA.safeParse(vuexData)
       if (result.success) {
@@ -346,27 +350,38 @@ export class PersistenceService extends Service {
             postwoman.environments
           )
         }
+      } else {
+        this.showErrorToast(vuexKey)
+        window.localStorage.setItem(
+          `${vuexKey}-backup`,
+          JSON.stringify(vuexData)
+        )
       }
-
-      window.localStorage.removeItem("vuex")
+      window.localStorage.removeItem(vuexKey)
     }
 
-    const themeColor = window.localStorage.getItem("THEME_COLOR")
+    const themeColor = window.localStorage.getItem(themeColorKey)
     if (themeColor) {
       const result = THEME_COLOR_SCHEMA.safeParse(themeColor)
       if (result.success) {
         applySetting("THEME_COLOR", result.data as HoppAccentColor)
+      } else {
+        this.showErrorToast(themeColorKey)
+        window.localStorage.setItem(`${themeColorKey}-backup`, themeColor)
       }
-      window.localStorage.removeItem("THEME_COLOR")
+      window.localStorage.removeItem(themeColorKey)
     }
 
-    const nuxtColorMode = window.localStorage.getItem("nuxt-color-mode")
+    const nuxtColorMode = window.localStorage.getItem(nuxtColorModeKey)
     if (nuxtColorMode) {
       const result = NUXT_COLOR_MODE_SCHEMA.safeParse(nuxtColorMode)
       if (result.success) {
         applySetting("BG_COLOR", result.data as HoppBgColor)
+      } else {
+        this.showErrorToast(nuxtColorModeKey)
+        window.localStorage.setItem(`${nuxtColorModeKey}-backup`, nuxtColorMode)
       }
-      window.localStorage.removeItem("nuxt-color-mode")
+      window.localStorage.removeItem(nuxtColorModeKey)
     }
   }
 

@@ -212,6 +212,15 @@ describe("PersistenceService", () => {
       const selectedEnvIndexKey = "selectedEnvIndex"
       const themeColorKey = "THEME_COLOR"
       const vuexKey = "vuex"
+      const storagePrefix = "persistence.v1:"
+
+      beforeEach(() => {
+        window.localStorage.clear()
+      })
+
+      beforeEach(async () => {
+        await Store.remove(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION)
+      })
 
       it(`sets the selected environment index type as "NO_ENV" in localStorage if the value retrieved for ${selectedEnvIndexKey} is "-1"`, async () => {
         window.localStorage.setItem(selectedEnvIndexKey, "-1")
@@ -223,10 +232,12 @@ describe("PersistenceService", () => {
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
         expect(setItemSpy).toHaveBeenCalledWith(
-          selectedEnvIndexKey,
-          JSON.stringify({
-            type: "NO_ENV_SELECTED",
-          })
+          `${storagePrefix}selectedEnv`,
+          expect.stringContaining(
+            JSON.stringify({
+              type: "NO_ENV_SELECTED",
+            })
+          )
         )
       })
 
@@ -240,11 +251,13 @@ describe("PersistenceService", () => {
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
         expect(setItemSpy).toHaveBeenCalledWith(
-          selectedEnvIndexKey,
-          JSON.stringify({
-            type: "MY_ENV",
-            index: 1,
-          })
+          `${storagePrefix}selectedEnv`,
+          expect.stringContaining(
+            JSON.stringify({
+              type: "MY_ENV",
+              index: 1,
+            })
+          )
         )
       })
 
@@ -257,9 +270,12 @@ describe("PersistenceService", () => {
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).not.toHaveBeenCalled()
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          `${storagePrefix}schema_version`,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
       it(`shows an error and sets the entry as a backup in localStorage if "${vuexKey}" read from localStorage doesn't match the schema`, async () => {
@@ -289,7 +305,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${vuexKey}-backup`,
-          JSON.stringify(vuexData)
+          expect.stringContaining(JSON.stringify(vuexData))
         )
       })
 
@@ -307,7 +323,6 @@ describe("PersistenceService", () => {
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).toHaveBeenCalledWith(
           expect.stringContaining(themeColorKey)
         )
@@ -315,8 +330,7 @@ describe("PersistenceService", () => {
           `${themeColorKey}-backup`,
           themeColorValue
         )
-
-        expect(applySetting).toHaveBeenCalledWith(
+        expect(applySetting).not.toHaveBeenCalledWith(
           themeColorKey,
           themeColorValue
         )
@@ -337,7 +351,6 @@ describe("PersistenceService", () => {
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).toHaveBeenCalledWith(
           expect.stringContaining(nuxtColorModeKey)
         )
@@ -345,8 +358,7 @@ describe("PersistenceService", () => {
           `${nuxtColorModeKey}-backup`,
           nuxtColorModeValue
         )
-
-        expect(applySetting).toHaveBeenCalledWith(
+        expect(applySetting).not.toHaveBeenCalledWith(
           bgColorKey,
           nuxtColorModeValue
         )
@@ -370,70 +382,51 @@ describe("PersistenceService", () => {
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).not.toHaveBeenCalledWith(nuxtColorModeKey)
         expect(setItemSpy).not.toHaveBeenCalledWith(
           `${nuxtColorModeKey}-backup`
         )
 
+        // Check settings is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          "settings",
-          JSON.stringify(vuexData.postwoman.settings)
+          `${storagePrefix}settings`,
+          expect.stringContaining(JSON.stringify(vuexData.postwoman.settings))
         )
 
         const { postwoman } = vuexData
         delete postwoman.settings
 
+        // Check collections is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        // Excluding `settings`
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "collections",
-          JSON.stringify(postwoman.collections)
+          `${storagePrefix}restCollections`,
+          expect.stringContaining(JSON.stringify(postwoman.collections))
         )
 
         delete postwoman.collections
 
-        // Excluding `settings` & `collections`
+        // Check graphql collections is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "collectionsGraphql",
-          JSON.stringify(postwoman.collectionsGraphql)
+          `${storagePrefix}gqlCollections`,
+          expect.stringContaining(JSON.stringify(postwoman.collectionsGraphql))
         )
 
         delete postwoman.collectionsGraphql
 
-        // Excluding `settings, `collections` & `collectionsGraphql`
+        // Check environments is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "environments",
-          JSON.stringify(postwoman.environments)
+          `${storagePrefix}environments`,
+          expect.stringContaining(JSON.stringify(postwoman.environments))
         )
 
         delete postwoman.environments
 
-        // Excluding `settings, `collections`, `collectionsGraphql` & `environments`
-        expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
+        // Check theme color handling
         expect(getItemSpy).toHaveBeenCalledWith(themeColorKey)
         expect(applySetting).toHaveBeenCalledWith(themeColorKey, themeColor)
         expect(removeItemSpy).toHaveBeenCalledWith(themeColorKey)
         expect(window.localStorage.getItem(themeColorKey)).toBe(null)
 
+        // Check color mode handling
         expect(getItemSpy).toHaveBeenCalledWith(nuxtColorModeKey)
         expect(applySetting).toHaveBeenCalledWith(bgColorKey, nuxtColorMode)
         expect(removeItemSpy).toHaveBeenCalledWith(nuxtColorModeKey)
