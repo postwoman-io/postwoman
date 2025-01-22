@@ -1553,7 +1553,7 @@ describe("PersistenceService", () => {
 
     describe("setup GQL tabs persistence", () => {
       // Key read from localStorage across test cases
-      const gqlTabStateKey = "gqlTabState"
+      const gqlTabStateKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_TABS}`
 
       const loadTabsFromPersistedStateFn = vi.fn()
       const mock = { loadTabsFromPersistedState: loadTabsFromPersistedStateFn }
@@ -1563,7 +1563,7 @@ describe("PersistenceService", () => {
         // `lastActiveTabID` -> `string`
         const gqlTabState = { ...GQL_TAB_STATE_MOCK, lastActiveTabID: 1234 }
 
-        window.localStorage.setItem(gqlTabStateKey, JSON.stringify(gqlTabState))
+        setStoreItem(gqlTabStateKey, gqlTabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1577,7 +1577,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${gqlTabStateKey}-backup`,
-          JSON.stringify(gqlTabState)
+          expect.stringContaining(JSON.stringify(gqlTabState))
         )
       })
 
@@ -1587,7 +1587,7 @@ describe("PersistenceService", () => {
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
@@ -1600,12 +1600,12 @@ describe("PersistenceService", () => {
 
       it("loads tabs from the state persisted in localStorage and sets watcher for `persistableTabState`", async () => {
         const tabState = GQL_TAB_STATE_MOCK
-        window.localStorage.setItem(gqlTabStateKey, JSON.stringify(tabState))
+        await setStoreItem(gqlTabStateKey, tabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
@@ -1620,22 +1620,20 @@ describe("PersistenceService", () => {
         )
       })
 
-      it("logs an error to the console on failing to parse persisted tab state", async () => {
+      it("logs an error to the console on failing to parse persisted gql tab state", async () => {
         window.localStorage.setItem(gqlTabStateKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
-        const setItemSpy = spyOnSetItem()
 
         await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
 
         expect(console.error).toHaveBeenCalledWith(
-          `Failed parsing persisted tab state, state:`,
+          `Failed parsing persisted GQL_TABS:`,
           window.localStorage.getItem(gqlTabStateKey)
         )
         expect(watchDebounced).toHaveBeenCalledWith(
