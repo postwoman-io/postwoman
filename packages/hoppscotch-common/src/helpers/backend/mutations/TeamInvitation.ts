@@ -21,6 +21,7 @@ export type CreateTeamInvitationErrors =
   | "team/member_not_found"
   | "team_invite/already_member"
   | "team_invite/member_has_invite"
+  | "user/not_found"
 
 type RevokeTeamInvitationErrors =
   | "team/not_required_role"

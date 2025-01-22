@@ -10,6 +10,7 @@ import IconCopy from "~icons/lucide/copy"
 import IconDownload from "~icons/lucide/download"
 import { useI18n } from "./i18n"
 import { useToast } from "./toast"
+import { HoppRESTRequestResponse } from "@hoppscotch/data"
 
 export function useCopyInterface(responseBodyText: Ref<string>) {
   const toast = useToast()
@@ -140,18 +141,22 @@ export function usePreview(
   }
 }
 
-export function useResponseBody(response: HoppRESTResponse): {
+export function useResponseBody(
+  response: HoppRESTResponse | HoppRESTRequestResponse
+): {
   responseBodyText: ComputedRef<string>
 } {
   const responseBodyText = computed(() => {
-    if (
-      response.type === "loading" ||
-      response.type === "network_fail" ||
-      response.type === "script_fail" ||
-      response.type === "fail" ||
-      response.type === "extension_error"
-    )
-      return ""
+    if ("type" in response) {
+      if (
+        response.type === "loading" ||
+        response.type === "network_fail" ||
+        response.type === "script_fail" ||
+        response.type === "fail" ||
+        response.type === "extension_error"
+      )
+        return ""
+    }
     return getResponseBodyText(response.body)
   })
   return {
@@ -159,7 +164,7 @@ export function useResponseBody(response: HoppRESTResponse): {
   }
 }
 
-export function getResponseBodyText(body: ArrayBuffer): string {
+export function getResponseBodyText(body: ArrayBuffer | string): string {
   if (typeof body === "string") return body
 
   const res = new TextDecoder("utf-8").decode(body)

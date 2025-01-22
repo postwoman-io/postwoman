@@ -15,12 +15,22 @@
 
         <div class="space-y-4 py-4">
           <div class="flex items-center">
-            <HoppSmartToggle
-              :on="smtpConfigs.enabled"
-              @change="smtpConfigs.enabled = !smtpConfigs.enabled"
-            >
-              {{ t('configs.mail_configs.enable_smtp') }}
-            </HoppSmartToggle>
+            <div class="flex justify-between w-full">
+              <HoppSmartToggle
+                :on="smtpConfigs.enabled"
+                @change="smtpConfigs.enabled = !smtpConfigs.enabled"
+              >
+                {{ t('configs.mail_configs.enable_smtp') }}
+              </HoppSmartToggle>
+              <HoppButtonSecondary
+                blank
+                v-tippy="{ theme: 'tooltip', allowHTML: true }"
+                to="https://docs.hoppscotch.io/documentation/self-host/community-edition/prerequisites#email-delivery"
+                :title="t('support.documentation')"
+                :icon="IconHelpCircle"
+                class="rounded hover:bg-primaryDark focus-visible:bg-primaryDark"
+              />
+            </div>
           </div>
 
           <div v-if="smtpConfigs.enabled" class="ml-12">
@@ -94,6 +104,7 @@ import { useI18n } from '~/composables/i18n';
 import { ServerConfigs } from '~/helpers/configs';
 import IconEye from '~icons/lucide/eye';
 import IconEyeOff from '~icons/lucide/eye-off';
+import IconHelpCircle from '~icons/lucide/help-circle';
 
 const t = useI18n();
 

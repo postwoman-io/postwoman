@@ -21,11 +21,11 @@
   <div class="flex flex-col divide-y divide-dividerLight">
     <!-- label as advanced config here -->
     <div class="p-4 flex flex-col space-y-1">
-      <label class="">
-        {{ t("authorization.aws_signature.advance_config") }}
+      <label>
+        {{ t("authorization.advance_config") }}
       </label>
       <p class="text-secondaryLight">
-        {{ t("authorization.aws_signature.advance_config_description") }}
+        {{ t("authorization.advance_config_description") }}
       </p>
     </div>
     <div class="flex flex-1">

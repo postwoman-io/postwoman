@@ -1,3 +1,8 @@
+import { runGQLQuery } from "../backend/GQLClient"
+import {
+  GetCollectionChildrenDocument,
+  GetSingleCollectionDocument,
+} from "../backend/graphql"
 import { TeamRequest } from "./TeamRequest"
 
 /**
@@ -10,3 +15,19 @@ export interface TeamCollection {
   requests: TeamRequest[] | null
   data: string | null
 }
+
+export const getSingleCollection = (collectionID: string) =>
+  runGQLQuery({
+    query: GetSingleCollectionDocument,
+    variables: {
+      collectionID,
+    },
+  })
+
+export const getCollectionChildCollections = (collectionID: string) =>
+  runGQLQuery({
+    query: GetCollectionChildrenDocument,
+    variables: {
+      collectionID,
+    },
+  })

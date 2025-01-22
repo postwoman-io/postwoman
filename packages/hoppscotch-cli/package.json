@@ -1,6 +1,6 @@
 {
   "name": "@hoppscotch/cli",
-  "version": "0.11.0",
+  "version": "0.20.2",
   "description": "A CLI to run Hoppscotch test scripts in CI environments.",
   "homepage": "https://hoppscotch.io",
   "type": "module",
@@ -12,7 +12,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "build": "pnpm exec tsup",
@@ -41,29 +41,32 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "axios": "1.7.5",
-    "aws4fetch": "1.0.19",
+    "aws4fetch": "1.0.20",
+    "axios": "1.7.7",
     "chalk": "5.3.0",
-    "commander": "11.1.0",
-    "isolated-vm": "4.7.2",
+    "commander": "12.1.0",
+    "isolated-vm": "5.0.1",
+    "js-md5": "0.8.3",
     "lodash-es": "4.17.21",
-    "qs": "6.11.2",
-    "verzod": "0.2.2",
+    "papaparse": "5.4.1",
+    "qs": "6.13.0",
+    "verzod": "0.2.4",
     "xmlbuilder2": "3.1.1",
-    "zod": "3.22.4"
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@hoppscotch/data": "workspace:^",
     "@hoppscotch/js-sandbox": "workspace:^",
     "@relmify/jest-fp-ts": "2.1.1",
-    "@swc/core": "1.4.2",
     "@types/lodash-es": "4.17.12",
-    "@types/qs": "6.9.12",
-    "fp-ts": "2.16.2",
-    "prettier": "3.2.5",
+    "@types/papaparse": "5.3.14",
+    "@types/qs": "6.9.16",
+    "fp-ts": "2.16.9",
+    "prettier": "3.3.3",
     "qs": "6.11.2",
-    "tsup": "8.0.2",
-    "typescript": "5.3.3",
-    "vitest": "0.34.6"
+    "semver": "7.6.3",
+    "tsup": "8.3.0",
+    "typescript": "5.6.3",
+    "vitest": "2.1.2"
   }
 }

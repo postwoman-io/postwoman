@@ -1,12 +1,12 @@
 import { ExecException } from "child_process";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import fs from "fs";
 import path from "path";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { HoppErrorCode } from "../../../types/errors";
 import { getErrorCode, getTestJsonFilePath, runCLI } from "../../utils";
 
-describe("hopp test [options] <file_path_or_id>", () => {
+describe("hopp test [options] <file_path_or_id>", { timeout: 100000 }, () => {
   const VALID_TEST_ARGS = `test ${getTestJsonFilePath("passes-coll.json", "collection")}`;
 
   describe("Test `hopp test <file_path_or_id>` command:", () => {
@@ -126,19 +126,15 @@ describe("hopp test [options] <file_path_or_id>", () => {
       expect(error).toBeNull();
     });
 
-    test(
-      "Successfully inherits/overrides authorization and headers at each level with multiple child collections",
-      async () => {
-        const args = `test ${getTestJsonFilePath(
-          "multiple-child-collections-auth-headers-coll.json",
-          "collection"
-        )}`;
-        const { error } = await runCLI(args);
+    test("Successfully inherits/overrides authorization and headers at each level with multiple child collections", async () => {
+      const args = `test ${getTestJsonFilePath(
+        "multiple-child-collections-auth-headers-coll.json",
+        "collection"
+      )}`;
+      const { error } = await runCLI(args);
 
-        expect(error).toBeNull();
-      },
-      { timeout: 100000 }
-    );
+      expect(error).toBeNull();
+    });
 
     test("Persists environment variables set in the pre-request script for consumption in the test script", async () => {
       const args = `test ${getTestJsonFilePath(
@@ -183,6 +179,45 @@ describe("hopp test [options] <file_path_or_id>", () => {
         expect(error).toBeNull();
       });
     });
+  });
+
+  test("Ensures tests run in sequence order based on request path", async () => {
+    // Expected order of collection runs
+    const expectedOrder = [
+      "root-collection-request",
+      "folder-1/folder-1-request",
+      "folder-1/folder-11/folder-11-request",
+      "folder-1/folder-12/folder-12-request",
+      "folder-1/folder-13/folder-13-request",
+      "folder-2/folder-2-request",
+      "folder-2/folder-21/folder-21-request",
+      "folder-2/folder-22/folder-22-request",
+      "folder-2/folder-23/folder-23-request",
+      "folder-3/folder-3-request",
+      "folder-3/folder-31/folder-31-request",
+      "folder-3/folder-32/folder-32-request",
+      "folder-3/folder-33/folder-33-request",
+    ];
+
+    const normalizePath = (path: string) => path.replace(/\\/g, "/");
+
+    const extractRunningOrder = (stdout: string): string[] =>
+      [...stdout.matchAll(/Running:.*?\/(.*?)\r?\n/g)].map(
+        ([, path]) => normalizePath(path.replace(/\x1b\[\d+m/g, "")) // Remove ANSI codes and normalize paths
+      );
+
+    const args = `test ${getTestJsonFilePath(
+      "multiple-child-collections-auth-headers-coll.json",
+      "collection"
+    )}`;
+
+    const { stdout, error } = await runCLI(args);
+
+    // Verify the actual order matches the expected order
+    expect(extractRunningOrder(stdout)).toStrictEqual(expectedOrder);
+
+    // Ensure no errors occurred
+    expect(error).toBeNull();
   });
 
   describe("Test `hopp test <file_path_or_id> --env <file_path_or_id>` command:", () => {
@@ -239,12 +274,12 @@ describe("hopp test [options] <file_path_or_id>", () => {
     });
 
     test("Successfully resolves values from the supplied environment export file", async () => {
-      const TESTS_PATH = getTestJsonFilePath(
+      const COLL_PATH = getTestJsonFilePath(
         "env-flag-tests-coll.json",
         "collection"
       );
       const ENV_PATH = getTestJsonFilePath("env-flag-envs.json", "environment");
-      const args = `test ${TESTS_PATH} --env ${ENV_PATH}`;
+      const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
 
       const { error } = await runCLI(args);
       expect(error).toBeNull();
@@ -255,134 +290,115 @@ describe("hopp test [options] <file_path_or_id>", () => {
         "req-body-env-vars-coll.json",
         "collection"
       );
-      const ENVS_PATH = getTestJsonFilePath(
+      const ENV_PATH = getTestJsonFilePath(
         "req-body-env-vars-envs.json",
         "environment"
       );
-      const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
+      const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
 
       const { error } = await runCLI(args);
       expect(error).toBeNull();
     });
 
     test("Works with short `-e` flag", async () => {
-      const TESTS_PATH = getTestJsonFilePath(
+      const COLL_PATH = getTestJsonFilePath(
         "env-flag-tests-coll.json",
         "collection"
       );
       const ENV_PATH = getTestJsonFilePath("env-flag-envs.json", "environment");
-      const args = `test ${TESTS_PATH} -e ${ENV_PATH}`;
+      const args = `test ${COLL_PATH} -e ${ENV_PATH}`;
 
       const { error } = await runCLI(args);
       expect(error).toBeNull();
     });
 
-    describe(
-      "Secret environment variables",
-      () => {
-        // Reads secret environment values from system environment
-        test("Successfully picks the values for secret environment variables from `process.env` and persists the variables set from the pre-request script", async () => {
-          const env = {
-            ...process.env,
-            secretBearerToken: "test-token",
-            secretBasicAuthUsername: "test-user",
-            secretBasicAuthPassword: "test-pass",
-            secretQueryParamValue: "secret-query-param-value",
-            secretBodyValue: "secret-body-value",
-            secretHeaderValue: "secret-header-value",
-          };
+    describe("Secret environment variables", () => {
+      // Reads secret environment values from system environment
+      test("Successfully picks the values for secret environment variables from `process.env` and persists the variables set from the pre-request script", async () => {
+        const env = {
+          ...process.env,
+          secretBearerToken: "test-token",
+          secretBasicAuthUsername: "test-user",
+          secretBasicAuthPassword: "test-pass",
+          secretQueryParamValue: "secret-query-param-value",
+          secretBodyValue: "secret-body-value",
+          secretHeaderValue: "secret-header-value",
+        };
 
-          const COLL_PATH = getTestJsonFilePath(
-            "secret-envs-coll.json",
-            "collection"
-          );
-          const ENVS_PATH = getTestJsonFilePath(
-            "secret-envs.json",
-            "environment"
-          );
-          const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
-
-          const { error, stdout } = await runCLI(args, { env });
-
-          expect(stdout).toContain(
-            "https://httpbin.org/basic-auth/*********/*********"
-          );
-          expect(error).toBeNull();
-        });
-
-        // Prefers values specified in the environment export file over values set in the system environment
-        test("Successfully picks the values for secret environment variables set directly in the environment export file and persists the environment variables set from the pre-request script", async () => {
-          const COLL_PATH = getTestJsonFilePath(
-            "secret-envs-coll.json",
-            "collection"
-          );
-          const ENVS_PATH = getTestJsonFilePath(
-            "secret-supplied-values-envs.json",
-            "environment"
-          );
-          const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
-
-          const { error, stdout } = await runCLI(args);
-
-          expect(stdout).toContain(
-            "https://httpbin.org/basic-auth/*********/*********"
-          );
-          expect(error).toBeNull();
-        });
-
-        // Values set from the scripting context takes the highest precedence
-        test("Setting values for secret environment variables from the pre-request script overrides values set at the supplied environment export file", async () => {
-          const COLL_PATH = getTestJsonFilePath(
-            "secret-envs-persistence-coll.json",
-            "collection"
-          );
-          const ENVS_PATH = getTestJsonFilePath(
-            "secret-supplied-values-envs.json",
-            "environment"
-          );
-          const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
-
-          const { error, stdout } = await runCLI(args);
-
-          expect(stdout).toContain(
-            "https://httpbin.org/basic-auth/*********/*********"
-          );
-          expect(error).toBeNull();
-        });
-
-        test("Persists secret environment variable values set from the pre-request script for consumption in the request and post-request script context", async () => {
-          const COLL_PATH = getTestJsonFilePath(
-            "secret-envs-persistence-scripting-coll.json",
-            "collection"
-          );
-          const ENVS_PATH = getTestJsonFilePath(
-            "secret-envs-persistence-scripting-envs.json",
-            "environment"
-          );
-
-          const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
-
-          const { error } = await runCLI(args);
-          expect(error).toBeNull();
-        });
-      },
-      { timeout: 50000 }
-    );
-
-    describe("Request variables", () => {
-      test("Picks active request variables and ignores inactive entries", async () => {
         const COLL_PATH = getTestJsonFilePath(
-          "request-vars-coll.json",
+          "secret-envs-coll.json",
           "collection"
         );
+        const ENV_PATH = getTestJsonFilePath("secret-envs.json", "environment");
+        const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
 
-        const args = `test ${COLL_PATH}`;
+        const { error, stdout } = await runCLI(args, { env });
+
+        expect(stdout).toContain(
+          "https://httpbin.org/basic-auth/*********/*********"
+        );
+        expect(error).toBeNull();
+      });
+
+      // Prefers values specified in the environment export file over values set in the system environment
+      test("Successfully picks the values for secret environment variables set directly in the environment export file and persists the environment variables set from the pre-request script", async () => {
+        const COLL_PATH = getTestJsonFilePath(
+          "secret-envs-coll.json",
+          "collection"
+        );
+        const ENV_PATH = getTestJsonFilePath(
+          "secret-supplied-values-envs.json",
+          "environment"
+        );
+        const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
+
+        const { error, stdout } = await runCLI(args);
+
+        expect(stdout).toContain(
+          "https://httpbin.org/basic-auth/*********/*********"
+        );
+        expect(error).toBeNull();
+      });
+
+      // Values set from the scripting context takes the highest precedence
+      test("Setting values for secret environment variables from the pre-request script overrides values set at the supplied environment export file", async () => {
+        const COLL_PATH = getTestJsonFilePath(
+          "secret-envs-persistence-coll.json",
+          "collection"
+        );
+        const ENV_PATH = getTestJsonFilePath(
+          "secret-supplied-values-envs.json",
+          "environment"
+        );
+        const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
+
+        const { error, stdout } = await runCLI(args);
+
+        expect(stdout).toContain(
+          "https://httpbin.org/basic-auth/*********/*********"
+        );
+        expect(error).toBeNull();
+      });
+
+      test("Persists secret environment variable values set from the pre-request script for consumption in the request and post-request script context", async () => {
+        const COLL_PATH = getTestJsonFilePath(
+          "secret-envs-persistence-scripting-coll.json",
+          "collection"
+        );
+        const ENV_PATH = getTestJsonFilePath(
+          "secret-envs-persistence-scripting-envs.json",
+          "environment"
+        );
+
+        const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
 
         const { error } = await runCLI(args);
         expect(error).toBeNull();
       });
+    });
 
-      test("Supports the usage of request variables along with environment variables", async () => {
+    describe("Request variables", () => {
+      test("Picks active request variables and ignores inactive entries alongside the usage of environment variables", async () => {
         const env = {
           ...process.env,
           secretBasicAuthPasswordEnvVar: "password",
@@ -392,12 +408,12 @@ describe("hopp test [options] <file_path_or_id>", () => {
           "request-vars-coll.json",
           "collection"
         );
-        const ENVS_PATH = getTestJsonFilePath(
+        const ENV_PATH = getTestJsonFilePath(
           "request-vars-envs.json",
           "environment"
         );
 
-        const args = `test ${COLL_PATH} --env ${ENVS_PATH}`;
+        const args = `test ${COLL_PATH} --env ${ENV_PATH}`;
 
         const { error, stdout } = await runCLI(args, { env });
         expect(stdout).toContain(
@@ -419,16 +435,49 @@ describe("hopp test [options] <file_path_or_id>", () => {
           "aws-signature-auth-coll.json",
           "collection"
         );
-        const ENVS_PATH = getTestJsonFilePath(
+        const ENV_PATH = getTestJsonFilePath(
           "aws-signature-auth-envs.json",
           "environment"
         );
 
-        const args = `test ${COLL_PATH} -e ${ENVS_PATH}`;
+        const args = `test ${COLL_PATH} -e ${ENV_PATH}`;
         const { error } = await runCLI(args, { env });
 
         expect(error).toBeNull();
       });
+    });
+
+    describe("Digest Authorization type", () => {
+      test("Successfully translates the authorization information to headers/query params and sends it along with the request", async () => {
+        const COLL_PATH = getTestJsonFilePath(
+          "digest-auth-success-coll.json",
+          "collection"
+        );
+        const ENV_PATH = getTestJsonFilePath(
+          "digest-auth-envs.json",
+          "environment"
+        );
+
+        const args = `test ${COLL_PATH} -e ${ENV_PATH}`;
+        const { error } = await runCLI(args);
+        expect(error).toBeNull();
+      });
+    });
+
+    test("Supports disabling request retries", async () => {
+      const COLL_PATH = getTestJsonFilePath(
+        "digest-auth-failure-coll.json",
+        "collection"
+      );
+      const ENV_PATH = getTestJsonFilePath(
+        "digest-auth-envs.json",
+        "environment"
+      );
+
+      const args = `test ${COLL_PATH} -e ${ENV_PATH}`;
+      const { error } = await runCLI(args);
+
+      expect(error).toBeTruthy();
     });
   });
 
@@ -569,11 +618,11 @@ describe("hopp test [options] <file_path_or_id>", () => {
     });
 
     test("Supports specifying collection file path along with environment ID", async () => {
-      const TESTS_PATH = getTestJsonFilePath(
+      const COLL_PATH = getTestJsonFilePath(
         "req-body-env-vars-coll.json",
         "collection"
       );
-      const args = `test ${TESTS_PATH} --env ${REQ_BODY_ENV_VARS_ENVS_ID} --token ${PERSONAL_ACCESS_TOKEN} --server ${SERVER_URL}`;
+      const args = `test ${COLL_PATH} --env ${REQ_BODY_ENV_VARS_ENVS_ID} --token ${PERSONAL_ACCESS_TOKEN} --server ${SERVER_URL}`;
 
       const { error } = await runCLI(args);
       expect(error).toBeNull();
@@ -591,7 +640,7 @@ describe("hopp test [options] <file_path_or_id>", () => {
     });
 
     test("Supports specifying both collection and environment file paths", async () => {
-      const TESTS_PATH = getTestJsonFilePath(
+      const COLL_PATH = getTestJsonFilePath(
         "req-body-env-vars-coll.json",
         "collection"
       );
@@ -599,7 +648,7 @@ describe("hopp test [options] <file_path_or_id>", () => {
         "req-body-env-vars-envs.json",
         "environment"
       );
-      const args = `test ${TESTS_PATH} --env ${ENV_PATH} --token ${PERSONAL_ACCESS_TOKEN}`;
+      const args = `test ${COLL_PATH} --env ${ENV_PATH} --token ${PERSONAL_ACCESS_TOKEN}`;
 
       const { error } = await runCLI(args);
       expect(error).toBeNull();
@@ -630,7 +679,12 @@ describe("hopp test [options] <file_path_or_id>", () => {
 
       const COLL_PATH = getTestJsonFilePath("passes-coll.json", "collection");
 
-      const args = `test ${COLL_PATH} --reporter-junit /non-existent-path/report.xml`;
+      const invalidPath =
+        process.platform === "win32"
+          ? "Z:/non-existent-path/report.xml"
+          : "/non-existent/report.xml";
+
+      const args = `test ${COLL_PATH} --reporter-junit ${invalidPath}`;
 
       const { stdout, stderr } = await runCLI(args, {
         cwd: path.resolve("hopp-cli-test"),
@@ -762,6 +816,141 @@ describe("hopp test [options] <file_path_or_id>", () => {
         .toString();
 
       expect(replaceDynamicValuesInStr(fileContents)).toMatchSnapshot();
+    });
+  });
+
+  describe("Test `hopp test <file> --iteration-count <no_of_iterations>` command:", () => {
+    const VALID_TEST_ARGS = `test ${getTestJsonFilePath("passes-coll.json", "collection")}`;
+
+    test("Errors with the code `INVALID_ARGUMENT` on not supplying an iteration count", async () => {
+      const args = `${VALID_TEST_ARGS} --iteration-count`;
+      const { stderr } = await runCLI(args);
+
+      const out = getErrorCode(stderr);
+      expect(out).toBe<HoppErrorCode>("INVALID_ARGUMENT");
+    });
+
+    test("Errors with the code `INVALID_ARGUMENT` on supplying an invalid iteration count", async () => {
+      const args = `${VALID_TEST_ARGS} --iteration-count NaN`;
+      const { stderr } = await runCLI(args);
+
+      const out = getErrorCode(stderr);
+      expect(out).toBe<HoppErrorCode>("INVALID_ARGUMENT");
+    });
+
+    test("Errors with the code `INVALID_ARGUMENT` on supplying an iteration count below `1`", async () => {
+      const args = `${VALID_TEST_ARGS} --iteration-count -5`;
+      const { stderr } = await runCLI(args);
+
+      const out = getErrorCode(stderr);
+      expect(out).toBe<HoppErrorCode>("INVALID_ARGUMENT");
+    });
+
+    test("Successfully executes all requests in the collection iteratively based on the specified iteration count", async () => {
+      const iterationCount = 3;
+      const args = `${VALID_TEST_ARGS} --iteration-count ${iterationCount}`;
+      const { error, stdout } = await runCLI(args);
+
+      // Logs iteration count in each pass
+      Array.from({ length: 3 }).forEach((_, idx) =>
+        expect(stdout).include(`Iteration: ${idx + 1}/${iterationCount}`)
+      );
+      expect(error).toBeNull();
+    });
+
+    test("Doesn't log iteration count if the value supplied is `1`", async () => {
+      const args = `${VALID_TEST_ARGS} --iteration-count 1`;
+      const { error, stdout } = await runCLI(args);
+
+      expect(stdout).not.include(`Iteration: 1/1`);
+
+      expect(error).toBeNull();
+    });
+  });
+
+  describe("Test `hopp test <file> --iteration-data <file_path>` command:", () => {
+    describe("Supplied data export file validations", () => {
+      const VALID_TEST_ARGS = `test ${getTestJsonFilePath("passes-coll.json", "collection")}`;
+
+      test("Errors with the code `INVALID_ARGUMENT` if no file is supplied", async () => {
+        const args = `${VALID_TEST_ARGS} --iteration-data`;
+        const { stderr } = await runCLI(args);
+
+        const out = getErrorCode(stderr);
+        expect(out).toBe<HoppErrorCode>("INVALID_ARGUMENT");
+      });
+
+      test("Errors with the code `INVALID_DATA_FILE_TYPE` if the supplied data file doesn't end with the `.csv` extension", async () => {
+        const args = `${VALID_TEST_ARGS} --iteration-data ${getTestJsonFilePath(
+          "notjson-coll.txt",
+          "collection"
+        )}`;
+        const { stderr } = await runCLI(args);
+
+        const out = getErrorCode(stderr);
+        expect(out).toBe<HoppErrorCode>("INVALID_DATA_FILE_TYPE");
+      });
+
+      test("Errors with the code `FILE_NOT_FOUND` if the supplied data export file doesn't exist", async () => {
+        const args = `${VALID_TEST_ARGS} --iteration-data notfound.csv`;
+        const { stderr } = await runCLI(args);
+
+        const out = getErrorCode(stderr);
+        expect(out).toBe<HoppErrorCode>("FILE_NOT_FOUND");
+      });
+    });
+
+    test("Prioritizes values from the supplied data export file over environment variables with relevant fallbacks for missing entries", async () => {
+      const COLL_PATH = getTestJsonFilePath(
+        "iteration-data-tests-coll.json",
+        "collection"
+      );
+      const ITERATION_DATA_PATH = getTestJsonFilePath(
+        "iteration-data-export.csv",
+        "environment"
+      );
+      const ENV_PATH = getTestJsonFilePath(
+        "iteration-data-envs.json",
+        "environment"
+      );
+      const args = `test ${COLL_PATH} --iteration-data ${ITERATION_DATA_PATH} -e ${ENV_PATH}`;
+
+      const { error, stdout } = await runCLI(args);
+
+      const iterationCount = 3;
+
+      // Even though iteration count is not supplied, it will be inferred from the iteration data size
+      Array.from({ length: iterationCount }).forEach((_, idx) =>
+        expect(stdout).include(`Iteration: ${idx + 1}/${iterationCount}`)
+      );
+
+      expect(error).toBeNull();
+    });
+
+    test("Iteration count takes priority if supplied instead of inferring from the iteration data size", async () => {
+      const COLL_PATH = getTestJsonFilePath(
+        "iteration-data-tests-coll.json",
+        "collection"
+      );
+      const ITERATION_DATA_PATH = getTestJsonFilePath(
+        "iteration-data-export.csv",
+        "environment"
+      );
+      const ENV_PATH = getTestJsonFilePath(
+        "iteration-data-envs.json",
+        "environment"
+      );
+
+      const iterationCount = 5;
+      const args = `test ${COLL_PATH} --iteration-data ${ITERATION_DATA_PATH} -e ${ENV_PATH} --iteration-count ${iterationCount}`;
+
+      const { error, stdout } = await runCLI(args);
+
+      Array.from({ length: iterationCount }).forEach((_, idx) =>
+        expect(stdout).include(`Iteration: ${idx + 1}/${iterationCount}`)
+      );
+
+      expect(error).toBeNull();
     });
   });
 });

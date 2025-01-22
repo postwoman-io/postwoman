@@ -24,6 +24,16 @@
     </div>
 
     <div class="flex items-center">
+      <div class="inline-flex items-center mr-5">
+        <HoppButtonSecondary
+          to="https://docs.hoppscotch.io/documentation/self-host/community-edition/getting-started"
+          blank
+          v-tippy="{ theme: 'tooltip' }"
+          :title="t('support.documentation')"
+          :icon="IconHelpCircle"
+          class="rounded hover:bg-primaryDark focus-visible:bg-primaryDark"
+        />
+      </div>
       <div v-if="currentUser" class="relative">
         <tippy
           interactive
@@ -69,6 +79,7 @@ import { useSidebar } from '~/composables/useSidebar';
 import { auth } from '~/helpers/auth';
 import IconMenu from '~icons/lucide/menu';
 import IconSidebarOpen from '~icons/lucide/sidebar-open';
+import IconHelpCircle from '~icons/lucide/help-circle';
 import IconSidebarClose from '~icons/lucide/sidebar-close';
 import { useI18n } from '~/composables/i18n';
 

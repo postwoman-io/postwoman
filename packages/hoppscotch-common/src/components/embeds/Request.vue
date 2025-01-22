@@ -64,13 +64,13 @@ import { useStreamSubscriber } from "~/composables/stream"
 import { HoppRESTResponse } from "~/helpers/types/HoppRESTResponse"
 import { runRESTRequest$ } from "~/helpers/RequestRunner"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 
 const toast = useToast()
 const t = useI18n()
 
 const props = defineProps<{
-  modelTab: HoppTab<HoppRESTDocument>
+  modelTab: HoppTab<HoppRequestDocument>
   sharedRequestURL: string
 }>()
 

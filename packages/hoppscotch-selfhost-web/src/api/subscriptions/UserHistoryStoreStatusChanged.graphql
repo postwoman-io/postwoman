@@ -1,0 +1,3 @@
+subscription UserHistoryStoreStatusChanged {
+  infraConfigUpdate(configName: USER_HISTORY_STORE_ENABLED)
+}

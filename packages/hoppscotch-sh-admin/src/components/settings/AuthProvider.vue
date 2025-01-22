@@ -17,13 +17,21 @@
           v-for="provider in workingConfigs.providers"
           class="space-y-4 py-4"
         >
-          <div class="flex items-center">
+          <div class="flex justify-between">
             <HoppSmartToggle
               :on="provider.enabled"
               @change="provider.enabled = !provider.enabled"
             >
               {{ capitalize(provider.name) }}
             </HoppSmartToggle>
+            <HoppButtonSecondary
+              v-tippy="{ theme: 'tooltip', allowHTML: true }"
+              to="https://docs.hoppscotch.io/documentation/self-host/community-edition/prerequisites#oauth"
+              blank
+              :title="t('support.documentation')"
+              :icon="IconCircleHelp"
+              class="rounded hover:bg-primaryDark focus-visible:bg-primaryDark"
+            />
           </div>
 
           <div v-if="provider.enabled" class="ml-12">
@@ -67,6 +75,7 @@ import { useVModel } from '@vueuse/core';
 import { reactive } from 'vue';
 import { useI18n } from '~/composables/i18n';
 import { ServerConfigs, SsoAuthProviders } from '~/helpers/configs';
+import IconCircleHelp from '~icons/lucide/circle-help';
 import IconEye from '~icons/lucide/eye';
 import IconEyeOff from '~icons/lucide/eye-off';
 

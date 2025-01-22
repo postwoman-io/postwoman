@@ -56,6 +56,12 @@ export const ENV_NOT_FOUND_KEY_DATA_ENCRYPTION_KEY =
   '"DATA_ENCRYPTION_KEY" is not present in .env file';
 
 /**
+ * Environment variable "DATA_ENCRYPTION_KEY" is changed in .env file
+ */
+export const ENV_INVALID_DATA_ENCRYPTION_KEY =
+  '"DATA_ENCRYPTION_KEY" value changed in .env file. Please undo the changes and restart the server';
+
+/**
  * Environment variable "VITE_ALLOWED_AUTH_PROVIDERS" is empty in .env file
  */
 export const ENV_EMPTY_AUTH_PROVIDERS =
@@ -486,7 +492,19 @@ export const USER_ENVIRONMENT_INVALID_ENVIRONMENT_NAME =
  */
 export const USER_HISTORY_NOT_FOUND = 'user_history/history_not_found' as const;
 
-/*
+/**
+ * User history deletion failed
+ * (UserHistoryService)
+ */
+export const USER_HISTORY_DELETION_FAILED =
+  'user_history/deletion_failed' as const;
+
+/**
+ * User history feature flag is disabled
+ * (UserHistoryService)
+ */
+export const USER_HISTORY_FEATURE_FLAG_DISABLED =
+  'user_history/feature_flag_disabled';
 
 /**
  * Invalid Request Type in History

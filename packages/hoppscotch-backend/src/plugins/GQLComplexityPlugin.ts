@@ -7,6 +7,7 @@ import {
 import { Plugin } from '@nestjs/apollo';
 import { GraphQLError } from 'graphql';
 import {
+  ComplexityEstimatorArgs,
   fieldExtensionsEstimator,
   getComplexity,
   simpleEstimator,
@@ -29,6 +30,14 @@ export class GQLComplexityPlugin implements ApolloServerPlugin {
           query: document,
           variables: request.variables,
           estimators: [
+            // Custom estimator for introspection fields
+            (args: ComplexityEstimatorArgs) => {
+              const fieldName = args.field.name;
+              if (fieldName.startsWith('__')) {
+                return 0; // Return 0 complexity for introspection fields
+              }
+              return;
+            },
             fieldExtensionsEstimator(),
             simpleEstimator({ defaultComplexity: 1 }),
           ],

@@ -42,6 +42,7 @@
               >
                 {{ inspector.text.text }}
                 <HoppSmartLink
+                  v-if="inspector.doc"
                   blank
                   :to="inspector.doc.link"
                   class="text-accent transition hover:text-accentDark"

@@ -7,6 +7,7 @@ import { HoppCLIError } from "./errors";
 export type FormDataEntry = {
   key: string;
   value: string | Blob;
+  contentType?: string;
 };
 
 export type HoppEnvPair = Environment["variables"][number];
@@ -18,7 +19,7 @@ export type HoppEnvs = {
   selected: HoppEnvPair[];
 };
 
-export type CollectionStack = {
+export type CollectionQueue = {
   path: string;
   collection: HoppCollection;
 };

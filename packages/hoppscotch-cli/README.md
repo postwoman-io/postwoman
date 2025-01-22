@@ -28,31 +28,50 @@ hopp [options or commands] arguments
    - Displays the help text
 
 3. #### **`hopp test [options] <file_path>`**
+
    - Interactive CLI to accept Hoppscotch collection JSON path
    - Parses the collection JSON and executes each requests
    - Executes pre-request script.
    - Outputs the response of each request.
    - Executes and outputs test-script response.
 
-    #### Options:
+   #### Options:
 
-    ##### `-e <file_path>` / `--env <file_path>`
+   ##### `-e <file_path>` / `--env <file_path>`
 
-    - Accepts path to env.json with contents in below format:
+   - Accepts path to env.json with contents in below format:
 
-        ```json
-        {
-            "ENV1":"value1",
-            "ENV2":"value2"
-        }
-        ```
+     ```json
+     {
+       "ENV1": "value1",
+       "ENV2": "value2"
+     }
+     ```
 
-    - You can now access those variables using `pw.env.get('<var_name>')`
+   - You can now access those variables using `pw.env.get('<var_name>')`
 
-		Taking the above example, `pw.env.get("ENV1")` will return `"value1"`
+     Taking the above example, `pw.env.get("ENV1")` will return `"value1"`
+
+   ##### `--iteration-count <no_of_iterations>`
+
+   - Accepts the number of iterations to run the collection
+
+   ##### `--iteration-data <file_path>`
+
+   - Accepts the path to a CSV file with contents in the below format:
+
+     ```text
+     key1,key2,key3
+     value1,value2,value3
+     value4,value5,value6
+     ```
+
+     For every iteration the values will be replaced with the respective keys in the environment. For iteration 1 the value1,value2,value3 will be replaced and for iteration 2 value4,value5,value6 will be replaced and so on.
 
 ## Install
+
 - Before you install Hoppscotch CLI you need to make sure you have the dependencies it requires to run.
+
   - **Windows & macOS**: You will need `node-gyp` installed. Find instructions here: https://github.com/nodejs/node-gyp
   - **Debian/Ubuntu derivatives**:
     ```sh
@@ -74,7 +93,6 @@ hopp [options or commands] arguments
     ```sh
     sudo dnf install python3 make gcc gcc-c++ zlib-devel brotli-devel openssl-devel libuv-devel
     ```
-
 
 - Once the dependencies are installed, install [@hoppscotch/cli](https://www.npmjs.com/package/@hoppscotch/cli) from npm by running:
   ```
@@ -112,39 +130,39 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 1. After cloning the repository, execute the following commands:
 
-    ```bash
-    pnpm install
-    pnpm run build
-    ```
+   ```bash
+   pnpm install
+   pnpm run build
+   ```
 
 2. In order to test locally, you can use two types of package linking:
 
-    1. The 'pnpm exec' way (preferred since it does not hamper your original installation of the CLI):
+   1. The 'pnpm exec' way (preferred since it does not hamper your original installation of the CLI):
 
-        ```bash
-        pnpm link @hoppscotch/cli
+      ```bash
+      pnpm link @hoppscotch/cli
 
-        // Then to use or test the CLI:
-        pnpm exec hopp
+      // Then to use or test the CLI:
+      pnpm exec hopp
 
-        // After testing, to remove the package linking:
-        pnpm rm @hoppscotch/cli
-        ```
+      // After testing, to remove the package linking:
+      pnpm rm @hoppscotch/cli
+      ```
 
-    2. The 'global' way (warning: this might override the globally installed CLI, if exists):
+   2. The 'global' way (warning: this might override the globally installed CLI, if exists):
 
-        ```bash
-        sudo pnpm link --global
+      ```bash
+      sudo pnpm link --global
 
-        // Then to use or test the CLI:
-        hopp
+      // Then to use or test the CLI:
+      hopp
 
-        // After testing, to remove the package linking:
-        sudo pnpm rm --global @hoppscotch/cli
-        ```
+      // After testing, to remove the package linking:
+      sudo pnpm rm --global @hoppscotch/cli
+      ```
 
 3. To use the Typescript watch scripts:
 
-      ```bash
-      pnpm run dev
-      ```
+   ```bash
+   pnpm run dev
+   ```

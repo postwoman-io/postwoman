@@ -3,21 +3,28 @@ import { InferredEntity, createVersionedEntity } from "verzod"
 import V1_VERSION from "./v/1"
 import V2_VERSION from "./v/2"
 import V3_VERSION from "./v/3"
+import V4_VERSION from "./v/4"
+import V5_VERSION from "./v/5"
+import V6_VERSION from "./v/6"
 
 import { z } from "zod"
 import { translateToNewRequest } from "../rest"
 import { translateToGQLRequest } from "../graphql"
+import { generateUniqueRefId } from "../utils/collection"
 
 const versionedObject = z.object({
   v: z.number(),
 })
 
 export const HoppCollection = createVersionedEntity({
-  latestVersion: 3,
+  latestVersion: 6,
   versionMap: {
     1: V1_VERSION,
     2: V2_VERSION,
     3: V3_VERSION,
+    4: V4_VERSION,
+    5: V5_VERSION,
+    6: V6_VERSION,
   },
   getVersion(data) {
     const versionCheck = versionedObject.safeParse(data)
@@ -33,7 +40,7 @@ export const HoppCollection = createVersionedEntity({
 
 export type HoppCollection = InferredEntity<typeof HoppCollection>
 
-export const CollectionSchemaVersion = 3
+export const CollectionSchemaVersion = 6
 
 /**
  * Generates a Collection object. This ignores the version number object
@@ -44,6 +51,7 @@ export function makeCollection(x: Omit<HoppCollection, "v">): HoppCollection {
   return {
     v: CollectionSchemaVersion,
     ...x,
+    _ref_id: x._ref_id ? x._ref_id : generateUniqueRefId("coll"),
   }
 }
 
@@ -70,6 +78,7 @@ export function translateToNewRESTCollection(x: any): HoppCollection {
   })
 
   if (x.id) obj.id = x.id
+  if (x._ref_id) obj._ref_id = x._ref_id
 
   return obj
 }
@@ -97,6 +106,7 @@ export function translateToNewGQLCollection(x: any): HoppCollection {
   })
 
   if (x.id) obj.id = x.id
+  if (x._ref_id) obj._ref_id = x._ref_id
 
   return obj
 }

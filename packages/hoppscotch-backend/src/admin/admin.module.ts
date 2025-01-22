@@ -12,6 +12,7 @@ import { TeamRequestModule } from '../team-request/team-request.module';
 import { InfraResolver } from './infra.resolver';
 import { ShortcodeModule } from 'src/shortcode/shortcode.module';
 import { InfraConfigModule } from 'src/infra-config/infra-config.module';
+import { UserHistoryModule } from 'src/user-history/user-history.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { InfraConfigModule } from 'src/infra-config/infra-config.module';
     TeamRequestModule,
     ShortcodeModule,
     InfraConfigModule,
+    UserHistoryModule,
   ],
   providers: [InfraResolver, AdminResolver, AdminService],
   exports: [AdminService],

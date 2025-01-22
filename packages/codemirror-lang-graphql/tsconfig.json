@@ -5,6 +5,7 @@
     "module": "es2020",
     "newLine": "lf",
     "declaration": true,
+    "declarationDir": "./dist",
     "moduleResolution": "node",
     "allowJs": true
   },

@@ -38,7 +38,7 @@ export class TeamService implements UserDataHandler, OnModuleInit {
 
   canAllowUserDeletion(user: AuthUser): TO.TaskOption<string> {
     return pipe(
-      this.isUserOwnerRoleInTeams(user.uid),
+      this.isUserSoleOwnerInAnyTeam(user.uid),
       TO.fromTask,
       TO.chain((isOwner) => (isOwner ? TO.some(USER_IS_OWNER) : TO.none)),
     );
@@ -396,18 +396,34 @@ export class TeamService implements UserDataHandler, OnModuleInit {
     return teamMember ? teamMember.role : null;
   }
 
-  isUserOwnerRoleInTeams(uid: string): T.Task<boolean> {
-    return pipe(
-      () =>
-        this.prisma.teamMember.count({
+  isUserSoleOwnerInAnyTeam(uid: string): T.Task<boolean> {
+    return async () => {
+      // Find all teams where the user is an OWNER
+      const userOwnedTeams = await this.prisma.teamMember.findMany({
+        where: {
+          userUid: uid,
+          role: TeamMemberRole.OWNER,
+        },
+        select: {
+          teamID: true,
+        },
+      });
+
+      for (const userOwnedTeam of userOwnedTeams) {
+        const ownerCount = await this.prisma.teamMember.count({
           where: {
-            userUid: uid,
+            teamID: userOwnedTeam.teamID,
             role: TeamMemberRole.OWNER,
           },
-          take: 1,
-        }),
-      T.map((count) => count > 0),
-    );
+        });
+
+        // early return true if the user is the sole owner
+        if (ownerCount === 1) return true;
+      }
+
+      // return false if the user is not the sole owner in any team
+      return false;
+    };
   }
 
   deleteUserFromAllTeams(uid: string) {

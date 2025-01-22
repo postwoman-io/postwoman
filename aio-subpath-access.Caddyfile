@@ -3,19 +3,7 @@
   persist_config off
 }
 
-:3000 {
-	respond 404
-}
-
-:3100 {
-	respond 404
-}
-
-:3170 {
-	reverse_proxy localhost:8080
-}
-
-:80 {
+:{$HOPP_AIO_ALTERNATE_PORT:80} {
 	# Serve the `selfhost-web` SPA by default
 	root * /site/selfhost-web
 	file_server

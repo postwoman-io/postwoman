@@ -23,9 +23,8 @@ import { replaceInsomniaTemplating } from "./insomniaEnv"
 
 // TODO: Insomnia allows custom prefixes for Bearer token auth, Hoppscotch doesn't. We just ignore the prefix for now
 
-type UnwrapPromise<T extends Promise<any>> = T extends Promise<infer Y>
-  ? Y
-  : never
+type UnwrapPromise<T extends Promise<any>> =
+  T extends Promise<infer Y> ? Y : never
 
 type InsomniaDoc = UnwrapPromise<ReturnType<typeof convert>>
 type InsomniaResource = ImportRequest
@@ -230,6 +229,9 @@ const getHoppRequest = (req: InsomniaRequestResource): HoppRESTRequest =>
     testScript: "",
 
     requestVariables: getHoppReqVariables(req),
+
+    //insomnia doesn't have saved response
+    responses: {},
   })
 
 const getHoppFolder = (

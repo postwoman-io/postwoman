@@ -57,6 +57,14 @@
       @hide-modal="showSupport = false"
     />
     <AppOptions v-else :show="showSupport" @hide-modal="showSupport = false" />
+
+    <!-- Let additional stuff be registered -->
+    <template
+      v-for="(component, index) in rootExtensionComponents"
+      :key="index"
+    >
+      <component :is="component" />
+    </template>
   </div>
 </template>
 
@@ -78,6 +86,7 @@ import { platform } from "~/platform"
 import { HoppSpotlightSessionEventData } from "~/platform/analytics"
 import { PersistenceService } from "~/services/persistence"
 import { SpotlightService } from "~/services/spotlight"
+import { UIExtensionService } from "~/services/ui-extension.service"
 
 const router = useRouter()
 
@@ -96,6 +105,9 @@ const t = useI18n()
 
 const persistenceService = useService(PersistenceService)
 const spotlightService = useService(SpotlightService)
+const uiExtensionService = useService(UIExtensionService)
+
+const rootExtensionComponents = uiExtensionService.rootUIExtensionComponents
 
 const HAS_OPENED_SPOTLIGHT = useSetting("HAS_OPENED_SPOTLIGHT")
 

@@ -72,13 +72,24 @@ const buildHarPostParams = (
           <Har.Param>{
             name: entry.key,
             fileName: entry.key, // TODO: Blob doesn't contain file info, anyway to bring file name here ?
-            contentType: file.type,
+            contentType: entry.contentType ? entry.contentType : file?.type,
           }
       )
     }
+
+    if (entry.contentType) {
+      return {
+        name: entry.key,
+        value: entry.value,
+        fileName: entry.key,
+        contentType: entry.contentType,
+      }
+    }
+
     return {
       name: entry.key,
       value: entry.value,
+      contentType: entry.contentType,
     }
   })
 }

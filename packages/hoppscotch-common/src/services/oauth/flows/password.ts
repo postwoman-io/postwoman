@@ -24,7 +24,6 @@ const PasswordFlowParamsSchema = PasswordGrantTypeParams.pick({
     return (
       params.authEndpoint.length >= 1 &&
       params.clientID.length >= 1 &&
-      params.clientSecret.length >= 1 &&
       params.username.length >= 1 &&
       params.password.length >= 1 &&
       (!params.scopes || params.scopes.length >= 1)
@@ -59,9 +58,12 @@ const initPasswordOauthFlow = async ({
   const formData = new URLSearchParams()
   formData.append("grant_type", "password")
   formData.append("client_id", clientID)
-  formData.append("client_secret", clientSecret)
   formData.append("username", username)
   formData.append("password", password)
+
+  if (clientSecret) {
+    formData.append("client_secret", clientSecret)
+  }
 
   if (scopes) {
     formData.append("scope", scopes)

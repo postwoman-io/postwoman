@@ -1,0 +1,18 @@
+{
+  "v": 0,
+  "name": "Iteration data environments",
+  "variables": [
+    {
+      "key": "URL",
+      "value": "https://httpbin.org/get"
+    },
+    {
+      "key": "BODY_KEY",
+      "value": "overriden-body-key-at-environment"
+    },
+    {
+      "key": "BODY_VALUE",
+      "value": "overriden-body-value-at-environment"
+    }
+  ]
+}

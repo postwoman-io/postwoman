@@ -231,6 +231,7 @@ import { useColorMode } from "@composables/theming"
 import { useToast } from "@composables/toast"
 import {
   GQLHeader,
+  HoppGQLAuth,
   HoppGQLRequest,
   parseRawKeyValueEntriesE,
   rawKeyValueEntriesToString,
@@ -675,7 +676,7 @@ const inheritedProperties = computedAsync(async () => {
 
   const [computedAuthHeader] = await getComputedAuthHeaders(
     request.value,
-    props.inheritedProperties.auth.inheritedAuth
+    props.inheritedProperties.auth.inheritedAuth as HoppGQLAuth
   )
 
   if (

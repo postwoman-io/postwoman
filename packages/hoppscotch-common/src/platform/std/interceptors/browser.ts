@@ -6,34 +6,7 @@ import {
   RequestRunResult,
 } from "../../../services/interceptor.service"
 import axios, { AxiosRequestConfig, CancelToken } from "axios"
-import { cloneDeep } from "lodash-es"
-
-export const preProcessRequest = (
-  req: AxiosRequestConfig
-): AxiosRequestConfig => {
-  const reqClone = cloneDeep(req)
-
-  // If the parameters are URLSearchParams, inject them to URL instead
-  // This prevents issues of marshalling the URLSearchParams to the proxy
-  if (reqClone.params instanceof URLSearchParams) {
-    try {
-      const url = new URL(reqClone.url ?? "")
-
-      for (const [key, value] of reqClone.params.entries()) {
-        url.searchParams.append(key, value)
-      }
-
-      reqClone.url = url.toString()
-    } catch (e) {
-      // making this a non-empty block, so we can make the linter happy.
-      // we should probably use, allowEmptyCatch, or take the time to do something with the caught errors :)
-    }
-
-    reqClone.params = {}
-  }
-
-  return reqClone
-}
+import { preProcessRequest } from "./helpers"
 
 async function runRequest(
   req: AxiosRequestConfig,
@@ -41,11 +14,9 @@ async function runRequest(
 ): RequestRunResult["response"] {
   const timeStart = Date.now()
 
-  const processedReq = preProcessRequest(req)
-
   try {
     const res = await axios({
-      ...processedReq,
+      ...req,
       cancelToken,
       responseType: "arraybuffer",
     })

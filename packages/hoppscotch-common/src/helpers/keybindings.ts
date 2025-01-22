@@ -45,7 +45,7 @@ export const bindings: {
   "ctrl-enter": "request.send-cancel",
   "ctrl-i": "request.reset",
   "ctrl-u": "request.share-request",
-  "ctrl-s": "request.save",
+  "ctrl-s": "request-response.save",
   "ctrl-shift-s": "request.save-as",
   "alt-up": "request.method.next",
   "alt-down": "request.method.prev",
@@ -67,6 +67,7 @@ export const bindings: {
   "ctrl-shift-p": "response.preview.toggle",
   "ctrl-j": "response.file.download",
   "ctrl-.": "response.copy",
+  "ctrl-e": "response.save-as-example",
   "ctrl-shift-l": "editor.format",
 }
 

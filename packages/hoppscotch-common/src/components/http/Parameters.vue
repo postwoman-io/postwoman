@@ -161,6 +161,7 @@ useCodemirror(
     linter,
     completer: null,
     environmentHighlights: true,
+    predefinedVariablesHighlights: true,
   })
 )
 
@@ -378,7 +379,11 @@ const parameterValueResults = inspectionService.getResultViewFor(
 
 const getInspectorResult = (results: InspectorResult[], index: number) => {
   return results.filter((result) => {
-    if (result.locations.type === "url" || result.locations.type === "response")
+    if (
+      result.locations.type === "url" ||
+      result.locations.type === "response" ||
+      result.locations.type === "body-content-type-header"
+    )
       return
     return result.locations.index === index
   })

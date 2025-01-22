@@ -8,19 +8,16 @@ import axios from "axios"
 import { Service } from "dioc"
 import * as E from "fp-ts/Either"
 import { Ref, ref } from "vue"
-
-import { runGQLQuery } from "../backend/GQLClient"
-import {
-  GetCollectionChildrenDocument,
-  GetCollectionRequestsDocument,
-  GetSingleCollectionDocument,
-  GetSingleRequestDocument,
-} from "../backend/graphql"
-import { TeamCollection } from "./TeamCollection"
+import { getSingleCollection, TeamCollection } from "./TeamCollection"
 
 import { platform } from "~/platform"
 import { HoppInheritedProperty } from "../types/HoppInheritedProperties"
-import { TeamRequest } from "./TeamRequest"
+import {
+  getSingleRequest,
+  getCollectionChildRequests,
+  TeamRequest,
+  getCollectionChildCollections,
+} from "./TeamRequest"
 
 type CollectionSearchMeta = {
   isSearchResult?: boolean
@@ -551,38 +548,6 @@ export class TeamSearchService extends Service {
     this.expandedCollections.value.push(collectionID)
   }
 }
-
-const getSingleCollection = (collectionID: string) =>
-  runGQLQuery({
-    query: GetSingleCollectionDocument,
-    variables: {
-      collectionID,
-    },
-  })
-
-const getSingleRequest = (requestID: string) =>
-  runGQLQuery({
-    query: GetSingleRequestDocument,
-    variables: {
-      requestID,
-    },
-  })
-
-const getCollectionChildCollections = (collectionID: string) =>
-  runGQLQuery({
-    query: GetCollectionChildrenDocument,
-    variables: {
-      collectionID,
-    },
-  })
-
-const getCollectionChildRequests = (collectionID: string) =>
-  runGQLQuery({
-    query: GetCollectionRequestsDocument,
-    variables: {
-      collectionID,
-    },
-  })
 
 const formatTeamsSearchResultsForSpotlight = (
   request: {

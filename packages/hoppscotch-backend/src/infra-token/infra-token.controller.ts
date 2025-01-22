@@ -28,6 +28,7 @@ import {
   CreateUserInvitationRequest,
   CreateUserInvitationResponse,
   DeleteUserResponse,
+  GetUserWorkspacesResponse,
 } from './request-response.dto';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
@@ -104,9 +105,8 @@ export class InfraTokensController {
   async getPendingUserInvitation(
     @Query() paginationQuery: OffsetPaginationArgs,
   ) {
-    const pendingInvitedUsers = await this.adminService.fetchInvitedUsers(
-      paginationQuery,
-    );
+    const pendingInvitedUsers =
+      await this.adminService.fetchInvitedUsers(paginationQuery);
 
     return plainToInstance(GetUserInvitationResponse, pendingInvitedUsers, {
       excludeExtraneousValues: true,
@@ -274,5 +274,29 @@ export class InfraTokensController {
         enableImplicitConversion: true,
       },
     );
+  }
+
+  @Get('users/:uid/workspaces')
+  @ApiOkResponse({
+    description: 'Get user workspaces',
+    type: [GetUserWorkspacesResponse],
+  })
+  @ApiNotFoundResponse({ type: ExceptionResponse })
+  async getUserWorkspaces(@Param('uid') uid: string) {
+    const userWorkspaces = await this.userService.fetchUserWorkspaces(uid);
+
+    if (E.isLeft(userWorkspaces)) {
+      const statusCode =
+        userWorkspaces.left === USER_NOT_FOUND
+          ? HttpStatus.NOT_FOUND
+          : HttpStatus.BAD_REQUEST;
+
+      throwHTTPErr({ message: userWorkspaces.left, statusCode });
+    }
+
+    return plainToInstance(GetUserWorkspacesResponse, userWorkspaces.right, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
   }
 }

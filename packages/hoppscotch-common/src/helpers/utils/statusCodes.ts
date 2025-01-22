@@ -99,3 +99,38 @@ export function getStatusCodeReasonPhrase(
 
   return statusCodes[code] ?? "Unknown"
 }
+
+// return the status code like
+//  code • status
+export const getFullStatusCodePhrase = () => {
+  return Object.keys(statusCodes).map((code) => {
+    return `${code} • ${statusCodes[code]}`
+  })
+}
+
+// return all status codes and their phrases
+// like code • phrase
+export const getStatusCodePhrase = (
+  code: number | undefined,
+  statusText: string
+) => {
+  if (!code) return statusText
+  return `${code} • ${getStatusCodeReasonPhrase(code, statusText)}`
+}
+
+// return the status code and status
+// like { code, status }
+export const getStatusAndCode = (status: string) => {
+  const statusAndCode = status.split(" • ")
+  return {
+    code: Number(statusAndCode[0]),
+    status: statusAndCode[1],
+  }
+}
+
+// check if the status code is valid
+export const isValidStatusCode = (status: string) => {
+  const allPhrases = getFullStatusCodePhrase()
+
+  return allPhrases.includes(status)
+}

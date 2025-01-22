@@ -153,6 +153,14 @@ const exampleSSOProfileData = {
   photos: 'https://en.wikipedia.org/wiki/Dwight_Schrute',
 };
 
+beforeAll(() => {
+  process.env.DATA_ENCRYPTION_KEY = '12345678901234567890123456789012';
+});
+
+afterAll(() => {
+  delete process.env.DATA_ENCRYPTION_KEY; // Clean up after tests
+});
+
 beforeEach(() => {
   mockReset(mockPrisma);
   mockPubSub.publish.mockClear();

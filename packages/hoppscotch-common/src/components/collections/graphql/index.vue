@@ -182,11 +182,7 @@ import { platform } from "~/platform"
 import { useService } from "dioc/vue"
 import { GQLTabService } from "~/services/tab/graphql"
 import { computed } from "vue"
-import {
-  HoppCollection,
-  HoppGQLRequest,
-  makeGQLRequest,
-} from "@hoppscotch/data"
+import { HoppCollection, HoppGQLRequest } from "@hoppscotch/data"
 import { Picked } from "~/helpers/types/HoppPicked"
 import { HoppInheritedProperty } from "~/helpers/types/HoppInheritedProperties"
 import { updateInheritedPropertiesForAffectedRequests } from "~/helpers/collection/collection"
@@ -400,21 +396,13 @@ const duplicateCollection = ({
   collectionSyncID?: string
 }) => duplicateGraphQLCollection(path, collectionSyncID)
 
-const onAddRequest = ({
-  name,
-  path,
-  index,
-}: {
-  name: string
-  path: string
-  index: number
-}) => {
+const onAddRequest = ({ name, path }: { name: string; path: string }) => {
   const newRequest = {
     ...tabs.currentActiveTab.value.document.request,
     name,
   }
 
-  saveGraphqlRequestAs(path, newRequest)
+  const insertionIndex = saveGraphqlRequestAs(path, newRequest)
 
   const { auth, headers } = cascadeParentCollectionForHeaderAuth(
     path,
@@ -425,7 +413,7 @@ const onAddRequest = ({
     saveContext: {
       originLocation: "user-collection",
       folderPath: path,
-      requestIndex: index,
+      requestIndex: insertionIndex,
     },
     request: newRequest,
     isDirty: false,
@@ -547,23 +535,13 @@ const selectRequest = ({
     tabs.setActiveTab(possibleTab.value.id)
     return
   }
-
   tabs.createNewTab({
     saveContext: {
       originLocation: "user-collection",
       folderPath: folderPath,
       requestIndex: requestIndex,
     },
-    request: cloneDeep(
-      makeGQLRequest({
-        name: request.name,
-        url: request.url,
-        query: request.query,
-        headers: request.headers,
-        variables: request.variables,
-        auth: request.auth,
-      })
-    ),
+    request: cloneDeep(request),
     isDirty: false,
     inheritedProperties: {
       auth,

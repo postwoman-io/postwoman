@@ -18,6 +18,8 @@ import {
   makeCollection,
   HoppRESTRequestVariable,
   HoppRESTRequest,
+  HoppRESTRequestResponses,
+  HoppRESTResponseOriginalRequest,
 } from "@hoppscotch/data"
 import { pipe, flow } from "fp-ts/function"
 import * as A from "fp-ts/Array"
@@ -26,7 +28,8 @@ import * as O from "fp-ts/Option"
 import * as TE from "fp-ts/TaskEither"
 import * as RA from "fp-ts/ReadonlyArray"
 import { IMPORTER_INVALID_FILE_FORMAT } from "."
-import { cloneDeep } from "lodash-es"
+import { cloneDeep, isNumber } from "lodash-es"
+import { getStatusCodeReasonPhrase } from "~/helpers/utils/statusCodes"
 
 export const OPENAPI_DEREF_ERROR = "openapi/deref_error" as const
 
@@ -44,6 +47,42 @@ const objectHasProperty = <T extends string>(
   !!obj &&
   typeof obj === "object" &&
   Object.prototype.hasOwnProperty.call(obj, propName)
+
+// basic validation for OpenAPI V2 Document
+const isOpenAPIV2Document = (doc: unknown): doc is OpenAPIV2.Document => {
+  return (
+    objectHasProperty(doc, "swagger") &&
+    typeof doc.swagger === "string" &&
+    doc.swagger === "2.0"
+  )
+}
+
+// basic validation for OpenAPI V3 Document
+const isOpenAPIV3Document = (
+  doc: unknown
+): doc is OpenAPIV3.Document | OpenAPIV31.Document => {
+  return (
+    objectHasProperty(doc, "openapi") &&
+    typeof doc.openapi === "string" &&
+    doc.openapi.startsWith("3.")
+  )
+}
+
+const hasRequiredOpenAPIFields = (doc: unknown): boolean => {
+  return (
+    objectHasProperty(doc, "info") &&
+    objectHasProperty(doc.info, "title") &&
+    objectHasProperty(doc.info, "version") &&
+    objectHasProperty(doc, "paths")
+  )
+}
+
+const isABasicOpenAPIDoc = (doc: unknown): boolean => {
+  return (
+    (isOpenAPIV2Document(doc) || isOpenAPIV3Document(doc)) &&
+    hasRequiredOpenAPIFields(doc)
+  )
+}
 
 type OpenAPIPathInfoType =
   | OpenAPIV2.PathItemObject<Record<string, unknown>>
@@ -106,6 +145,105 @@ const parseOpenAPIVariables = (
       )
     )
   )
+
+const parseOpenAPIV3Responses = (
+  op: OpenAPIV3.OperationObject | OpenAPIV31.OperationObject,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses => {
+  const responses = op.responses
+  if (!responses) return {}
+
+  const res: HoppRESTRequestResponses = {}
+
+  for (const [key, value] of Object.entries(responses)) {
+    const response = value as
+      | OpenAPIV3.ResponseObject
+      | OpenAPIV31.ResponseObject
+
+    // add support for schema key as well
+    const contentType = Object.keys(response.content ?? {})[0]
+    const body = response.content?.[contentType]
+
+    const name = response.description ?? key
+
+    const code = isNumber(key) ? Number(key) : 200
+
+    const status = getStatusCodeReasonPhrase(code)
+
+    const headers: HoppRESTHeader[] = [
+      {
+        key: "content-type",
+        value: contentType ?? "application/json",
+        description: "",
+        active: true,
+      },
+    ]
+
+    res[name] = {
+      name,
+      status,
+      code,
+      headers,
+      body: JSON.stringify(body ?? ""),
+      originalRequest,
+    }
+  }
+
+  return res
+}
+
+const parseOpenAPIV2Responses = (
+  op: OpenAPIV2.OperationObject,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses => {
+  const responses = op.responses
+
+  if (!responses) return {}
+
+  const res: HoppRESTRequestResponses = {}
+
+  for (const [key, value] of Object.entries(responses)) {
+    const response = value as OpenAPIV2.ResponseObject
+
+    // add support for schema key as well
+    const contentType = Object.keys(response.examples ?? {})[0]
+    const body = response.examples?.[contentType]
+
+    const name = response.description ?? key
+
+    const code = isNumber(Number(key)) ? Number(key) : 200
+    const status = getStatusCodeReasonPhrase(code)
+
+    const headers: HoppRESTHeader[] = [
+      {
+        key: "content-type",
+        value: contentType ?? "application/json",
+        description: "",
+        active: true,
+      },
+    ]
+
+    res[name] = {
+      name,
+      status,
+      code,
+      headers,
+      body: body ?? "",
+      originalRequest,
+    }
+  }
+
+  return res
+}
+
+const parseOpenAPIResponses = (
+  doc: OpenAPI.Document,
+  op: OpenAPIOperationType,
+  originalRequest: HoppRESTResponseOriginalRequest
+): HoppRESTRequestResponses =>
+  isOpenAPIV3Operation(doc, op)
+    ? parseOpenAPIV3Responses(op, originalRequest)
+    : parseOpenAPIV2Responses(op, originalRequest)
 
 const parseOpenAPIHeaders = (params: OpenAPIParamsType[]): HoppRESTHeader[] =>
   pipe(
@@ -332,6 +470,7 @@ const resolveOpenAPIV3SecurityObj = (
           clientSecret: "",
           scopes: _schemeData.join(" "),
           token: "",
+          clientAuthentication: "IN_BODY",
         },
         addTo: "HEADERS",
       }
@@ -478,6 +617,7 @@ const resolveOpenAPIV2SecurityScheme = (
           grantType: "CLIENT_CREDENTIALS",
           scopes: _schemeData.join(" "),
           token: "",
+          clientAuthentication: "IN_BODY",
         },
         addTo: "HEADERS",
       }
@@ -657,6 +797,25 @@ const convertPathToHoppReqs = (
           requestVariables: parseOpenAPIVariables(
             (info.parameters as OpenAPIParamsType[] | undefined) ?? []
           ),
+
+          responses: parseOpenAPIResponses(doc, info, {
+            name: info.operationId ?? info.summary ?? "Untitled Request",
+            auth: parseOpenAPIAuth(doc, info),
+            body: parseOpenAPIBody(doc, info),
+            endpoint,
+            // We don't need to worry about reference types as the Dereferencing pass should remove them
+            params: parseOpenAPIParams(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            headers: parseOpenAPIHeaders(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            method: method.toUpperCase(),
+            requestVariables: parseOpenAPIVariables(
+              (info.parameters as OpenAPIParamsType[] | undefined) ?? []
+            ),
+            v: "3",
+          }),
         }),
         metadata: {
           tags: info.tags ?? [],
@@ -748,8 +907,39 @@ export const hoppOpenAPIImporter = (fileContents: string[]) =>
             const resultDoc = []
 
             for (const docObj of docArr) {
-              const validatedDoc = await SwaggerParser.validate(docObj)
-              resultDoc.push(validatedDoc)
+              try {
+                const isValidOpenAPISpec = isABasicOpenAPIDoc(docObj)
+
+                if (!isValidOpenAPISpec) {
+                  throw new Error("INVALID_OPENAPI_SPEC")
+                }
+
+                const validatedDoc = await SwaggerParser.validate(docObj, {
+                  // @ts-expect-error - this is a valid option, but seems like the types are not updated
+                  continueOnError: true,
+                })
+
+                resultDoc.push(validatedDoc)
+              } catch (err) {
+                if (
+                  err instanceof Error &&
+                  err.message === "INVALID_OPENAPI_SPEC"
+                ) {
+                  throw new Error("INVALID_OPENAPI_SPEC")
+                }
+
+                if (
+                  // @ts-expect-error the type for err is not exported from the library
+                  err.files &&
+                  // @ts-expect-error the type for err is not exported from the library
+                  err.files instanceof SwaggerParser &&
+                  // @ts-expect-error the type for err is not exported from the library
+                  err.files.schema
+                ) {
+                  // @ts-expect-error the type for err is not exported from the library
+                  resultDoc.push(err.files.schema)
+                }
+              }
             }
 
             return resultDoc

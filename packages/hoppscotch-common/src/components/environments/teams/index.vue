@@ -104,7 +104,7 @@
       class="flex flex-col items-center py-4"
     >
       <icon-lucide-help-circle class="svg-icons mb-4" />
-      {{ getErrorMessage(adapterError) }}
+      {{ t(getEnvActionErrorMessage(adapterError)) }}
     </div>
     <EnvironmentsTeamsDetails
       :show="showModalDetails"
@@ -146,6 +146,7 @@ import IconImport from "~icons/lucide/folder-down"
 import { defineActionHandler } from "~/helpers/actions"
 import { TeamWorkspace } from "~/services/workspace.service"
 import { sortTeamEnvironmentsAlphabetically } from "~/helpers/utils/sortEnvironmentsAlphabetically"
+import { getEnvActionErrorMessage } from "~/helpers/error-messages"
 
 const t = useI18n()
 
@@ -199,18 +200,6 @@ const resetSelectedData = () => {
   editingEnvironment.value = null
   editingVariableName.value = ""
   secretOptionSelected.value = false
-}
-
-const getErrorMessage = (err: GQLError<string>) => {
-  if (err.type === "network_error") {
-    return t("error.network_error")
-  }
-  switch (err.error) {
-    case "team_environment/not_found":
-      return t("team_environment.not_found")
-    default:
-      return t("error.something_went_wrong")
-  }
 }
 
 const showEnvironmentProperties = (environmentID: string) => {

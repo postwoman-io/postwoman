@@ -13,18 +13,34 @@
       />
     </template>
     <template #footer>
-      <span class="flex space-x-2">
-        <HoppButtonPrimary
-          :label="t('users.add_user')"
-          @click="emit('send-invite', email)"
-        />
-        <HoppButtonSecondary
-          :label="t('users.cancel')"
-          outline
-          filled
-          @click="hideModal"
-        />
-      </span>
+      <div class="w-full">
+        <p class="text-secondaryLight mb-5 text-center">
+          {{ t('users.invite_users_description') }}
+        </p>
+
+        <div class="flex justify-between">
+          <HoppButtonSecondary
+            v-tippy="{ theme: 'tooltip', allowHTML: true }"
+            to="https://docs.hoppscotch.io/documentation/self-host/community-edition/admin-dashboard#invite-users-to-your-hoppscotch-instance"
+            blank
+            :title="t('support.documentation')"
+            :icon="IconCircleHelp"
+            class="rounded hover:bg-primaryDark focus-visible:bg-primaryDark"
+          />
+          <span class="flex space-x-2">
+            <HoppButtonPrimary
+              :label="t('users.add_user')"
+              @click="emit('send-invite', email)"
+            />
+            <HoppButtonSecondary
+              :label="t('users.cancel')"
+              outline
+              filled
+              @click="hideModal"
+            />
+          </span>
+        </div>
+      </div>
     </template>
   </HoppSmartModal>
 </template>
@@ -32,6 +48,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from '~/composables/i18n';
+import IconCircleHelp from '~icons/lucide/circle-help';
 
 const t = useI18n();
 

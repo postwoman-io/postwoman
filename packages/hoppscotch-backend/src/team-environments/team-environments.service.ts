@@ -194,7 +194,7 @@ export class TeamEnvironmentsService {
 
       const result = await this.prisma.teamEnvironment.create({
         data: {
-          name: environment.name,
+          name: `${environment.name} - Duplicate`,
           teamID: environment.teamID,
           variables: environment.variables as Prisma.JsonArray,
         },

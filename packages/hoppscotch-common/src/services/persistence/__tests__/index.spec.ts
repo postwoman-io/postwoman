@@ -1469,9 +1469,9 @@ describe("PersistenceService", () => {
         // Invalid shape for `globalEnv`
         const globalEnv = [
           {
-            ...GLOBAL_ENV_MOCK[0],
             // `key` -> `string`
             key: 1,
+            value: "test-value",
           },
         ]
 

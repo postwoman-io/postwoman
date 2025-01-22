@@ -10,6 +10,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { TeamMemberRole } from 'src/team/team.model';
 import { OffsetPaginationArgs } from 'src/types/input-types.args';
 
 // POST v1/infra/user-invitations
@@ -127,4 +128,35 @@ export class DeleteUserResponse {
   @ApiProperty()
   @Expose()
   message: string;
+}
+
+// GET v1/infra/users/:uid/workspaces
+export class GetUserWorkspacesResponse {
+  @ApiProperty()
+  @Expose()
+  id: string;
+
+  @ApiProperty()
+  @Expose()
+  name: string;
+
+  @ApiProperty({ enum: TeamMemberRole })
+  @Expose()
+  role: string;
+
+  @ApiProperty()
+  @Expose()
+  owner_count: number;
+
+  @ApiProperty()
+  @Expose()
+  editor_count: number;
+
+  @ApiProperty()
+  @Expose()
+  viewer_count: number;
+
+  @ApiProperty()
+  @Expose()
+  member_count: number;
 }

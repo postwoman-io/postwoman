@@ -1,7 +1,15 @@
+/*
+ * Type used to send error data to the Fallback catch-all component
+ */
+export type ErrorPageData = {
+  message: string;
+  statusCode?: number;
+};
+
 /* No cookies were found in the auth request
  * (AuthService)
  */
-export const COOKIES_NOT_FOUND = 'auth/cookies_not_found' as const;
+export const COOKIES_NOT_FOUND = '[GraphQL] auth/cookies_not_found' as const;
 
 export const UNAUTHORIZED = 'Unauthorized' as const;
 

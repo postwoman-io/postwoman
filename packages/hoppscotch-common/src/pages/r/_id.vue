@@ -136,8 +136,10 @@ const addRequestToTab = () => {
     const request: unknown = JSON.parse(data.right.shortcode?.request as string)
 
     tabs.createNewTab({
+      type: "request",
       request: safelyExtractRESTRequest(request, getDefaultRESTRequest()),
       isDirty: false,
+      type: "request",
     })
 
     router.push({ path: "/" })

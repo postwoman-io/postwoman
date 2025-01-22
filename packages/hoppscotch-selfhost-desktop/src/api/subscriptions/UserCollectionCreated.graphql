@@ -6,5 +6,6 @@ subscription UserCollectionCreated {
     id
     title
     type
+    data
   }
 }

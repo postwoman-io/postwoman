@@ -64,6 +64,12 @@
                   folder: node.data.data.data,
                 })
             "
+            @run-collection="
+              emit('run-collection', {
+                collectionIndex: node.id,
+                collection: node.data.data.data,
+              })
+            "
             @edit-collection="
               node.data.type === 'collections' &&
                 emit('edit-collection', {
@@ -105,7 +111,8 @@
               })
             "
             @dragging="
-              (isDraging) => highlightChildren(isDraging ? node.id : null)
+              (isDraging: boolean) =>
+                highlightChildren(isDraging ? node.id : null)
             "
             @toggle-children="
               () => {
@@ -132,6 +139,12 @@
               })
             "
             folder-type="folder"
+            @run-collection="
+              emit('run-collection', {
+                collectionIndex: node.id,
+                collection: node.data.data.data,
+              })
+            "
             @add-request="
               node.data.type === 'folders' &&
                 emit('add-request', {
@@ -187,7 +200,8 @@
               })
             "
             @dragging="
-              (isDraging) => highlightChildren(isDraging ? node.id : null)
+              (isDraging: boolean) =>
+                highlightChildren(isDraging ? node.id : null)
             "
             @toggle-children="
               () => {
@@ -228,12 +242,30 @@
                   request: node.data.data.data,
                 })
             "
+            @edit-response="
+              emit('edit-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: pathToIndex(node.id),
+                request: node.data.data.data,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
+            "
             @duplicate-request="
               node.data.type === 'requests' &&
                 emit('duplicate-request', {
                   folderPath: node.data.data.parentIndex,
                   request: node.data.data.data,
                 })
+            "
+            @duplicate-response="
+              emit('duplicate-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: pathToIndex(node.id),
+                request: node.data.data.data,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
             "
             @remove-request="
               node.data.type === 'requests' &&
@@ -242,6 +274,15 @@
                   requestIndex: pathToIndex(node.id),
                 })
             "
+            @remove-response="
+              emit('remove-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: pathToIndex(node.id),
+                request: node.data.data.data,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
+            "
             @select-request="
               node.data.type === 'requests' &&
                 selectRequest({
@@ -249,6 +290,15 @@
                   folderPath: node.data.data.parentIndex,
                   requestIndex: pathToIndex(node.id),
                 })
+            "
+            @select-response="
+              emit('select-response', {
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+                request: node.data.data.data,
+                folderPath: node.data.data.parentIndex,
+                requestIndex: pathToIndex(node.id),
+              })
             "
             @share-request="
               node.data.type === 'requests' &&
@@ -431,6 +481,14 @@ const props = defineProps({
   },
 })
 
+type ResponsePayload = {
+  folderPath: string
+  requestIndex: string
+  request: HoppRESTRequest
+  responseName: string
+  responseID: string
+}
+
 const emit = defineEmits<{
   (event: "display-modal-add"): void
   (
@@ -445,6 +503,13 @@ const emit = defineEmits<{
     payload: {
       path: string
       folder: HoppCollection
+    }
+  ): void
+  (
+    event: "run-collection",
+    payload: {
+      collectionIndex: string
+      collection: HoppCollection
     }
   ): void
   (
@@ -483,6 +548,7 @@ const emit = defineEmits<{
       request: HoppRESTRequest
     }
   ): void
+  (event: "edit-response", payload: ResponsePayload): void
   (
     event: "duplicate-request",
     payload: {
@@ -490,6 +556,7 @@ const emit = defineEmits<{
       request: HoppRESTRequest
     }
   ): void
+  (event: "duplicate-response", payload: ResponsePayload): void
   (event: "export-data", payload: HoppCollection): void
   (event: "remove-collection", payload: string): void
   (event: "remove-folder", payload: string): void
@@ -500,6 +567,7 @@ const emit = defineEmits<{
       requestIndex: string
     }
   ): void
+  (event: "remove-response", payload: ResponsePayload): void
   (
     event: "select-request",
     payload: {
@@ -550,6 +618,7 @@ const emit = defineEmits<{
   ): void
   (event: "select", payload: Picked | null): void
   (event: "display-modal-import-export"): void
+  (event: "select-response", payload: ResponsePayload): void
 }>()
 
 const refFilterCollection = toRef(props, "filteredCollections")
@@ -600,7 +669,8 @@ const isActiveRequest = (folderPath: string, requestIndex: number) => {
       (active) =>
         active.originLocation === "user-collection" &&
         active.folderPath === folderPath &&
-        active.requestIndex === requestIndex
+        active.requestIndex === requestIndex &&
+        active.exampleID === undefined
     ),
     O.isSome
   )

@@ -14,6 +14,7 @@ import {
   ServiceStatus,
   ToggleAnalyticsCollectionMutation,
   ToggleSmtpMutation,
+  ToggleUserHistoryStoreMutation,
   UpdateInfraConfigsMutation,
 } from '~/helpers/backend/graphql';
 import {
@@ -139,6 +140,14 @@ export function useConfigHandler(updatedConfigs?: ServerConfigs) {
         name: 'data_sharing',
         enabled: !!infraConfigs.value.find(
           (x) => x.name === 'ALLOW_ANALYTICS_COLLECTION' && x.value === 'true'
+        ),
+      },
+      historyConfig: {
+        name: 'history_settings',
+        enabled: !!infraConfigs.value.find(
+          (config) =>
+            config.name === 'USER_HISTORY_STORE_ENABLED' &&
+            config.value === 'ENABLE'
         ),
       },
     };
@@ -384,12 +393,27 @@ export function useConfigHandler(updatedConfigs?: ServerConfigs) {
       'configs.mail_configs.toggle_failure'
     );
 
+  // Toggle User History Store
+  const toggleUserHistoryStore = (
+    toggleUserHistoryStore: UseMutationResponse<ToggleUserHistoryStoreMutation>
+  ) =>
+    executeMutation(
+      toggleUserHistoryStore,
+      {
+        status: updatedConfigs?.historyConfig.enabled
+          ? ServiceStatus.Enable
+          : ServiceStatus.Disable,
+      },
+      'configs.user_history_store.toggle_failure'
+    );
+
   return {
     currentConfigs,
     workingConfigs,
     updateAuthProvider,
     updateDataSharingConfigs,
     toggleSMTPConfigs,
+    toggleUserHistoryStore,
     updateInfraConfigs,
     resetInfraConfigs,
     fetchingInfraConfigs,

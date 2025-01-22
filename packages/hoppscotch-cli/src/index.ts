@@ -69,6 +69,15 @@ program
     "--reporter-junit [path]",
     "generate JUnit report optionally specifying the path"
   )
+  .option(
+    "--iteration-count <no_of_iterations>",
+    "number of iterations to run the test",
+    parseInt
+  )
+  .option(
+    "--iteration-data <file_path>",
+    "path to a CSV file for data-driven testing"
+  )
   .allowExcessArguments(false)
   .allowUnknownOption(false)
   .description("running hoppscotch collection.json file")

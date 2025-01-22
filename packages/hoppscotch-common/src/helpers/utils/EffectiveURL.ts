@@ -27,7 +27,14 @@ import { map } from "rxjs/operators"
 import { arrayFlatMap, arraySort } from "../functional/array"
 import { toFormData } from "../functional/formData"
 import { tupleWithSameKeysToRecord } from "../functional/record"
+import { isJSONContentType } from "./contenttypes"
+import { stripComments } from "../editor/linting/jsonc"
 
+import {
+  DigestAuthParams,
+  fetchInitialDigestAuthInfo,
+  generateDigestAuthHeader,
+} from "../auth/digest"
 export interface EffectiveHoppRESTRequest extends HoppRESTRequest {
   /**
    * The effective final URL.
@@ -37,7 +44,7 @@ export interface EffectiveHoppRESTRequest extends HoppRESTRequest {
   effectiveFinalURL: string
   effectiveFinalHeaders: HoppRESTHeaders
   effectiveFinalParams: HoppRESTParams
-  effectiveFinalBody: FormData | string | null
+  effectiveFinalBody: FormData | string | null | File
   effectiveFinalRequestVariables: { key: string; value: string }[]
 }
 
@@ -98,6 +105,52 @@ export const getComputedAuthHeaders = async (
       value: `Basic ${btoa(`${username}:${password}`)}`,
       description: "",
     })
+  } else if (request.auth.authType === "digest") {
+    const { method, endpoint } = request as HoppRESTRequest
+
+    // Step 1: Fetch the initial auth info (nonce, realm, etc.)
+    const authInfo = await fetchInitialDigestAuthInfo(
+      parseTemplateString(endpoint, envVars),
+      method
+    )
+
+    const reqBody = getFinalBodyFromRequest(
+      req as HoppRESTRequest,
+      envVars,
+      showKeyIfSecret
+    )
+
+    // Step 2: Set up the parameters for the digest authentication header
+    const digestAuthParams: DigestAuthParams = {
+      username: parseTemplateString(request.auth.username, envVars),
+      password: parseTemplateString(request.auth.password, envVars),
+      realm: request.auth.realm
+        ? parseTemplateString(request.auth.realm, envVars)
+        : authInfo.realm,
+      nonce: request.auth.nonce
+        ? parseTemplateString(authInfo.nonce, envVars)
+        : authInfo.nonce,
+      endpoint: parseTemplateString(endpoint, envVars),
+      method,
+      algorithm: request.auth.algorithm ?? authInfo.algorithm,
+      qop: request.auth.qop
+        ? parseTemplateString(request.auth.qop, envVars)
+        : authInfo.qop,
+      opaque: request.auth.opaque
+        ? parseTemplateString(request.auth.opaque, envVars)
+        : authInfo.opaque,
+      reqBody: typeof reqBody === "string" ? reqBody : "",
+    }
+
+    // Step 3: Generate the Authorization header
+    const authHeaderValue = await generateDigestAuthHeader(digestAuthParams)
+
+    headers.push({
+      active: true,
+      key: "Authorization",
+      value: authHeaderValue,
+      description: "",
+    })
   } else if (
     request.auth.authType === "bearer" ||
     (request.auth.authType === "oauth-2" && request.auth.addTo === "HEADERS")
@@ -130,7 +183,7 @@ export const getComputedAuthHeaders = async (
               false,
               showKeyIfSecret
             )
-          : request.auth.value ?? "",
+          : (request.auth.value ?? ""),
         description: "",
       })
     }
@@ -195,6 +248,32 @@ export const getComputedBodyHeaders = (
 
   // Body should have a non-null content-type
   if (!req.body || req.body.contentType === null) return []
+
+  if (
+    req.body &&
+    req.body.contentType === "application/octet-stream" &&
+    req.body.body
+  ) {
+    const filename = req.body.body.name
+    const fileType = req.body.body.type
+
+    const contentType = fileType ? fileType : "application/octet-stream"
+
+    return [
+      {
+        active: true,
+        key: "content-type",
+        value: contentType,
+        description: "",
+      },
+      {
+        active: true,
+        key: "Content-Disposition",
+        value: `attachment; filename="${filename}"`,
+        description: "",
+      },
+    ]
+  }
 
   return [
     {
@@ -355,6 +434,10 @@ export const resolvesEnvsInBody = (
 ): HoppRESTReqBody => {
   if (!body.contentType) return body
 
+  if (body.contentType === "application/octet-stream") {
+    return body
+  }
+
   if (body.contentType === "multipart/form-data") {
     if (!body.body) {
       return {
@@ -374,14 +457,20 @@ export const resolvesEnvsInBody = (
             value: entry.isFile
               ? entry.value
               : parseTemplateString(entry.value, env.variables, false, true),
+            contentType: entry.contentType,
           }
       ),
     }
   }
 
+  let bodyContent = ""
+
+  if (isJSONContentType(body.contentType))
+    bodyContent = stripComments(body.body)
+
   return {
     contentType: body.contentType,
-    body: parseTemplateString(body.body ?? "", env.variables, false, true),
+    body: parseTemplateString(bodyContent, env.variables, false, true),
   }
 }
 
@@ -389,7 +478,7 @@ function getFinalBodyFromRequest(
   request: HoppRESTRequest,
   envVariables: Environment["variables"],
   showKeyIfSecret = false
-): FormData | string | null {
+): FormData | Blob | string | null {
   if (request.body.contentType === null) return null
 
   if (request.body.contentType === "application/x-www-form-urlencoded") {
@@ -454,11 +543,13 @@ function getFinalBodyFromRequest(
           ? x.value.map((v) => ({
               key: parseTemplateString(x.key, envVariables),
               value: v as string | Blob,
+              contentType: x.contentType,
             }))
           : [
               {
                 key: parseTemplateString(x.key, envVariables),
                 value: parseTemplateString(x.value, envVariables),
+                contentType: x.contentType,
               },
             ]
       ),
@@ -466,8 +557,17 @@ function getFinalBodyFromRequest(
     )
   }
 
+  if (request.body.contentType === "application/octet-stream") {
+    return request.body.body
+  }
+
+  let bodyContent = request.body.body ?? ""
+
+  if (isJSONContentType(request.body.contentType))
+    bodyContent = stripComments(request.body.body)
+
   // body can be null if the content-type is not set
-  return parseBodyEnvVariables(request.body.body ?? "", envVariables)
+  return parseBodyEnvVariables(bodyContent, envVariables)
 }
 
 /**

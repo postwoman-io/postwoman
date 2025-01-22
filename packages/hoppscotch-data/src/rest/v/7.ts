@@ -1,12 +1,12 @@
 import { z } from "zod"
 import { defineVersion } from "verzod"
 import {
-  HoppRESTAuthAPIKey,
   HoppRESTAuthBasic,
   HoppRESTAuthBearer,
   HoppRESTAuthInherit,
   HoppRESTAuthNone,
 } from "./1"
+import { HoppRESTAuthAPIKey } from "./4"
 import { V6_SCHEMA } from "./6"
 
 import { AuthCodeGrantTypeParams as AuthCodeGrantTypeParamsOld } from "./5"

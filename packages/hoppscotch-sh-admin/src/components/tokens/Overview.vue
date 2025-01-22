@@ -5,9 +5,18 @@
         {{ t('infra_tokens.section_title') }}
       </h4>
 
-      <p class="text-secondaryLight">
-        {{ t('infra_tokens.section_description') }}
-      </p>
+      <div class="flex">
+        <p class="text-secondaryLight">
+          {{ t('infra_tokens.section_description') }}
+        </p>
+        <HoppSmartAnchor
+          blank
+          to="https://docs.hoppscotch.io/documentation/self-host/community-edition/admin-dashboard#infratokens"
+          :label="t('support.more_info')"
+          class="underline ml-1"
+        />
+        <icon-lucide-arrow-up-right class="underline w-4 h-4" />
+      </div>
     </div>
 
     <HoppButtonSecondary

@@ -15,7 +15,7 @@
       {{ statusCode }}
     </h1>
     <p class="mb-4 text-secondaryLight">{{ message }}</p>
-    <p class="mt-4 space-x-2">
+    <div class="mt-4 space-x-2">
       <HoppButtonSecondary
         to="/"
         :icon="IconHome"
@@ -28,7 +28,7 @@
         filled
         @click="reloadApplication"
       />
-    </p>
+    </div>
   </div>
 </template>
 

@@ -79,7 +79,7 @@ export function resolveSaveContextOnCollectionReorder(
 }
 
 /**
- * Resolve save context for affected requests on drop folder from one  to another
+ * Resolve save context for affected requests on drop folder from one to another
  * @param oldFolderPath
  * @param newFolderPath
  * @returns
@@ -186,6 +186,8 @@ export function updateInheritedPropertiesForAffectedRequests(
   })
 
   effectedTabs.map((tab) => {
+    if (!("inheritedProperties" in tab.value.document)) return
+
     const inheritedParentID =
       tab.value.document.inheritedProperties?.auth.parentID
 
@@ -239,6 +241,13 @@ function resetSaveContextForAffectedRequests(folderPath: string) {
   for (const tab of tabs) {
     tab.value.document.saveContext = null
     tab.value.document.isDirty = true
+
+    if (tab.value.document.type === "request") {
+      // since the request is deleted, we need to remove the saved responses as well
+      tab.value.document.request.responses = {}
+    }
+
+    //
   }
 }
 
@@ -265,6 +274,11 @@ export async function resetTeamRequestsContext() {
       if (E.isRight(data) && data.right.request === null) {
         tab.value.document.saveContext = null
         tab.value.document.isDirty = true
+
+        if (tab.value.document.type === "request") {
+          // since the request is deleted, we need to remove the saved responses as well
+          tab.value.document.request.responses = {}
+        }
       }
     }
   }

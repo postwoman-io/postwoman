@@ -401,7 +401,7 @@ const supportedGrantTypes = [
         return E.right(undefined)
       }
 
-      const runAction = () => {
+      const runAction = async () => {
         const params: AuthCodeOauthFlowParams = {
           authEndpoint: authEndpoint.value,
           tokenEndpoint: tokenEndpoint.value,
@@ -420,7 +420,11 @@ const supportedGrantTypes = [
           return E.left("VALIDATION_FAILED" as const)
         }
 
-        authCode.init(parsedArgs.data)
+        const res = await authCode.init(parsedArgs.data)
+
+        if (E.isLeft(res)) {
+          return res
+        }
 
         return E.right(undefined)
       }
@@ -560,6 +564,33 @@ const supportedGrantTypes = [
         }
       )
 
+      const clientAuthentication = refWithCallbackOnChange(
+        grantTypeInfo.clientAuthentication
+          ? grantTypeInfo.clientAuthentication === "AS_BASIC_AUTH_HEADERS"
+            ? {
+                id: "AS_BASIC_AUTH_HEADERS" as const,
+                label: t("authorization.oauth.label_send_as_basic_auth"),
+              }
+            : {
+                id: "IN_BODY" as const,
+                label: t("authorization.oauth.label_send_in_body"),
+              }
+          : {
+              id: "IN_BODY" as const,
+              label: t("authorization.oauth.label_send_in_body"),
+            },
+        (value) => {
+          if (!("clientAuthentication" in auth.value.grantTypeInfo)) {
+            return
+          }
+
+          auth.value.grantTypeInfo = {
+            ...auth.value.grantTypeInfo,
+            clientAuthentication: value.id,
+          }
+        }
+      )
+
       const runAction = async () => {
         const values: ClientCredentialsFlowParams =
           replaceTemplateStringsInObjectValues({
@@ -567,6 +598,7 @@ const supportedGrantTypes = [
             clientID: clientID.value,
             clientSecret: clientSecret.value,
             scopes: scopes.value,
+            clientAuthentication: clientAuthentication.value.id,
           })
 
         const parsedArgs = clientCredentials.params.safeParse(values)
@@ -592,27 +624,45 @@ const supportedGrantTypes = [
         return [
           {
             id: "authEndpoint",
-            label: "Authorization Endpoint",
+            label: t("authorization.oauth.label_authorization_endpoint"),
             type: "text" as const,
             ref: authEndpoint,
           },
           {
             id: "clientId",
-            label: "Client ID",
+            label: t("authorization.oauth.label_client_id"),
             type: "text" as const,
             ref: clientID,
           },
           {
             id: "clientSecret",
-            label: "Client Secret",
+            label: t("authorization.oauth.label_client_secret"),
             type: "text" as const,
             ref: clientSecret,
           },
           {
             id: "scopes",
-            label: "Scopes",
+            label: t("authorization.oauth.label_scopes"),
             type: "text" as const,
             ref: scopes,
+          },
+          {
+            id: "clientAuthentication",
+            label: t("authorization.oauth.label_send_as"),
+            type: "dropdown" as const,
+            ref: clientAuthentication,
+            tippyRefName: "clientAuthenticationTippyActions",
+            tippyRef: clientAuthenticationTippyActions,
+            options: [
+              {
+                id: "IN_BODY" as const,
+                label: t("authorization.oauth.label_send_in_body"),
+              },
+              {
+                id: "AS_BASIC_AUTH_HEADERS" as const,
+                label: t("authorization.oauth.label_send_as_basic_auth"),
+              },
+            ],
           },
         ]
       })
@@ -1047,8 +1097,14 @@ const generateOAuthToken = async () => {
       VALIDATION_FAILED: t("authorization.oauth.validation_failed"),
       OAUTH_TOKEN_FETCH_FAILED: t("authorization.oauth.token_fetch_failed"),
     }
+    if (res.left in errorMessages) {
+      // @ts-expect-error - not possible to have a key that doesn't exist
+      toast.error(errorMessages[res.left])
+      return
+    }
 
-    toast.error(errorMessages[res.left])
+    toast.error(t("error.something_went_wrong"))
+
     return
   }
 }
@@ -1056,4 +1112,5 @@ const generateOAuthToken = async () => {
 const grantTypeTippyActions = ref<HTMLElement | null>(null)
 const pkceTippyActions = ref<HTMLElement | null>(null)
 const authTippyActions = ref<HTMLElement | null>(null)
+const clientAuthenticationTippyActions = ref<HTMLElement | null>(null)
 </script>

@@ -18,9 +18,12 @@ import {
 import { HistoryPlatformDef } from "@hoppscotch/common/platform/history"
 import {
   getUserHistoryEntries,
+  getUserHistoryStore,
+  runUserHistoryAllDeletedSubscription,
   runUserHistoryCreatedSubscription,
   runUserHistoryDeletedManySubscription,
   runUserHistoryDeletedSubscription,
+  runUserHistoryStoreStatusChangedSubscription,
   runUserHistoryUpdatedSubscription,
 } from "./history.api"
 
@@ -28,7 +31,8 @@ import * as E from "fp-ts/Either"
 import { restHistorySyncer, gqlHistorySyncer } from "./history.sync"
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import { runDispatchWithOutSyncing } from "@lib/sync"
-import { ReqType } from "../../api/generated/graphql"
+import { ReqType, ServiceStatus } from "../../api/generated/graphql"
+import { ref } from "vue"
 
 function initHistorySync() {
   const currentUser$ = platformAuth.getCurrentUserStream()
@@ -38,11 +42,14 @@ function initHistorySync() {
 
   gqlHistorySyncer.startStoreSync()
 
+  getUserHistoryStatus()
   loadHistoryEntries()
 
   currentUser$.subscribe(async (user) => {
+    getUserHistoryStatus()
+
     if (user) {
-      await loadHistoryEntries()
+      loadHistoryEntries()
     }
   })
 
@@ -64,12 +71,17 @@ function setupSubscriptions() {
   const userHistoryUpdatedSub = setupUserHistoryUpdatedSubscription()
   const userHistoryDeletedSub = setupUserHistoryDeletedSubscription()
   const userHistoryDeletedManySub = setupUserHistoryDeletedManySubscription()
+  const userHistoryStoreStatusChangedSub =
+    setupUserHistoryStoreStatusChangedSubscription()
+  const userHistoryAllDeletedSub = setupUserHistoryAllDeletedSubscription()
 
   subs = [
     userHistoryCreatedSub,
     userHistoryUpdatedSub,
     userHistoryDeletedSub,
     userHistoryDeletedManySub,
+    userHistoryStoreStatusChangedSub,
+    userHistoryAllDeletedSub,
   ]
 
   return () => {
@@ -107,6 +119,30 @@ async function loadHistoryEntries() {
       setGraphqlHistoryEntries(gqlHistoryEntries)
     })
   }
+}
+
+async function getUserHistoryStatus() {
+  const currentUser = platformAuth.getCurrentUser()
+
+  if (!currentUser) {
+    isHistoryStoreEnabled.value = true
+    return
+  }
+
+  isFetchingHistoryStoreStatus.value = true
+
+  const res = await getUserHistoryStore()
+
+  if (E.isLeft(res)) {
+    hasErrorFetchingHistoryStoreStatus.value = true
+    isFetchingHistoryStoreStatus.value = false
+    return
+  }
+
+  isHistoryStoreEnabled.value =
+    res.right.isUserHistoryEnabled.value === ServiceStatus.Enable
+
+  isFetchingHistoryStoreStatus.value = false
 }
 
 function setupUserHistoryCreatedSubscription() {
@@ -256,6 +292,47 @@ function setupUserHistoryDeletedManySubscription() {
   return userHistoryDeletedManySub
 }
 
+function setupUserHistoryStoreStatusChangedSubscription() {
+  const [userHistoryStoreStatusChanged$, userHistoryStoreStatusChangedSub] =
+    runUserHistoryStoreStatusChangedSubscription()
+
+  userHistoryStoreStatusChanged$.subscribe((res) => {
+    if (E.isRight(res)) {
+      const status =
+        res.right.infraConfigUpdate == ServiceStatus.Enable ? true : false
+
+      isHistoryStoreEnabled.value = status
+    }
+  })
+
+  return userHistoryStoreStatusChangedSub
+}
+
+function setupUserHistoryAllDeletedSubscription() {
+  const [userHistoryAllDeleted$, userHistoryAllDeletedSub] =
+    runUserHistoryAllDeletedSubscription()
+
+  userHistoryAllDeleted$.subscribe((res) => {
+    if (E.isRight(res)) {
+      runDispatchWithOutSyncing(() => {
+        clearRESTHistory()
+        clearGraphqlHistory()
+      })
+    }
+  })
+
+  return userHistoryAllDeletedSub
+}
+
+export const isHistoryStoreEnabled = ref(false)
+const isFetchingHistoryStoreStatus = ref(false)
+const hasErrorFetchingHistoryStoreStatus = ref(false)
+
 export const def: HistoryPlatformDef = {
   initHistorySync,
+  requestHistoryStore: {
+    isHistoryStoreEnabled,
+    isFetchingHistoryStoreStatus,
+    hasErrorFetchingHistoryStoreStatus,
+  },
 }

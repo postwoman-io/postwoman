@@ -20,14 +20,14 @@ import { useVModel } from "@vueuse/core"
 import { cloneDeep } from "lodash-es"
 import { isEqualHoppRESTRequest } from "@hoppscotch/data"
 import { HoppTab } from "~/services/tab"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 
 // TODO: Move Response and Request execution code to over here
 
-const props = defineProps<{ modelValue: HoppTab<HoppRESTDocument> }>()
+const props = defineProps<{ modelValue: HoppTab<HoppRequestDocument> }>()
 
 const emit = defineEmits<{
-  (e: "update:modelValue", val: HoppTab<HoppRESTDocument>): void
+  (e: "update:modelValue", val: HoppTab<HoppRequestDocument>): void
 }>()
 
 const tab = useVModel(props, "modelValue", emit)

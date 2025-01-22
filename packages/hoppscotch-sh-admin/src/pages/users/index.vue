@@ -290,7 +290,7 @@ const t = useI18n();
 const toast = useToast();
 
 // Time and Date Helpers
-const getCreatedDate = (date: string) => format(new Date(date), 'dd-MM-yyyy');
+const getCreatedDate = (date: string) => format(new Date(date), 'dd-MMMM-yyyy');
 const getCreatedTime = (date: string) => format(new Date(date), 'hh:mm a');
 const getLastActiveOn = (date: string | null) =>
   date ? useTimeAgo(date).value : t('users.not_available');
@@ -415,7 +415,7 @@ enum PageDirection {
 }
 
 const page = ref(1);
-const { data } = useQuery({ query: MetricsDocument });
+const { data } = useQuery({ query: MetricsDocument, variables: {} });
 const usersCount = computed(() => data?.value?.infra.usersCount);
 
 const changePage = (direction: PageDirection) => {
@@ -460,7 +460,10 @@ const goToUserDetails = (user: UserInfoQuery['infra']['userInfo']) =>
   router.push('/users/' + user.uid);
 
 // Check if SMTP is enabled
-const { data: status } = useQuery({ query: IsSmtpEnabledDocument });
+const { data: status } = useQuery({
+  query: IsSmtpEnabledDocument,
+  variables: {},
+});
 const smtpEnabled = computed(() => status?.value?.isSMTPEnabled);
 const inviteSuccessModal = ref(false);
 

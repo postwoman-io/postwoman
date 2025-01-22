@@ -1,10 +1,11 @@
-import { authEvents$, def as platformAuth } from "@platform/auth/auth.platform"
 import { CollectionsPlatformDef } from "@hoppscotch/common/platform/collections"
+import { authEvents$, def as platformAuth } from "@platform/auth/auth.platform"
 import { runDispatchWithOutSyncing } from "../../lib/sync"
 
 import {
   exportUserCollectionsToJSON,
   runUserCollectionCreatedSubscription,
+  runUserCollectionDuplicatedSubscription,
   runUserCollectionMovedSubscription,
   runUserCollectionOrderUpdatedSubscription,
   runUserCollectionRemovedSubscription,
@@ -16,38 +17,38 @@ import {
 } from "./collections.api"
 import { collectionsSyncer, getStoreByCollectionType } from "./collections.sync"
 
-import * as E from "fp-ts/Either"
-import {
-  addRESTCollection,
-  setRESTCollections,
-  editRESTCollection,
-  removeRESTCollection,
-  moveRESTFolder,
-  updateRESTCollectionOrder,
-  saveRESTRequestAs,
-  navigateToFolderWithIndexPath,
-  editRESTRequest,
-  removeRESTRequest,
-  moveRESTRequest,
-  updateRESTRequestOrder,
-  addRESTFolder,
-  editRESTFolder,
-  removeRESTFolder,
-  addGraphqlFolder,
-  addGraphqlCollection,
-  editGraphqlFolder,
-  editGraphqlCollection,
-  removeGraphqlFolder,
-  removeGraphqlCollection,
-  saveGraphqlRequestAs,
-  editGraphqlRequest,
-  moveGraphqlRequest,
-  removeGraphqlRequest,
-  setGraphqlCollections,
-  restCollectionStore,
-} from "@hoppscotch/common/newstore/collections"
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
 import {
+  addGraphqlCollection,
+  addGraphqlFolder,
+  addRESTCollection,
+  addRESTFolder,
+  editGraphqlCollection,
+  editGraphqlFolder,
+  editGraphqlRequest,
+  editRESTCollection,
+  editRESTFolder,
+  editRESTRequest,
+  moveGraphqlRequest,
+  moveRESTFolder,
+  moveRESTRequest,
+  navigateToFolderWithIndexPath,
+  removeGraphqlCollection,
+  removeGraphqlFolder,
+  removeGraphqlRequest,
+  removeRESTCollection,
+  removeRESTFolder,
+  removeRESTRequest,
+  restCollectionStore,
+  saveGraphqlRequestAs,
+  saveRESTRequestAs,
+  setGraphqlCollections,
+  setRESTCollections,
+  updateRESTCollectionOrder,
+  updateRESTRequestOrder,
+} from "@hoppscotch/common/newstore/collections"
+import {
+  generateUniqueRefId,
   GQLHeader,
   HoppCollection,
   HoppGQLRequest,
@@ -55,8 +56,13 @@ import {
   HoppRESTParam,
   HoppRESTRequest,
 } from "@hoppscotch/data"
+import * as E from "fp-ts/Either"
+import {
+  ReqType,
+  UserCollectionDuplicatedData,
+  UserRequest,
+} from "../../api/generated/graphql"
 import { gqlCollectionsSyncer } from "./gqlCollections.sync"
-import { ReqType } from "../../api/generated/graphql"
 
 function initCollectionsSync() {
   const currentUser$ = platformAuth.getCurrentUserStream()
@@ -65,6 +71,7 @@ function initCollectionsSync() {
 
   gqlCollectionsSyncer.startStoreSync()
 
+  // TODO: fix collection schema transformation on backend maybe?
   loadUserCollections("REST")
   loadUserCollections("GQL")
 
@@ -89,6 +96,7 @@ function initCollectionsSync() {
 
 type ExportedUserCollectionREST = {
   id?: string
+  _ref_id?: string
   folders: ExportedUserCollectionREST[]
   requests: Array<HoppRESTRequest & { id: string }>
   name: string
@@ -97,6 +105,7 @@ type ExportedUserCollectionREST = {
 
 type ExportedUserCollectionGQL = {
   id?: string
+  _ref_id?: string
   folders: ExportedUserCollectionGQL[]
   requests: Array<HoppGQLRequest & { id: string }>
   name: string
@@ -125,11 +134,13 @@ function exportedCollectionToHoppCollection(
         : {
             auth: { authType: "inherit", authActive: false },
             headers: [],
+            _ref_id: generateUniqueRefId("coll"),
           }
 
     return {
       id: restCollection.id,
-      v: 3,
+      _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
+      v: 6,
       name: restCollection.name,
       folders: restCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -153,6 +164,7 @@ function exportedCollectionToHoppCollection(
           preRequestScript,
           testScript,
           requestVariables,
+          responses,
         } = request
 
         const resolvedParams = addDescriptionField(params)
@@ -171,6 +183,7 @@ function exportedCollectionToHoppCollection(
           body,
           preRequestScript,
           testScript,
+          responses,
         }
       }),
       auth: data.auth,
@@ -185,11 +198,13 @@ function exportedCollectionToHoppCollection(
         : {
             auth: { authType: "inherit", authActive: false },
             headers: [],
+            _ref_id: generateUniqueRefId("coll"),
           }
 
     return {
       id: gqlCollection.id,
-      v: 3,
+      _ref_id: data._ref_id ?? generateUniqueRefId("coll"),
+      v: 6,
       name: gqlCollection.name,
       folders: gqlCollection.folders.map((folder) =>
         exportedCollectionToHoppCollection(folder, collectionType)
@@ -267,6 +282,9 @@ function setupSubscriptions() {
   const userCollectionMovedSub = setupUserCollectionMovedSubscription()
   const userCollectionOrderUpdatedSub =
     setupUserCollectionOrderUpdatedSubscription()
+  const userCollectionDuplicatedSub =
+    setupUserCollectionDuplicatedSubscription()
+
   const userRequestCreatedSub = setupUserRequestCreatedSubscription()
   const userRequestUpdatedSub = setupUserRequestUpdatedSubscription()
   const userRequestDeletedSub = setupUserRequestDeletedSubscription()
@@ -278,6 +296,7 @@ function setupSubscriptions() {
     userCollectionRemovedSub,
     userCollectionMovedSub,
     userCollectionOrderUpdatedSub,
+    userCollectionDuplicatedSub,
     userRequestCreatedSub,
     userRequestUpdatedSub,
     userRequestDeletedSub,
@@ -309,20 +328,6 @@ function setupUserCollectionCreatedSubscription() {
 
       // collection already exists in store ( this instance created it )
       if (userCollectionLocalID) {
-        return
-      }
-
-      // While duplicating a collection, the new entry added to the store has an ID with a suffix to be updated after the backend ID is received from the GQL subscription
-      // This is to prevent the new entry from being added to the store again when the GQL subscription
-      // The boolean return value indicates if the GQL subscription was fired because of a duplicate collection action and whether the collection should be added to the store
-      const shouldCreateCollection = issueBackendIDToDuplicatedCollection(
-        collectionStore,
-        collectionType,
-        userCollectionBackendID,
-        parentCollectionID
-      )
-
-      if (!shouldCreateCollection) {
         return
       }
 
@@ -369,6 +374,7 @@ function setupUserCollectionCreatedSubscription() {
             : {
                 auth: { authType: "inherit", authActive: false },
                 headers: [],
+                _ref_id: generateUniqueRefId("coll"),
               }
 
         runDispatchWithOutSyncing(() => {
@@ -377,7 +383,8 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 3,
+                v: 6,
+                _ref_id: data._ref_id,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
               })
@@ -385,7 +392,8 @@ function setupUserCollectionCreatedSubscription() {
                 name: res.right.userCollectionCreated.title,
                 folders: [],
                 requests: [],
-                v: 3,
+                v: 6,
+                _ref_id: data._ref_id,
                 auth: data.auth,
                 headers: addDescriptionField(data.headers),
               })
@@ -562,6 +570,150 @@ function setupUserCollectionOrderUpdatedSubscription() {
   })
 
   return userCollectionOrderUpdatedSub
+}
+
+function setupUserCollectionDuplicatedSubscription() {
+  const [userCollectionDuplicated$, userCollectionDuplicatedSub] =
+    runUserCollectionDuplicatedSubscription()
+
+  userCollectionDuplicated$.subscribe((res) => {
+    if (E.isRight(res)) {
+      const {
+        childCollections: childCollectionsJSONStr,
+        data,
+        id,
+        parentID: parentCollectionID,
+        requests: userRequests,
+        title: name,
+        type: collectionType,
+      } = res.right.userCollectionDuplicated
+
+      const { collectionStore } = getStoreByCollectionType(collectionType)
+
+      const parentCollectionPath =
+        parentCollectionID &&
+        getCollectionPathFromCollectionID(
+          parentCollectionID,
+          collectionStore.value.state
+        )
+
+      // Incoming data transformed to the respective internal representations
+      const { auth, headers } =
+        data && data != "null"
+          ? JSON.parse(data)
+          : {
+              auth: { authType: "inherit", authActive: false },
+              headers: [],
+            }
+      // Duplicated collection will have a unique ref id
+      const _ref_id = generateUniqueRefId("coll")
+
+      const folders = transformDuplicatedCollections(childCollectionsJSONStr)
+
+      const requests = transformDuplicatedCollectionRequests(
+        userRequests as UserRequest[]
+      )
+
+      // New collection to be added to store with the transformed data
+      const effectiveDuplicatedCollection: HoppCollection = {
+        id,
+        name,
+        folders,
+        requests,
+        v: 6,
+        _ref_id,
+        auth,
+        headers: addDescriptionField(headers),
+      }
+
+      // only folders will have parent collection id
+      if (parentCollectionID && parentCollectionPath) {
+        const collectionCreatedFromStoreIDSuffix = "-duplicate-collection"
+
+        const parentCollection = navigateToFolderWithIndexPath(
+          collectionStore.value.state,
+          parentCollectionPath
+            .split("/")
+            .map((pathIndex) => parseInt(pathIndex))
+        )
+
+        if (!parentCollection) {
+          return
+        }
+
+        // Grab the child collection inserted via store update with the ID suffix
+        const collectionInsertedViaStoreUpdateIdx =
+          parentCollection.folders.findIndex(({ id }) =>
+            id?.endsWith(collectionCreatedFromStoreIDSuffix)
+          )
+
+        if (collectionInsertedViaStoreUpdateIdx === -1) {
+          return
+        }
+
+        const collectionInsertedViaStoreUpdateIndexPath = `${parentCollectionPath}/${collectionInsertedViaStoreUpdateIdx}`
+
+        runDispatchWithOutSyncing(() => {
+          /**
+           * Step 1. Remove the collection inserted via store update with the ID suffix
+           * Step 2. Add the duplicated collection received from the GQL subscription
+           * Step 3. Update the duplicated collection with the relevant data
+           */
+
+          if (collectionType === "GQL") {
+            removeGraphqlFolder(collectionInsertedViaStoreUpdateIndexPath)
+
+            addGraphqlFolder(name, parentCollectionPath)
+
+            editGraphqlFolder(
+              collectionInsertedViaStoreUpdateIndexPath,
+              effectiveDuplicatedCollection
+            )
+          } else {
+            removeRESTFolder(collectionInsertedViaStoreUpdateIndexPath)
+
+            addRESTFolder(name, parentCollectionPath)
+
+            editRESTFolder(
+              collectionInsertedViaStoreUpdateIndexPath,
+              effectiveDuplicatedCollection
+            )
+          }
+        })
+      } else {
+        // root collections won't have `parentCollectionID`
+        const collectionCreatedFromStoreIDSuffix = "-duplicate-collection"
+
+        // Grab the child collection inserted via store update with the ID suffix
+        const collectionInsertedViaStoreUpdateIdx =
+          collectionStore.value.state.findIndex(({ id }) =>
+            id?.endsWith(collectionCreatedFromStoreIDSuffix)
+          )
+
+        if (collectionInsertedViaStoreUpdateIdx === -1) {
+          return
+        }
+
+        runDispatchWithOutSyncing(() => {
+          /**
+           * Step 1. Remove the collection inserted via store update with the ID suffix
+           * Step 2. Add the duplicated collection received from the GQL subscription
+           */
+          if (collectionType === "GQL") {
+            removeGraphqlCollection(collectionInsertedViaStoreUpdateIdx)
+
+            addGraphqlCollection(effectiveDuplicatedCollection)
+          } else {
+            removeRESTCollection(collectionInsertedViaStoreUpdateIdx)
+
+            addRESTCollection(effectiveDuplicatedCollection)
+          }
+        })
+      }
+    }
+  })
+
+  return userCollectionDuplicatedSub
 }
 
 function setupUserRequestCreatedSubscription() {
@@ -871,104 +1023,54 @@ function getRequestIndex(
   return requestIndex
 }
 
-function issueBackendIDToDuplicatedCollection(
-  collectionStore: ReturnType<
-    typeof getStoreByCollectionType
-  >["collectionStore"],
-  collectionType: ReqType,
-  userCollectionBackendID: string,
-  parentCollectionID?: string
-): boolean {
-  // Collection added to store via duplicating is set an ID with a suffix to be updated after the backend ID is received from the GQL subscription
-  const collectionCreatedFromStoreIDSuffix = "-duplicate-collection"
+function transformDuplicatedCollections(
+  collectionsJSONStr: string
+): HoppCollection[] {
+  const parsedCollections: UserCollectionDuplicatedData[] =
+    JSON.parse(collectionsJSONStr)
 
-  // Duplicating a child collection
-  if (parentCollectionID) {
-    // Get the index path for the parent collection
-    const parentCollectionPath = getCollectionPathFromCollectionID(
-      parentCollectionID,
-      collectionStore.value.state
-    )
+  return parsedCollections.map(
+    ({
+      childCollections: childCollectionsJSONStr,
+      data,
+      id,
+      requests: userRequests,
+      title: name,
+    }) => {
+      const { auth, headers } =
+        data && data !== "null"
+          ? JSON.parse(data)
+          : { auth: { authType: "inherit", authActive: false }, headers: [] }
 
-    if (!parentCollectionPath) {
-      // Indicates the collection received from the GQL subscription should be created in the store
-      return true
-    }
+      const _ref_id = generateUniqueRefId("coll")
 
-    const parentCollection = navigateToFolderWithIndexPath(
-      collectionStore.value.state,
-      parentCollectionPath.split("/").map((index) => parseInt(index))
-    )
+      const folders = transformDuplicatedCollections(childCollectionsJSONStr)
 
-    if (!parentCollection) {
-      // Indicates the collection received from the GQL subscription should be created in the store
-      return true
-    }
+      const requests = transformDuplicatedCollectionRequests(userRequests)
 
-    // Grab the child collection inserted via store update with the ID suffix
-    const collectionInsertedViaStoreUpdateIdx =
-      parentCollection.folders.findIndex(({ id }) =>
-        id?.endsWith(collectionCreatedFromStoreIDSuffix)
-      )
-
-    // No entry indicates the GQL subscription was fired not because of a duplicate collection action
-    if (collectionInsertedViaStoreUpdateIdx === -1) {
-      // Indicates the collection received from the GQL subscription should be created in the store
-      return true
-    }
-    const collectionInsertedViaStoreUpdate =
-      parentCollection.folders[collectionInsertedViaStoreUpdateIdx]
-
-    const childCollectionPath = `${parentCollectionPath}/${collectionInsertedViaStoreUpdateIdx}`
-
-    // Update the ID for the child collection already existing in store with the backend ID
-    runDispatchWithOutSyncing(() => {
-      if (collectionType == ReqType.Rest) {
-        editRESTFolder(childCollectionPath, {
-          ...collectionInsertedViaStoreUpdate,
-          id: userCollectionBackendID,
-        })
-      } else {
-        editGraphqlFolder(childCollectionPath, {
-          ...collectionInsertedViaStoreUpdate,
-          id: userCollectionBackendID,
-        })
+      return {
+        id,
+        name,
+        folders,
+        requests,
+        _ref_id,
+        v: 6,
+        auth,
+        headers: addDescriptionField(headers),
       }
-    })
-  } else {
-    // Duplicating a root collection
-
-    // Grab the collection inserted via store update with the ID suffix
-    const collectionInsertedViaStoreUpdateIdx =
-      collectionStore.value.state.findIndex(({ id }) =>
-        id?.endsWith(collectionCreatedFromStoreIDSuffix)
-      )
-
-    // No entry indicates the GQL subscription was fired not because of a duplicate collection action
-    if (collectionInsertedViaStoreUpdateIdx === -1) {
-      // Indicates the collection received from the GQL subscription should be created in the store
-      return true
     }
+  )
+}
 
-    const collectionInsertedViaStoreUpdate =
-      collectionStore.value.state[collectionInsertedViaStoreUpdateIdx]
+function transformDuplicatedCollectionRequests(
+  requests: UserRequest[]
+): HoppRESTRequest[] | HoppGQLRequest[] {
+  return requests.map(({ id, request }) => {
+    const parsedRequest = JSON.parse(request)
 
-    // Update the ID for the collection already existing in store with the backend ID
-    runDispatchWithOutSyncing(() => {
-      if (collectionType == ReqType.Rest) {
-        editRESTCollection(collectionInsertedViaStoreUpdateIdx, {
-          ...collectionInsertedViaStoreUpdate,
-          id: userCollectionBackendID,
-        })
-      } else {
-        editGraphqlCollection(collectionInsertedViaStoreUpdateIdx, {
-          ...collectionInsertedViaStoreUpdate,
-          id: userCollectionBackendID,
-        })
-      }
-    })
-  }
-
-  // Prevent adding the collection received from GQL subscription to the store
-  return false
+    return {
+      ...parsedRequest,
+      id,
+    }
+  })
 }

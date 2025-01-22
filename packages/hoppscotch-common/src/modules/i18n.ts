@@ -11,6 +11,8 @@ import { throwError } from "~/helpers/functional/error"
 import { PersistenceService } from "~/services/persistence"
 import { getService } from "./dioc"
 
+import FALLBACK_LANG_MESSAGES from "../../locales/en.json"
+
 /*
   In context of this file, we have 2 main kinds of things.
   1. Locale -> A locale is termed as the i18n entries present in the /locales folder
@@ -143,6 +145,12 @@ export default <HoppModule>{
     app.use(i18n)
 
     i18nInstance = i18n
+
+    // Load in fallback lang messages
+    i18nInstance.global.setLocaleMessage(
+      FALLBACK_LANG_CODE,
+      FALLBACK_LANG_MESSAGES
+    )
 
     // TODO: Global loading state to hide the resolved lang loading
     const currentLocale = resolveCurrentLocale()

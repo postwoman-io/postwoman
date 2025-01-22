@@ -13,6 +13,7 @@ import {
   printSchema,
 } from "graphql"
 import { Component, computed, reactive, ref } from "vue"
+import { useToast } from "~/composables/toast"
 import { getService } from "~/modules/dioc"
 import { getI18n } from "~/modules/i18n"
 
@@ -52,7 +53,11 @@ export type GQLResponseEvent =
       }
     }
 
-export type ConnectionState = "CONNECTING" | "CONNECTED" | "DISCONNECTED"
+export type ConnectionState =
+  | "CONNECTING"
+  | "CONNECTED"
+  | "DISCONNECTED"
+  | "ERROR"
 export type SubscriptionState = "SUBSCRIBING" | "SUBSCRIBED" | "UNSUBSCRIBED"
 
 const GQL = {
@@ -100,10 +105,7 @@ export const gqlMessageEvent = ref<GQLResponseEvent | "reset">()
 
 export const schemaString = computed(() => {
   if (!connection.schema) return ""
-
-  return printSchema(connection.schema, {
-    commentDescriptions: true,
-  })
+  return printSchema(connection.schema)
 })
 
 export const queryFields = computed(() => {
@@ -159,23 +161,43 @@ export const graphqlTypes = computed(() => {
 
 let timeoutSubscription: any
 
-export const connect = (url: string, headers: GQLHeader[]) => {
+export const connect = async (
+  url: string,
+  headers: GQLHeader[],
+  isRunGQLOperation = false
+) => {
   if (connection.state === "CONNECTED") {
     throw new Error(
       "A connection is already running. Close it before starting another."
     )
   }
 
-  // Polling
-  connection.state = "CONNECTED"
+  const toast = useToast()
+  const t = getI18n()
+
+  connection.state = "CONNECTING"
 
   const poll = async () => {
-    await getSchema(url, headers)
-    timeoutSubscription = setTimeout(() => {
-      poll()
-    }, GQL_SCHEMA_POLL_INTERVAL)
+    try {
+      await getSchema(url, headers)
+      // polling for schema
+      if (connection.state !== "CONNECTED") connection.state = "CONNECTED"
+      timeoutSubscription = setTimeout(() => {
+        poll()
+      }, GQL_SCHEMA_POLL_INTERVAL)
+    } catch (error) {
+      connection.state = "ERROR"
+
+      // Show an error toast if the introspection attempt failed and not while sending a request
+      if (!isRunGQLOperation) {
+        toast.error(t("graphql.connection_error_http"))
+      }
+
+      console.error(error)
+    }
   }
-  poll()
+
+  await poll()
 }
 
 export const disconnect = () => {
@@ -220,6 +242,8 @@ const getSchema = async (url: string, headers: GQLHeader[]) => {
     const res = await interceptorService.runRequest(reqOptions).response
 
     if (E.isLeft(res)) {
+      connection.state = "ERROR"
+
       if (
         res.left !== "cancellation" &&
         res.left.error === "NO_PW_EXT_HOOK" &&
@@ -234,6 +258,17 @@ const getSchema = async (url: string, headers: GQLHeader[]) => {
       }
 
       throw new Error(res.left.toString())
+    }
+
+    if (res.right.status !== 200) {
+      connection.state = "ERROR"
+      connection.error = {
+        type: "HTTP_ERROR",
+        message: (t: ReturnType<typeof getI18n>) =>
+          t("graphql.connection_error_http"),
+        component: undefined,
+      }
+      throw new Error("Failed to fetch schema. Status: " + res.right.status)
     }
 
     const data = res.right
@@ -256,6 +291,10 @@ const getSchema = async (url: string, headers: GQLHeader[]) => {
 }
 
 export const runGQLOperation = async (options: RunQueryOptions) => {
+  if (connection.state !== "CONNECTED") {
+    await connect(options.url, options.headers, true)
+  }
+
   const { url, headers, query, variables, auth, operationName, operationType } =
     options
 
@@ -377,10 +416,6 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     data: responseText,
     rawQuery: options,
     operationType,
-  }
-
-  if (connection.state !== "CONNECTED") {
-    connection.state = "CONNECTED"
   }
 
   addQueryToHistory(options, responseText)

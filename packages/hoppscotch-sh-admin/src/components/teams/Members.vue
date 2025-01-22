@@ -359,7 +359,7 @@ const removeExistingTeamMember = async (userID: string, index: number) => {
     );
 
     compiledErrorMessage
-      ? toast.error(compiledErrorMessage)
+      ? toast.error(t(compiledErrorMessage))
       : toast.error(t('state.remove_member_failure'));
   } else {
     team.value.teamMembers = team.value.teamMembers?.filter(

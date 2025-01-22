@@ -51,7 +51,7 @@ type ClientCertDef =
     }
 
 // TODO: Figure out a way to autogen this from the interceptor definition on the Rust side
-type RequestDef = {
+export type RequestDef = {
   req_id: number
 
   method: string
@@ -65,6 +65,10 @@ type RequestDef = {
   validate_certs: boolean,
   root_cert_bundle_files: number[],
   client_cert: ClientCertDef | null
+
+  proxy?: {
+    url: string
+  }
 }
 
 type RunRequestResponse = {
@@ -177,7 +181,8 @@ async function convertToRequestDef(
   reqID: number,
   caCertificates: CACertificateEntry[],
   clientCertificates: Map<string, ClientCertificateEntry>,
-  validateCerts: boolean
+  validateCerts: boolean,
+  proxyInfo: RequestDef["proxy"]
 ): Promise<RequestDef> {
   const clientCertDomain = getURLDomain(axiosReq.url!)
 
@@ -188,14 +193,21 @@ async function convertToRequestDef(
     method: axiosReq.method ?? "GET",
     endpoint: axiosReq.url ?? "",
     headers: Object.entries(axiosReq.headers ?? {})
-      .filter(([key, value]) => !(key.toLowerCase() === "content-type" && value.toLowerCase() === "multipart/form-data")) // Removing header, because this header will be set by reqwest
+      .filter(
+        ([key, value]) =>
+          !(
+            key.toLowerCase() === "content-type" &&
+            value.toLowerCase() === "multipart/form-data"
+          )
+      ) // Removing header, because this header will be set by relay.
       .map(([key, value]): KeyValuePair => ({ key, value })),
     parameters: Object.entries(axiosReq.params as Record<string, string> ?? {})
       .map(([key, value]): KeyValuePair => ({ key, value })),
     body: await processBody(axiosReq),
     root_cert_bundle_files: caCertificates.map((cert) => Array.from(cert.certificate)),
     validate_certs: validateCerts,
-    client_cert: clientCert ? convertClientCertToDefCert(clientCert) : null
+    client_cert: clientCert ? convertClientCertToDefCert(clientCert) : null,
+    proxy: proxyInfo
   }
 }
 
@@ -236,6 +248,7 @@ export type ClientCertificateEntry = z.infer<typeof ClientCertificateEntry>
 const CA_STORE_PERSIST_KEY = "native_interceptor_ca_store"
 const CLIENT_CERTS_PERSIST_KEY = "native_interceptor_client_certs_store"
 const VALIDATE_SSL_KEY = "native_interceptor_validate_ssl"
+const PROXY_INFO_PERSIST_KEY = "native_interceptor_proxy_info"
 
 export class NativeInterceptorService extends Service implements Interceptor {
   public static readonly ID = "NATIVE_INTERCEPTOR_SERVICE"
@@ -247,6 +260,8 @@ export class NativeInterceptorService extends Service implements Interceptor {
   public selectable = { type: "selectable" as const }
 
   public supportsCookies = true
+  public supportsDigestAuth = true
+  public supportsBinaryContentType = false
 
   private cookieJarService = this.bind(CookieJarService)
   private persistenceService: PersistenceService = this.bind(PersistenceService)
@@ -262,6 +277,7 @@ export class NativeInterceptorService extends Service implements Interceptor {
 
   public clientCertificates = ref<Map<string, ClientCertificateEntry>>(new Map())
   public validateCerts = ref(true)
+  public proxyInfo = ref<RequestDef["proxy"]>(undefined)
 
   override onServiceInit() {
     // Load SSL Validation
@@ -271,6 +287,17 @@ export class NativeInterceptorService extends Service implements Interceptor {
 
     if (typeof persistedValidateSSL === "boolean") {
       this.validateCerts.value = persistedValidateSSL
+    }
+
+    const persistedProxyInfo = this.persistenceService.getLocalConfig(
+      PROXY_INFO_PERSIST_KEY
+    )
+
+    if (persistedProxyInfo && persistedProxyInfo !== "null") {
+      try {
+        const proxyInfo = JSON.parse(persistedProxyInfo)
+        this.proxyInfo.value = proxyInfo
+      } catch (e) {}
     }
 
     watch(this.validateCerts, () => {
@@ -390,6 +417,13 @@ export class NativeInterceptorService extends Service implements Interceptor {
 
       this.persistenceService.setLocalConfig(CLIENT_CERTS_PERSIST_KEY, JSON.stringify(storableValue))
     })
+
+    watch(this.proxyInfo, (newProxyInfo) => {
+      this.persistenceService.setLocalConfig(
+        PROXY_INFO_PERSIST_KEY,
+        JSON.stringify(newProxyInfo) ?? "null"
+      )
+    })
   }
 
   public runRequest(req: AxiosRequestConfig): RequestRunResult<InterceptorError> {
@@ -417,7 +451,8 @@ export class NativeInterceptorService extends Service implements Interceptor {
           reqID,
           this.caCertificates.value,
           this.clientCertificates.value,
-          this.validateCerts.value
+          this.validateCerts.value,
+          this.proxyInfo.value
         )
 
         try {

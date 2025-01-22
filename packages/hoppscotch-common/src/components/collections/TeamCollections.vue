@@ -123,7 +123,7 @@
               })
             "
             @dragging="
-              (isDraging) =>
+              (isDraging: boolean) =>
                 highlightChildren(isDraging ? node.data.data.data.id : null)
             "
             @toggle-children="
@@ -136,7 +136,12 @@
                     })
               }
             "
-            @run-collection="emit('run-collection', $event)"
+            @run-collection="
+              emit('run-collection', {
+                collectionID: node.data.data.data.id,
+                path: node.id,
+              })
+            "
             @click="
               () => {
                 handleCollectionClick({
@@ -220,7 +225,7 @@
               })
             "
             @dragging="
-              (isDraging) =>
+              (isDraging: boolean) =>
                 highlightChildren(isDraging ? node.data.data.data.id : null)
             "
             @toggle-children="
@@ -233,7 +238,12 @@
                     })
               }
             "
-            @run-collection="emit('run-collection', $event)"
+            @run-collection="
+              emit('run-collection', {
+                collectionID: node.data.data.data.id,
+                path: node.id,
+              })
+            "
             @click="
               () => {
                 handleCollectionClick({
@@ -267,12 +277,30 @@
                   request: node.data.data.data.request,
                 })
             "
+            @edit-response="
+              emit('edit-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: node.data.data.data.id,
+                request: node.data.data.data.request,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
+            "
             @duplicate-request="
               node.data.type === 'requests' &&
                 emit('duplicate-request', {
                   folderPath: node.data.data.parentIndex,
                   request: node.data.data.data.request,
                 })
+            "
+            @duplicate-response="
+              emit('duplicate-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: node.data.data.data.id,
+                request: node.data.data.data.request,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
             "
             @remove-request="
               node.data.type === 'requests' &&
@@ -281,6 +309,15 @@
                   requestIndex: node.data.data.data.id,
                 })
             "
+            @remove-response="
+              emit('remove-response', {
+                folderPath: node.data.data.parentIndex,
+                requestIndex: node.data.data.data.id,
+                request: node.data.data.data.request,
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+              })
+            "
             @select-request="
               node.data.type === 'requests' &&
                 selectRequest({
@@ -288,6 +325,15 @@
                   requestIndex: node.data.data.data.id,
                   folderPath: getPath(node.id),
                 })
+            "
+            @select-response="
+              emit('select-response', {
+                responseName: $event.responseName,
+                responseID: $event.responseID,
+                request: node.data.data.data.request,
+                folderPath: getPath(node.id),
+                requestIndex: node.data.data.data.id,
+              })
             "
             @share-request="
               node.data.type === 'requests' &&
@@ -488,6 +534,14 @@ const props = defineProps({
 
 const isShowingSearchResults = computed(() => props.filterText.length > 0)
 
+type ResponsePayload = {
+  folderPath: string
+  requestIndex: string
+  request: HoppRESTRequest
+  responseName: string
+  responseID: string
+}
+
 const emit = defineEmits<{
   (
     event: "add-request",
@@ -537,6 +591,7 @@ const emit = defineEmits<{
       request: HoppRESTRequest
     }
   ): void
+  (event: "edit-response", payload: ResponsePayload): void
   (
     event: "duplicate-request",
     payload: {
@@ -544,6 +599,7 @@ const emit = defineEmits<{
       request: HoppRESTRequest
     }
   ): void
+  (event: "duplicate-response", payload: ResponsePayload): void
   (event: "export-data", payload: TeamCollection): void
   (event: "remove-collection", payload: string): void
   (event: "remove-folder", payload: string): void
@@ -554,6 +610,7 @@ const emit = defineEmits<{
       requestIndex: string
     }
   ): void
+  (event: "remove-response", payload: ResponsePayload): void
   (
     event: "select-request",
     payload: {
@@ -563,6 +620,7 @@ const emit = defineEmits<{
       folderPath: string
     }
   ): void
+  (event: "select-response", payload: ResponsePayload): void
   (
     event: "share-request",
     payload: {
@@ -614,7 +672,10 @@ const emit = defineEmits<{
   (event: "expand-team-collection", payload: string): void
   (event: "display-modal-add"): void
   (event: "display-modal-import-export"): void
-  (event: "run-collection", collectionID: string): void
+  (
+    event: "run-collection",
+    payload: { collectionID: string; path: string }
+  ): void
 }>()
 
 const getPath = (path: string) => {
@@ -682,7 +743,8 @@ const isActiveRequest = (requestID: string) => {
     O.filter(
       (active) =>
         active.originLocation === "team-collection" &&
-        active.requestID === requestID
+        active.requestID === requestID &&
+        active.exampleID === undefined
     ),
     O.isSome
   )
@@ -704,7 +766,7 @@ const selectRequest = (data: {
       request: request,
       requestIndex: requestIndex,
       isActive: isActiveRequest(requestIndex),
-      folderPath: data.folderPath,
+      folderPath: data.folderPath ?? "",
     })
   }
 }

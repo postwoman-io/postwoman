@@ -28,3 +28,12 @@ dist-ssr
 
 # Backend Code generation
 src/api/generated
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml

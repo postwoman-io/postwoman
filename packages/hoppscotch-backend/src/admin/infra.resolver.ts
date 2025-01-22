@@ -214,9 +214,8 @@ export class InfraResolver {
     })
     teamID: string,
   ) {
-    const invitations = await this.adminService.pendingInvitationCountInTeam(
-      teamID,
-    );
+    const invitations =
+      await this.adminService.pendingInvitationCountInTeam(teamID);
     return invitations;
   }
 
@@ -352,9 +351,8 @@ export class InfraResolver {
     })
     providerInfo: EnableAndDisableSSOArgs[],
   ) {
-    const isUpdated = await this.infraConfigService.enableAndDisableSSO(
-      providerInfo,
-    );
+    const isUpdated =
+      await this.infraConfigService.enableAndDisableSSO(providerInfo);
     if (E.isLeft(isUpdated)) throwErr(isUpdated.left);
 
     return true;
@@ -372,7 +370,26 @@ export class InfraResolver {
     })
     status: ServiceStatus,
   ) {
-    const isUpdated = await this.infraConfigService.enableAndDisableSMTP(
+    const isUpdated =
+      await this.infraConfigService.enableAndDisableSMTP(status);
+    if (E.isLeft(isUpdated)) throwErr(isUpdated.left);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Enable or Disable User History Storing in DB',
+  })
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async toggleUserHistoryStore(
+    @Args({
+      name: 'status',
+      type: () => ServiceStatus,
+      description: 'Toggle User History Store',
+    })
+    status: ServiceStatus,
+  ) {
+    const isUpdated = await this.infraConfigService.toggleServiceStatus(
+      InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
       status,
     );
     if (E.isLeft(isUpdated)) throwErr(isUpdated.left);

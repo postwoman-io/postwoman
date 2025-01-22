@@ -47,7 +47,11 @@ export class RequestSpotlightSearcherService extends StaticSpotlightSearcherServ
   private readonly restTab = this.bind(RESTTabService)
 
   private route = useRoute()
-  private isRESTPage = computed(() => this.route.name === "index")
+  private isRESTPage = computed(
+    () =>
+      this.route.name === "index" &&
+      this.restTab.currentActiveTab.value.document.type === "request"
+  )
   private isGQLPage = computed(() => this.route.name === "graphql")
   private isRESTOrGQLPage = computed(
     () => this.isRESTPage.value || this.isGQLPage.value
@@ -272,11 +276,14 @@ export class RequestSpotlightSearcherService extends StaticSpotlightSearcherServ
       case "save_to_collections":
         invokeAction("request.save-as", {
           requestType: "rest",
-          request: this.restTab.currentActiveTab.value?.document.request,
+          request:
+            this.restTab.currentActiveTab.value?.document.type === "request"
+              ? this.restTab.currentActiveTab.value?.document.request
+              : null,
         })
         break
       case "save_request":
-        invokeAction("request.save")
+        invokeAction("request-response.save")
         break
       case "rename_request":
         invokeAction("request.rename")

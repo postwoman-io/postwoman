@@ -13,12 +13,22 @@
       </h4>
 
       <div class="flex items-center space-y-4 py-4">
-        <HoppSmartToggle
-          :on="dataSharingConfigs.enabled"
-          @change="dataSharingConfigs.enabled = !dataSharingConfigs.enabled"
-        >
-          {{ t('configs.data_sharing.toggle_description') }}
-        </HoppSmartToggle>
+        <div class="flex justify-between w-full">
+          <HoppSmartToggle
+            :on="dataSharingConfigs.enabled"
+            @change="dataSharingConfigs.enabled = !dataSharingConfigs.enabled"
+          >
+            {{ t('configs.data_sharing.toggle_description') }}
+          </HoppSmartToggle>
+          <HoppButtonSecondary
+            v-tippy="{ theme: 'tooltip', allowHTML: true }"
+            blank
+            to="https://docs.hoppscotch.io/documentation/self-host/community-edition/telemetry"
+            :title="t('support.documentation')"
+            :icon="IconHelpCircle"
+            class="rounded hover:bg-primaryDark focus-visible:bg-primaryDark"
+          />
+        </div>
       </div>
 
       <HoppButtonSecondary
@@ -30,6 +40,9 @@
         blank
         class="w-min my-2"
       />
+      <p class="my-1 text-secondaryLight">
+        {{ t('configs.data_sharing.description') }}
+      </p>
     </div>
   </div>
 </template>
@@ -40,6 +53,7 @@ import { computed } from 'vue';
 import { useI18n } from '~/composables/i18n';
 import { ServerConfigs } from '~/helpers/configs';
 import IconShieldQuestion from '~icons/lucide/shield-question';
+import IconHelpCircle from '~icons/lucide/help-circle';
 
 const t = useI18n();
 

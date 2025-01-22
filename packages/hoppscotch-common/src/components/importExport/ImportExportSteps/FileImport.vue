@@ -1,22 +1,26 @@
 <template>
   <div class="space-y-4">
-    <p class="flex items-center">
-      <span
-        class="inline-flex items-center justify-center flex-shrink-0 mr-4 border-4 rounded-full border-primary text-dividerDark"
-        :class="{
-          '!text-green-500': hasFile,
-        }"
-      >
-        <icon-lucide-check-circle class="svg-icons" />
-      </span>
-      <span>
-        {{ t(`${caption}`) }}
-      </span>
-    </p>
+    <div>
+      <p class="flex items-center">
+        <span
+          class="inline-flex items-center justify-center flex-shrink-0 mr-4 border-4 rounded-full border-primary text-dividerDark"
+          :class="{
+            '!text-green-500': hasFile,
+          }"
+        >
+          <icon-lucide-check-circle class="svg-icons" />
+        </span>
+        <span>
+          {{ t(`${caption}`) }}
+        </span>
+      </p>
 
-    <div
-      class="flex flex-col ml-10 border border-dashed rounded border-dividerDark"
-    >
+      <p v-if="description" class="ml-10 mt-2 text-secondaryLight">
+        {{ t(description) }}
+      </p>
+    </div>
+
+    <div class="flex flex-col border border-dashed rounded border-dividerDark">
       <input
         id="inputChooseFileToImportFrom"
         ref="inputChooseFileToImportFrom"
@@ -33,6 +37,7 @@
       <template v-if="importFilesCount">
         {{
           t("import.file_size_limit_exceeded_warning_multiple_files", {
+            sizeLimit: ALLOWED_FILE_SIZE_LIMIT,
             files:
               importFilesCount === 1 ? "file" : `${importFilesCount} files`,
           })
@@ -40,14 +45,19 @@
       </template>
 
       <template v-else>
-        {{ t("import.file_size_limit_exceeded_warning_single_file") }}
+        {{
+          t("import.file_size_limit_exceeded_warning_single_file", {
+            sizeLimit: ALLOWED_FILE_SIZE_LIMIT,
+          })
+        }}
       </template>
     </p>
     <div>
       <HoppButtonPrimary
-        class="w-full"
+        :disabled="disableImportCTA"
         :label="t('import.title')"
-        :disabled="!hasFile || showFileSizeLimitExceededWarning"
+        :loading="loading"
+        class="w-full"
         @click="emit('importFromFile', fileContent)"
       />
     </div>
@@ -55,19 +65,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
 import { useI18n } from "@composables/i18n"
 import { useToast } from "@composables/toast"
+import { computed, ref } from "vue"
+import { platform } from "~/platform"
 
-defineProps<{
-  caption: string
-  acceptedFileTypes: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    caption: string
+    acceptedFileTypes: string
+    loading?: boolean
+    description?: string
+  }>(),
+  {
+    loading: false,
+    description: undefined,
+  }
+)
 
 const t = useI18n()
 const toast = useToast()
 
-const ALLOWED_FILE_SIZE_LIMIT = 10 // 10 MB
+const ALLOWED_FILE_SIZE_LIMIT = platform.limits?.collectionImportSizeLimit ?? 10 // Default to 10 MB
 
 const importFilesCount = ref(0)
 
@@ -80,6 +99,12 @@ const inputChooseFileToImportFrom = ref<HTMLInputElement | any>()
 const emit = defineEmits<{
   (e: "importFromFile", content: string[]): void
 }>()
+
+// Disable the import CTA if no file is selected, the file size limit is exceeded, or during an import action indicated by the `isLoading` prop
+const disableImportCTA = computed(
+  () =>
+    !hasFile.value || showFileSizeLimitExceededWarning.value || props.loading
+)
 
 const onFileChange = async () => {
   // Reset the state on entering the handler to avoid any stale state

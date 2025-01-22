@@ -325,6 +325,7 @@ export class CollectionsSpotlightSearcherService
 
         this.restTab.createNewTab(
           {
+            type: "request",
             request: req,
             isDirty: false,
             saveContext: {

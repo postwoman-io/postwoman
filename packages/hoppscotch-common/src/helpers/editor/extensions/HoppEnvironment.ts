@@ -1,4 +1,3 @@
-import { watch, Ref } from "vue"
 import { Compartment } from "@codemirror/state"
 import {
   Decoration,
@@ -7,9 +6,13 @@ import {
   ViewPlugin,
   hoverTooltip,
 } from "@codemirror/view"
-import * as E from "fp-ts/Either"
-import { parseTemplateStringE } from "@hoppscotch/data"
 import { StreamSubscriberFunc } from "@composables/stream"
+import { parseTemplateStringE } from "@hoppscotch/data"
+import * as E from "fp-ts/Either"
+import { Ref, watch } from "vue"
+
+import { invokeAction } from "~/helpers/actions"
+import { getService } from "~/modules/dioc"
 import {
   AggregateEnvironment,
   aggregateEnvsWithSecrets$,
@@ -17,13 +20,12 @@ import {
   getCurrentEnvironment,
   getSelectedEnvironmentType,
 } from "~/newstore/environments"
-import { invokeAction } from "~/helpers/actions"
+import { SecretEnvironmentService } from "~/services/secret-environment.service"
+import { RESTTabService } from "~/services/tab/rest"
+import IconEdit from "~icons/lucide/edit?raw"
 import IconUser from "~icons/lucide/user?raw"
 import IconUsers from "~icons/lucide/users?raw"
-import IconEdit from "~icons/lucide/edit?raw"
-import { SecretEnvironmentService } from "~/services/secret-environment.service"
-import { getService } from "~/modules/dioc"
-import { RESTTabService } from "~/services/tab/rest"
+import { isComment } from "./helpers"
 
 const HOPP_ENVIRONMENT_REGEX = /(<<[a-zA-Z0-9-_]+>>)/g
 
@@ -66,6 +68,10 @@ const filterNonEmptyEnvironmentVariables = (
 const cursorTooltipField = (aggregateEnvs: AggregateEnvironment[]) =>
   hoverTooltip(
     (view, pos, side) => {
+      // Check if the current position is inside a comment then disable the tooltip
+      if (isComment(view.state, pos)) {
+        return null
+      }
       const { from, to, text } = view.state.doc.lineAt(pos)
 
       // TODO: When Codemirror 6 allows this to work (not make the
@@ -163,7 +169,10 @@ const cursorTooltipField = (aggregateEnvs: AggregateEnvironment[]) =>
             invokeActionType = "modals.my.environment.edit"
           }
 
-          if (tooltipEnv?.sourceEnv === "RequestVariable") {
+          if (
+            tooltipEnv?.sourceEnv === "RequestVariable" &&
+            restTabs.currentActiveTab.value.document.type === "request"
+          ) {
             restTabs.currentActiveTab.value.document.optionTabPreference =
               "requestVariables"
           } else {
@@ -229,7 +238,13 @@ function checkEnv(env: string, aggregateEnvs: AggregateEnvironment[]) {
 const getMatchDecorator = (aggregateEnvs: AggregateEnvironment[]) =>
   new MatchDecorator({
     regexp: HOPP_ENVIRONMENT_REGEX,
-    decoration: (m) => checkEnv(m[0], aggregateEnvs),
+    decoration: (m, view, pos) => {
+      // Check if the current position is inside a comment then disable the highlight
+      if (isComment(view.state, pos)) {
+        return null
+      }
+      return checkEnv(m[0], aggregateEnvs)
+    },
   })
 
 export const environmentHighlightStyle = (
@@ -265,11 +280,20 @@ export class HoppEnvironmentPlugin {
     const aggregateEnvs = getAggregateEnvs()
     const currentTab = restTabs.currentActiveTab.value
 
+    const currentTabRequest =
+      currentTab.document.type === "example-response"
+        ? currentTab.document.response.originalRequest
+        : currentTab.document.request
+
     watch(
-      currentTab.document.request,
-      (reqVariables) => {
+      currentTabRequest,
+      (request) => {
+        const requestVariables = request?.requestVariables
+          ? request.requestVariables
+          : []
+
         this.envs = [
-          ...reqVariables.requestVariables.map(({ key, value }) => ({
+          ...requestVariables.map(({ key, value }) => ({
             key,
             value,
             sourceEnv: "RequestVariable",
@@ -288,16 +312,16 @@ export class HoppEnvironmentPlugin {
       { immediate: true, deep: true }
     )
 
+    const requestVariables = currentTabRequest?.requestVariables ?? []
+
     subscribeToStream(aggregateEnvsWithSecrets$, (envs) => {
       this.envs = [
-        ...currentTab.document.request.requestVariables.map(
-          ({ key, value }) => ({
-            key,
-            value,
-            sourceEnv: "RequestVariable",
-            secret: false,
-          })
-        ),
+        ...requestVariables.map(({ key, value }) => ({
+          key,
+          value,
+          sourceEnv: "RequestVariable",
+          secret: false,
+        })),
         ...envs,
       ]
 

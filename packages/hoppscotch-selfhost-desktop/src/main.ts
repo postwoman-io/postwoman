@@ -46,14 +46,15 @@ const headerPaddingTop = ref("0px")
       settings: settingsDef,
       history: historyDef,
     },
-    addedHoppModules: [
-      interopModule
-    ],
+    addedHoppModules: [interopModule],
     interceptors: {
       default: "native",
       interceptors: [
         { type: "service", service: NativeInterceptorService },
-        { type: "standalone", interceptor: proxyInterceptor },
+        {
+          type: "standalone",
+          interceptor: { ...proxyInterceptor, supportsDigestAuth: true },
+        },
       ],
     },
     platformFeatureFlags: {

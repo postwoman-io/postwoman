@@ -62,7 +62,7 @@
           <HoppButtonSecondary
             v-tippy="{ theme: 'tooltip' }"
             :icon="IconFilePlus"
-            :title="t('request.new')"
+            :title="t('request.add')"
             class="hidden group-hover:inline-flex"
             @click="emit('add-request')"
           />
@@ -74,7 +74,6 @@
             @click="emit('add-folder')"
           />
           <HoppButtonSecondary
-            v-if="collectionsType === 'team-collections'"
             v-tippy="{ theme: 'tooltip' }"
             :icon="IconPlaySquare"
             :title="t('collection_runner.run_collection')"
@@ -102,11 +101,7 @@
                   @keyup.r="requestAction?.$el.click()"
                   @keyup.n="folderAction?.$el.click()"
                   @keyup.e="edit?.$el.click()"
-                  @keyup.d="
-                    showDuplicateCollectionAction
-                      ? duplicateAction?.$el.click()
-                      : null
-                  "
+                  @keyup.d="duplicateAction?.$el.click()"
                   @keyup.delete="deleteAction?.$el.click()"
                   @keyup.x="exportAction?.$el.click()"
                   @keyup.p="propertiesAction?.$el.click()"
@@ -138,6 +133,18 @@
                     "
                   />
                   <HoppSmartItem
+                    ref="runCollectionAction"
+                    :icon="IconPlaySquare"
+                    :label="t('collection_runner.run_collection')"
+                    :shortcut="['T']"
+                    @click="
+                      () => {
+                        emit('run-collection', props.id)
+                        hide()
+                      }
+                    "
+                  />
+                  <HoppSmartItem
                     ref="edit"
                     :icon="IconEdit"
                     :label="t('action.edit')"
@@ -150,7 +157,6 @@
                     "
                   />
                   <HoppSmartItem
-                    v-if="showDuplicateCollectionAction"
                     ref="duplicateAction"
                     :icon="IconCopy"
                     :label="t('action.duplicate')"
@@ -200,19 +206,6 @@
                       }
                     "
                   />
-                  <HoppSmartItem
-                    v-if="collectionsType === 'team-collections'"
-                    ref="runCollectionAction"
-                    :icon="IconPlaySquare"
-                    :label="t('collection_runner.run_collection')"
-                    :shortcut="['T']"
-                    @click="
-                      () => {
-                        emit('run-collection', props.id)
-                        hide()
-                      }
-                    "
-                  />
                 </div>
               </template>
             </tippy>
@@ -248,7 +241,6 @@ import {
   changeCurrentReorderStatus,
   currentReorderingStatus$,
 } from "~/newstore/reordering"
-import { platform } from "~/platform"
 import IconCheckCircle from "~icons/lucide/check-circle"
 import IconCopy from "~icons/lucide/copy"
 import IconDownload from "~icons/lucide/download"
@@ -304,6 +296,7 @@ const emit = defineEmits<{
   (event: "toggle-children"): void
   (event: "add-request"): void
   (event: "add-folder"): void
+  (event: "run-collection"): void
   (event: "edit-collection"): void
   (event: "edit-properties"): void
   (event: "duplicate-collection"): void
@@ -339,11 +332,6 @@ const currentReorderingStatus = useReadonlyStream(currentReorderingStatus$, {
   parentID: "",
 })
 
-const currentUser = useReadonlyStream(
-  platform.auth.getCurrentUserStream(),
-  platform.auth.getCurrentUser()
-)
-
 // Used to determine if the collection is being dragged to a different destination
 // This is used to make the highlight effect work
 watch(
@@ -368,21 +356,6 @@ const collectionName = computed(() => {
   if ((props.data as HoppCollection).name)
     return (props.data as HoppCollection).name
   return (props.data as TeamCollection).title
-})
-
-const showDuplicateCollectionAction = computed(() => {
-  // Show if the user is not logged in
-  if (!currentUser.value) {
-    return true
-  }
-
-  if (props.collectionsType === "team-collections") {
-    return true
-  }
-
-  // Duplicate collection action is disabled on SH until the issue with syncing is resolved
-  return !platform.platformFeatureFlags
-    .duplicateCollectionDisabledInPersonalWorkspace
 })
 
 watch(

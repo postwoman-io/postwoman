@@ -5,7 +5,7 @@
   "author": "Hoppscotch (support@hoppscotch.io)",
   "license": "MIT",
   "scripts": {
-    "prepare": "rollup -c"
+    "prepare": "rollup -c && tsc --emitDeclarationOnly --declaration"
   },
   "type": "module",
   "main": "dist/index.cjs",
@@ -25,8 +25,7 @@
     "@lezer/generator": "1.5.1",
     "mocha": "9.2.2",
     "rollup": "3.29.4",
-    "rollup-plugin-dts": "6.0.2",
-    "rollup-plugin-ts": "3.4.5",
+    "@rollup/plugin-typescript": "12.1.1",
     "typescript": "5.2.2"
   }
 }

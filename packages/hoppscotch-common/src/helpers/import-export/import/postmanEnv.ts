@@ -13,6 +13,7 @@ const postmanEnvSchema = z.object({
     z.object({
       key: z.string(),
       value: z.string(),
+      type: z.string(),
     })
   ),
 })
@@ -34,6 +35,7 @@ export const postmanEnvImporter = (contents: string[]) => {
         values: entry.values?.map((valueEntry) => ({
           ...valueEntry,
           value: String(valueEntry.value),
+          type: String(valueEntry.type),
         })),
       }))
     }
@@ -52,7 +54,11 @@ export const postmanEnvImporter = (contents: string[]) => {
       id: uniqueID(),
       v: 1,
       name,
-      variables: values.map((entires) => ({ ...entires, secret: false })),
+      variables: values.map(({ key, value, type }) => ({
+        key,
+        value,
+        secret: type === "secret",
+      })),
     })
   )
 

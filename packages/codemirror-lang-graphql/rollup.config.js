@@ -1,4 +1,4 @@
-import typescript from "rollup-plugin-ts"
+import typescript from "@rollup/plugin-typescript"
 import { lezer } from "@lezer/generator/rollup"
 
 export default {
@@ -8,5 +8,10 @@ export default {
     { file: "dist/index.cjs", format: "cjs" },
     { dir: "./dist", format: "es" },
   ],
-  plugins: [lezer(), typescript()],
+  plugins: [
+    lezer(),
+    typescript({
+      tsconfig: "./tsconfig.json"
+    })
+  ],
 }

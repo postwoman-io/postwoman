@@ -7,6 +7,7 @@ export const knownContentTypes = {
   "text/xml": "xml",
   "application/x-www-form-urlencoded": "multipart",
   "multipart/form-data": "multipart",
+  "application/octet-stream": "binary",
   "text/html": "html",
   "text/plain": "plain",
 }

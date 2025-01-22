@@ -26,6 +26,7 @@ type HoppErrors = {
   MALFORMED_ENV_FILE: HoppErrorPath & HoppErrorData;
   BULK_ENV_FILE: HoppErrorPath & HoppErrorData;
   INVALID_FILE_TYPE: HoppErrorData;
+  INVALID_DATA_FILE_TYPE: HoppErrorData;
   TOKEN_EXPIRED: HoppErrorData;
   TOKEN_INVALID: HoppErrorData;
   INVALID_ID: HoppErrorData;

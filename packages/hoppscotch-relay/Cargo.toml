@@ -1,0 +1,21 @@
+[package]
+name = "hoppscotch-relay"
+version = "0.1.1"
+description = "A HTTP request-response relay used by Hoppscotch Desktop and Hoppscotch Agent for advanced request handling including custom headers, certificates, proxies, and local system integration."
+authors = ["CuriousCorrelation"]
+edition = "2021"
+
+[dependencies]
+curl = { git = "https://github.com/CuriousCorrelation/curl-rust.git", features = ["ntlm"] }
+tokio-util = "0.7.12"
+openssl = { version = "0.10.66", features = ["vendored"] }
+# NOTE: This crate follows `openssl-sys` from https://github.com/CuriousCorrelation/curl-rust.git
+# to avoid issues from version mismatch when compiling from source.
+openssl-sys = { version = "0.9.64", features = ["vendored"] }
+log = "0.4.22"
+env_logger = "0.11.5"
+thiserror = "1.0.64"
+http = "1.1.0"
+url-escape = "0.1.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

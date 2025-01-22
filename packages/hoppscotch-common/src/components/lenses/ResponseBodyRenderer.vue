@@ -13,7 +13,10 @@
     >
       <component
         :is="lensRendererFor(lens.renderer)"
-        :response="doc.response"
+        v-model:response="doc.response"
+        :is-savable="isSavable"
+        :is-editable="isEditable"
+        @save-as-example="$emit('save-as-example')"
       />
     </HoppSmartTab>
     <HoppSmartTab
@@ -23,15 +26,28 @@
       :info="`${maybeHeaders.length}`"
       class="flex flex-1 flex-col"
     >
-      <LensesHeadersRenderer :headers="maybeHeaders" />
+      <LensesHeadersRenderer v-model="maybeHeaders" :is-editable="false" />
     </HoppSmartTab>
     <HoppSmartTab
+      v-if="!isEditable"
       id="results"
       :label="t('test.results')"
       :indicator="showIndicator"
       class="flex flex-1 flex-col"
     >
       <HttpTestResult v-model="doc.testResults" />
+    </HoppSmartTab>
+    <HoppSmartTab
+      v-if="requestHeaders"
+      id="req-headers"
+      :label="t('response.request_headers')"
+      :info="`${requestHeaders?.length}`"
+      class="flex flex-1 flex-col"
+    >
+      <LensesHeadersRenderer
+        :model-value="requestHeaders"
+        :is-editable="false"
+      />
     </HoppSmartTab>
   </HoppSmartTabs>
 </template>
@@ -45,17 +61,24 @@ import {
 } from "~/helpers/lenses/lenses"
 import { useI18n } from "@composables/i18n"
 import { useVModel } from "@vueuse/core"
-import { HoppRESTDocument } from "~/helpers/rest/document"
+import { HoppRequestDocument } from "~/helpers/rest/document"
 
 const props = defineProps<{
-  document: HoppRESTDocument
+  document: HoppRequestDocument
+  isEditable: boolean
+  isTestRunner?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: "update:document", document: HoppRESTDocument): void
+  (e: "update:document", document: HoppRequestDocument): void
+  (e: "save-as-example"): void
 }>()
 
 const doc = useVModel(props, "document", emit)
+
+const isSavable = computed(() => {
+  return doc.value.response?.type === "success" && doc.value.saveContext
+})
 
 const showIndicator = computed(() => {
   if (!doc.value.testResults) return false
@@ -92,6 +115,11 @@ const maybeHeaders = computed(() => {
   return doc.value.response.headers
 })
 
+const requestHeaders = computed(() => {
+  if (!props.isTestRunner || !doc.value) return null
+  return doc.value.request.headers
+})
+
 const validLenses = computed(() => {
   if (!doc.value.response) return []
   return getSuitableLenses(doc.value.response)
@@ -123,6 +151,7 @@ watch(
 )
 
 watch(selectedLensTab, (newLensID) => {
+  if (props.isTestRunner) return
   doc.value.responseTabPreference = newLensID
 })
 </script>

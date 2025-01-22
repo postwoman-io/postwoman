@@ -27,6 +27,13 @@
           :icon="IconWrapText"
           @click.prevent="toggleNestedSetting('WRAP_LINES', 'httpPreRequest')"
         />
+        <HoppButtonSecondary
+          v-if="shouldEnableAIFeatures && currentRequest"
+          v-tippy="{ theme: 'tooltip' }"
+          :title="t('ai_experiments.modify_with_ai')"
+          :icon="IconSparkles"
+          @click="showModifyPreRequestModal"
+        />
       </div>
     </div>
     <div class="flex flex-1 border-b border-dividerLight">
@@ -58,6 +65,13 @@
         </div>
       </div>
     </div>
+    <AiexperimentsModifyPreRequestModal
+      v-if="isModifyPreRequestModalOpen && currentRequest"
+      :current-script="preRequestScript"
+      :request-info="currentRequest"
+      @close-modal="isModifyPreRequestModalOpen = false"
+      @update-script="(updatedScript) => (preRequestScript = updatedScript)"
+    />
   </div>
 </template>
 
@@ -65,7 +79,8 @@
 import IconHelpCircle from "~icons/lucide/help-circle"
 import IconWrapText from "~icons/lucide/wrap-text"
 import IconTrash2 from "~icons/lucide/trash-2"
-import { reactive, ref } from "vue"
+import IconSparkles from "~icons/lucide/sparkles"
+import { reactive, ref, computed } from "vue"
 import snippets from "@helpers/preRequestScriptSnippets"
 import { useCodemirror } from "@composables/codemirror"
 import linter from "~/helpers/editor/linting/preRequest"
@@ -74,6 +89,13 @@ import { useI18n } from "@composables/i18n"
 import { useVModel } from "@vueuse/core"
 import { useNestedSetting } from "~/composables/settings"
 import { toggleNestedSetting } from "~/newstore/settings"
+import { useAIExperiments } from "~/composables/ai-experiments"
+import { useService } from "dioc/vue"
+import { RESTTabService } from "~/services/tab/rest"
+import { platform } from "~/platform"
+import { useReadonlyStream } from "~/composables/stream"
+import AiexperimentsModifyPreRequestModal from "@components/aiexperiments/ModifyPreRequestModal.vue"
+import { invokeAction } from "~/helpers/actions"
 
 const t = useI18n()
 
@@ -111,6 +133,29 @@ const useSnippet = (script: string) => {
 
 const clearContent = () => {
   preRequestScript.value = ""
+}
+const tabService = useService(RESTTabService)
+
+const currentRequest = computed(() =>
+  tabService.currentActiveTab.value?.document.type === "request"
+    ? tabService.currentActiveTab.value?.document.request
+    : null
+)
+
+const { shouldEnableAIFeatures } = useAIExperiments()
+const isModifyPreRequestModalOpen = ref(false)
+
+const currentUser = useReadonlyStream(
+  platform.auth.getCurrentUserStream(),
+  platform.auth.getCurrentUser()
+)
+
+const showModifyPreRequestModal = () => {
+  if (!currentUser.value) {
+    invokeAction("modals.login.toggle")
+    return
+  }
+  isModifyPreRequestModalOpen.value = true
 }
 </script>
 

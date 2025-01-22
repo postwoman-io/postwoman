@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-between px-4 py-2">
-    <div class="flex flex-shrink flex-shrink-0 items-center overflow-x-auto">
+    <div class="flex flex-shrink items-center overflow-x-auto">
       <component
         :is="getIcon(status)"
         v-tippy="{ theme: 'tooltip' }"
@@ -8,9 +8,7 @@
         :class="getStyle(status)"
         :title="`${t(getTooltip(status))}`"
       />
-      <div
-        class="flex flex-shrink flex-shrink-0 items-center space-x-2 overflow-x-auto"
-      >
+      <div class="flex flex-shrink items-center space-x-2 overflow-x-auto">
         <span class="inline-flex text-secondaryDark">
           {{ env.key }}
         </span>
@@ -51,7 +49,7 @@ type Props = {
     previousValue?: string
   }
   status: Status
-  global: boolean
+  global?: boolean
 }
 
 withDefaults(defineProps<Props>(), {

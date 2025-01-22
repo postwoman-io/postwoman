@@ -1,529 +1,529 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`hopp test [options] <file_path_or_id> > Test\`hopp test <file_path_or_id> --env <file_path_or_id> --reporter-junit [path] > Generates a JUnit report at the default path 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
-<testsuites tests=\\"76\\" failures=\\"2\\" errors=\\"66\\" time=\\"time\\">
-  <testsuite name=\\"test-junit-report-export/request-level-errors/invalid-url\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
-    <system-err><![CDATA[
-      REQUEST_ERROR - TypeError: Invalid URL]]></system-err>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+"<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="76" failures="2" errors="66" time="time">
+  <testsuite name="test-junit-report-export/assertions/error" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/assertions/error">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/assertions/error">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toInclude should not be null"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toInclude should not be undefined"/>
     </testcase>
   </testsuite>
-  <testsuite name=\\"test-junit-report-export/request-level-errors/test-script-reference-error\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"0\\" failures=\\"0\\" errors=\\"0\\">
+  <testsuite name="test-junit-report-export/assertions/success" time="time" timestamp="timestamp" tests="5" failures="0" errors="0">
+    <testcase name="Status code is 200 - Expected '200' to be '200'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'application/json, text/plain, */*,image/webp' to be 'application/json, text/plain, */*,image/webp'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'echo.hoppscotch.io' to be 'echo.hoppscotch.io'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'undefined' to be 'undefined'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Status code is 2xx - Expected '200' to be 200-level status" classname="test-junit-report-export/assertions/success"/>
+  </testsuite>
+  <testsuite name="test-junit-report-export/assertions/failure" time="time" timestamp="timestamp" tests="5" failures="2" errors="0">
+    <testcase name="Simulating failure - Status code is 200 - Expected '200' to not be '200'" classname="test-junit-report-export/assertions/failure">
+      <failure type="AssertionFailure" message="Expected '200' to not be '200'"/>
+    </testcase>
+    <testcase name="Simulating failure - Check headers - Expected 'application/json, text/plain, */*,image/webp' to not be 'application/json, text/plain, */*'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Check headers - Expected 'echo.hoppscotch.io' to not be 'httpbin.org'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Check headers - Expected 'undefined' to not be 'value'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Status code is 2xx - Expected '200' to not be 200-level status" classname="test-junit-report-export/assertions/failure">
+      <failure type="AssertionFailure" message="Expected '200' to not be 200-level status"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="test-junit-report-export/request-level-errors/invalid-url" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
+    <system-err><![CDATA[
+      REQUEST_ERROR - TypeError: Invalid URL]]></system-err>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
+    </testcase>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toHaveLength should be a number"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toHaveLength should be a number"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toInclude to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toInclude to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toInclude should not be null"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toInclude should not be undefined"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="test-junit-report-export/request-level-errors/test-script-reference-error" time="time" timestamp="timestamp" tests="0" failures="0" errors="0">
     <system-err><![CDATA[
       REQUEST_ERROR - TypeError: Invalid URL
       TEST_SCRIPT_ERROR - Script execution failed: ReferenceError: status is not defined]]></system-err>
   </testsuite>
-  <testsuite name=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
+  <testsuite name="test-junit-report-export/request-level-errors/non-existent-env-var" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
     <system-err><![CDATA[
       PARSING_ERROR - {
-  \\"key\\": \\"<<key>>\\"
+  "key": "<<key>>"
 } (ENV_EXPAND_LOOP)]]></system-err>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toInclude should not be null"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
-    </testcase>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/error\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
-    </testcase>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/success\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"5\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Status code is 200 - Expected '200' to be '200'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'application/json, text/plain, */*,image/webp' to be 'application/json, text/plain, */*,image/webp'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'echo.hoppscotch.io' to be 'echo.hoppscotch.io'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'undefined' to be 'undefined'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Status code is 2xx - Expected '200' to be 200-level status\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/failure\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"5\\" failures=\\"2\\" errors=\\"0\\">
-    <testcase name=\\"Simulating failure - Status code is 200 - Expected '200' to not be '200'\\" classname=\\"test-junit-report-export/assertions/failure\\">
-      <failure type=\\"AssertionFailure\\" message=\\"Expected '200' to not be '200'\\"/>
-    </testcase>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'application/json, text/plain, */*,image/webp' to not be 'application/json, text/plain, */*'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'echo.hoppscotch.io' to not be 'httpbin.org'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'undefined' to not be 'value'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Status code is 2xx - Expected '200' to not be 200-level status\\" classname=\\"test-junit-report-export/assertions/failure\\">
-      <failure type=\\"AssertionFailure\\" message=\\"Expected '200' to not be 200-level status\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toInclude should not be undefined"/>
     </testcase>
   </testsuite>
 </testsuites>"
 `;
 
 exports[`hopp test [options] <file_path_or_id> > Test\`hopp test <file_path_or_id> --env <file_path_or_id> --reporter-junit [path] > Generates a JUnit report at the specified path 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
-<testsuites tests=\\"76\\" failures=\\"2\\" errors=\\"66\\" time=\\"time\\">
-  <testsuite name=\\"test-junit-report-export/request-level-errors/invalid-url\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
-    <system-err><![CDATA[
-      REQUEST_ERROR - TypeError: Invalid URL]]></system-err>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+"<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="76" failures="2" errors="66" time="time">
+  <testsuite name="test-junit-report-export/assertions/error" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/assertions/error">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/assertions/error">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/assertions/error">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toInclude should not be null"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/request-level-errors/invalid-url\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/assertions/error">
+      <error message="Argument for toInclude should not be undefined"/>
     </testcase>
   </testsuite>
-  <testsuite name=\\"test-junit-report-export/request-level-errors/test-script-reference-error\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"0\\" failures=\\"0\\" errors=\\"0\\">
+  <testsuite name="test-junit-report-export/assertions/success" time="time" timestamp="timestamp" tests="5" failures="0" errors="0">
+    <testcase name="Status code is 200 - Expected '200' to be '200'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'application/json, text/plain, */*,image/webp' to be 'application/json, text/plain, */*,image/webp'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'echo.hoppscotch.io' to be 'echo.hoppscotch.io'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Check headers - Expected 'undefined' to be 'undefined'" classname="test-junit-report-export/assertions/success"/>
+    <testcase name="Status code is 2xx - Expected '200' to be 200-level status" classname="test-junit-report-export/assertions/success"/>
+  </testsuite>
+  <testsuite name="test-junit-report-export/assertions/failure" time="time" timestamp="timestamp" tests="5" failures="2" errors="0">
+    <testcase name="Simulating failure - Status code is 200 - Expected '200' to not be '200'" classname="test-junit-report-export/assertions/failure">
+      <failure type="AssertionFailure" message="Expected '200' to not be '200'"/>
+    </testcase>
+    <testcase name="Simulating failure - Check headers - Expected 'application/json, text/plain, */*,image/webp' to not be 'application/json, text/plain, */*'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Check headers - Expected 'echo.hoppscotch.io' to not be 'httpbin.org'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Check headers - Expected 'undefined' to not be 'value'" classname="test-junit-report-export/assertions/failure"/>
+    <testcase name="Simulating failure - Status code is 2xx - Expected '200' to not be 200-level status" classname="test-junit-report-export/assertions/failure">
+      <failure type="AssertionFailure" message="Expected '200' to not be 200-level status"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="test-junit-report-export/request-level-errors/invalid-url" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
+    <system-err><![CDATA[
+      REQUEST_ERROR - TypeError: Invalid URL]]></system-err>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
+    </testcase>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toHaveLength to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toHaveLength should be a number"/>
+    </testcase>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toHaveLength should be a number"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toInclude to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Expected toInclude to be called for an array or string"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toInclude should not be null"/>
+    </testcase>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/request-level-errors/invalid-url">
+      <error message="Argument for toInclude should not be undefined"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="test-junit-report-export/request-level-errors/test-script-reference-error" time="time" timestamp="timestamp" tests="0" failures="0" errors="0">
     <system-err><![CDATA[
       REQUEST_ERROR - TypeError: Invalid URL
       TEST_SCRIPT_ERROR - Script execution failed: ReferenceError: status is not defined]]></system-err>
   </testsuite>
-  <testsuite name=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
+  <testsuite name="test-junit-report-export/request-level-errors/non-existent-env-var" time="time" timestamp="timestamp" tests="22" failures="0" errors="22">
     <system-err><![CDATA[
       PARSING_ERROR - {
-  \\"key\\": \\"<<key>>\\"
+  "key": "<<key>>"
 } (ENV_EXPAND_LOOP)]]></system-err>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
+    <testcase name="\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected 200-level status but could not parse value 'foo'"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
+    <testcase name="\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toHaveLength to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
+    <testcase name="\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toHaveLength should be a number"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Expected toInclude to be called for an array or string"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be null" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toInclude should not be null"/>
     </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/request-level-errors/non-existent-env-var\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
-    </testcase>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/error\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"22\\" failures=\\"0\\" errors=\\"22\\">
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeLevelxxx()\` error scenarios - Expected 200-level status but could not parse value 'foo'\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected 200-level status but could not parse value 'foo'\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toBeType()\` error scenarios - Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toBeType should be &quot;string&quot;, &quot;boolean&quot;, &quot;number&quot;, &quot;object&quot;, &quot;undefined&quot;, &quot;bigint&quot;, &quot;symbol&quot; or &quot;function&quot;\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Expected toHaveLength to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toHaveLength to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
-    </testcase>
-    <testcase name=\\"\`toHaveLength()\` error scenarios - Argument for toHaveLength should be a number\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toHaveLength should be a number\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Expected toInclude to be called for an array or string\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Expected toInclude to be called for an array or string\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be null\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toInclude should not be null\\"/>
-    </testcase>
-    <testcase name=\\"\`toInclude() error scenarios\` - Argument for toInclude should not be undefined\\" classname=\\"test-junit-report-export/assertions/error\\">
-      <error message=\\"Argument for toInclude should not be undefined\\"/>
-    </testcase>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/success\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"5\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Status code is 200 - Expected '200' to be '200'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'application/json, text/plain, */*,image/webp' to be 'application/json, text/plain, */*,image/webp'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'echo.hoppscotch.io' to be 'echo.hoppscotch.io'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Check headers - Expected 'undefined' to be 'undefined'\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-    <testcase name=\\"Status code is 2xx - Expected '200' to be 200-level status\\" classname=\\"test-junit-report-export/assertions/success\\"/>
-  </testsuite>
-  <testsuite name=\\"test-junit-report-export/assertions/failure\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"5\\" failures=\\"2\\" errors=\\"0\\">
-    <testcase name=\\"Simulating failure - Status code is 200 - Expected '200' to not be '200'\\" classname=\\"test-junit-report-export/assertions/failure\\">
-      <failure type=\\"AssertionFailure\\" message=\\"Expected '200' to not be '200'\\"/>
-    </testcase>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'application/json, text/plain, */*,image/webp' to not be 'application/json, text/plain, */*'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'echo.hoppscotch.io' to not be 'httpbin.org'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Check headers - Expected 'undefined' to not be 'value'\\" classname=\\"test-junit-report-export/assertions/failure\\"/>
-    <testcase name=\\"Simulating failure - Status code is 2xx - Expected '200' to not be 200-level status\\" classname=\\"test-junit-report-export/assertions/failure\\">
-      <failure type=\\"AssertionFailure\\" message=\\"Expected '200' to not be 200-level status\\"/>
+    <testcase name="\`toInclude() error scenarios\` - Argument for toInclude should not be undefined" classname="test-junit-report-export/request-level-errors/non-existent-env-var">
+      <error message="Argument for toInclude should not be undefined"/>
     </testcase>
   </testsuite>
 </testsuites>"
 `;
 
 exports[`hopp test [options] <file_path_or_id> > Test\`hopp test <file_path_or_id> --env <file_path_or_id> --reporter-junit [path] > Generates a JUnit report for a collection referring to environment variables 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
-<testsuites tests=\\"12\\" failures=\\"0\\" errors=\\"0\\" time=\\"time\\">
-  <testsuite name=\\"Test environment variables in request body/test-request\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"12\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Status code is 200 - Expected '200' to be '200'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected '7' to be '7'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'John' to be 'John'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'Doe' to be 'Doe'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'John Doe' to be 'John Doe'\\" classname=\\"Test environment variables in request body/test-request\\"/>
-    <testcase name=\\"Successfully resolves environments referenced in the request body - Expected 'Hello, John Doe' to be 'Hello, John Doe'\\" classname=\\"Test environment variables in request body/test-request\\"/>
+"<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="12" failures="0" errors="0" time="time">
+  <testsuite name="Test environment variables in request body/test-request" time="time" timestamp="timestamp" tests="12" failures="0" errors="0">
+    <testcase name="Status code is 200 - Expected '200' to be '200'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments recursively - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'Hello' to be 'Hello'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected '7' to be '7'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'John' to be 'John'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'Doe' to be 'Doe'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'John Doe' to be 'John Doe'" classname="Test environment variables in request body/test-request"/>
+    <testcase name="Successfully resolves environments referenced in the request body - Expected 'Hello, John Doe' to be 'Hello, John Doe'" classname="Test environment variables in request body/test-request"/>
   </testsuite>
 </testsuites>"
 `;
 
 exports[`hopp test [options] <file_path_or_id> > Test\`hopp test <file_path_or_id> --env <file_path_or_id> --reporter-junit [path] > Generates a JUnit report for a collection with authorization/headers set at the collection level 1`] = `
-"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
-<testsuites tests=\\"12\\" failures=\\"0\\" errors=\\"0\\" time=\\"time\\">
-  <testsuite name=\\"CollectionB/RequestA\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Correctly inherits auth and headers from the root collection - Expected 'Set at root collection' to be 'Set at root collection'\\" classname=\\"CollectionB/RequestA\\"/>
-    <testcase name=\\"Correctly inherits auth and headers from the root collection - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'\\" classname=\\"CollectionB/RequestA\\"/>
+"<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="12" failures="0" errors="0" time="time">
+  <testsuite name="CollectionA/RequestA" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Correctly inherits auth and headers from the root collection - Expected 'Set at root collection' to be 'Set at root collection'" classname="CollectionA/RequestA"/>
+    <testcase name="Correctly inherits auth and headers from the root collection - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'" classname="CollectionA/RequestA"/>
   </testsuite>
-  <testsuite name=\\"CollectionB/FolderA/RequestB\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'Set at root collection' to be 'Set at root collection'\\" classname=\\"CollectionB/FolderA/RequestB\\"/>
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'\\" classname=\\"CollectionB/FolderA/RequestB\\"/>
+  <testsuite name="CollectionA/FolderA/RequestB" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'Set at root collection' to be 'Set at root collection'" classname="CollectionA/FolderA/RequestB"/>
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'" classname="CollectionA/FolderA/RequestB"/>
   </testsuite>
-  <testsuite name=\\"CollectionA/RequestA\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Correctly inherits auth and headers from the root collection - Expected 'Set at root collection' to be 'Set at root collection'\\" classname=\\"CollectionA/RequestA\\"/>
-    <testcase name=\\"Correctly inherits auth and headers from the root collection - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'\\" classname=\\"CollectionA/RequestA\\"/>
+  <testsuite name="CollectionA/FolderA/FolderB/RequestC" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'Overriden at FolderB' to be 'Overriden at FolderB'" classname="CollectionA/FolderA/FolderB/RequestC"/>
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'test-key' to be 'test-key'" classname="CollectionA/FolderA/FolderB/RequestC"/>
   </testsuite>
-  <testsuite name=\\"CollectionA/FolderA/RequestB\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'Set at root collection' to be 'Set at root collection'\\" classname=\\"CollectionA/FolderA/RequestB\\"/>
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'\\" classname=\\"CollectionA/FolderA/RequestB\\"/>
+  <testsuite name="CollectionA/FolderA/FolderB/FolderC/RequestD" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Overrides auth and headers set at the parent folder - Expected 'Overriden at RequestD' to be 'Overriden at RequestD'" classname="CollectionA/FolderA/FolderB/FolderC/RequestD"/>
+    <testcase name="Overrides auth and headers set at the parent folder - Expected 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=' to be 'Basic dXNlcm5hbWU6cGFzc3dvcmQ='" classname="CollectionA/FolderA/FolderB/FolderC/RequestD"/>
   </testsuite>
-  <testsuite name=\\"CollectionA/FolderA/FolderB/RequestC\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'Overriden at FolderB' to be 'Overriden at FolderB'\\" classname=\\"CollectionA/FolderA/FolderB/RequestC\\"/>
-    <testcase name=\\"Correctly inherits auth and headers from the parent folder - Expected 'test-key' to be 'test-key'\\" classname=\\"CollectionA/FolderA/FolderB/RequestC\\"/>
+  <testsuite name="CollectionB/RequestA" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Correctly inherits auth and headers from the root collection - Expected 'Set at root collection' to be 'Set at root collection'" classname="CollectionB/RequestA"/>
+    <testcase name="Correctly inherits auth and headers from the root collection - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'" classname="CollectionB/RequestA"/>
   </testsuite>
-  <testsuite name=\\"CollectionA/FolderA/FolderB/FolderC/RequestD\\" time=\\"time\\" timestamp=\\"timestamp\\" tests=\\"2\\" failures=\\"0\\" errors=\\"0\\">
-    <testcase name=\\"Overrides auth and headers set at the parent folder - Expected 'Overriden at RequestD' to be 'Overriden at RequestD'\\" classname=\\"CollectionA/FolderA/FolderB/FolderC/RequestD\\"/>
-    <testcase name=\\"Overrides auth and headers set at the parent folder - Expected 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=' to be 'Basic dXNlcm5hbWU6cGFzc3dvcmQ='\\" classname=\\"CollectionA/FolderA/FolderB/FolderC/RequestD\\"/>
+  <testsuite name="CollectionB/FolderA/RequestB" time="time" timestamp="timestamp" tests="2" failures="0" errors="0">
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'Set at root collection' to be 'Set at root collection'" classname="CollectionB/FolderA/RequestB"/>
+    <testcase name="Correctly inherits auth and headers from the parent folder - Expected 'Bearer BearerToken' to be 'Bearer BearerToken'" classname="CollectionB/FolderA/RequestB"/>
   </testsuite>
 </testsuites>"
 `;

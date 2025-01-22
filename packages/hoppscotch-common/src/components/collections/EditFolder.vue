@@ -69,6 +69,10 @@ watch(
 )
 
 const editFolder = () => {
+  if (props.loadingState) {
+    return
+  }
+
   if (editingName.value.trim() === "") {
     toast.error(t("folder.invalid_name"))
     return

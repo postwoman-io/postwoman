@@ -35,7 +35,7 @@ export function getTransportOption(env, config): TransportType {
     console.log('Using advanced mailer configuration');
     return {
       host: env.INFRA.MAILER_SMTP_HOST ?? config.get('MAILER_SMTP_HOST'),
-      port: +env.INFRA.MAILER_SMTP_PORT ?? +config.get('MAILER_SMTP_PORT'),
+      port: +(env.INFRA.MAILER_SMTP_PORT ?? config.get('MAILER_SMTP_PORT')),
       secure:
         (env.INFRA.MAILER_SMTP_SECURE ?? config.get('MAILER_SMTP_SECURE')) ===
         'true',

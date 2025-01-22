@@ -21,10 +21,22 @@ module.exports = {
   ],
   rules: {
     semi: [2, "never"],
-    "prettier/prettier": ["warn", { semi: false }],
+    "prettier/prettier": ["warn", { semi: false, trailingComma: "es5" }],
     "import/no-named-as-default": "off",
     "no-undef": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        args: "all",
+        argsIgnorePattern: "^_",
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_",
+        destructuredArrayIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        ignoreRestSiblings: true,
+      },
+    ],
   },
 }

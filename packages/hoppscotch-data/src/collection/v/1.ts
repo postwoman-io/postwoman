@@ -26,9 +26,10 @@ type Output = z.output<typeof baseCollectionSchema> & {
   folders: Output[]
 }
 
-export const V1_SCHEMA: z.ZodType<Output, z.ZodTypeDef, Input> = baseCollectionSchema.extend({
-  folders: z.lazy(() => z.array(V1_SCHEMA)),
-})
+export const V1_SCHEMA: z.ZodType<Output, z.ZodTypeDef, Input> =
+  baseCollectionSchema.extend({
+    folders: z.lazy(() => z.array(V1_SCHEMA)),
+  })
 
 export default defineVersion({
   initial: true,

@@ -2,13 +2,13 @@ import { defineVersion } from "verzod"
 import { z } from "zod"
 import { HoppRESTAuthAWSSignature } from "./../../rest/v/7"
 import {
-  HoppGQLAuthAPIKey,
   HoppGQLAuthBasic,
   HoppGQLAuthBearer,
   HoppGQLAuthInherit,
   HoppGQLAuthNone,
 } from "./2"
 import { HoppGQLAuthOAuth2, V5_SCHEMA } from "./5"
+import { HoppGQLAuthAPIKey } from "./4"
 
 export { HoppRESTAuthOAuth2 as HoppGQLAuthOAuth2 } from "../../rest/v/7"
 

@@ -1,0 +1,43 @@
+{
+  "v": 3,
+  "name": "Digest Auth (failure state) - collection",
+  "folders": [],
+  "requests": [
+    {
+      "v": "8",
+      "id": "cm0dm70cw000687bnxi830zz7",
+      "auth": {
+        "authType": "digest",
+        "authActive": true,
+        "username": "<<username>>",
+        "password": "<<password>>",
+        "realm": "",
+        "nonce": "",
+        "algorithm": "MD5",
+        "qop": "auth",
+        "nc": "",
+        "cnonce": "",
+        "opaque": "",
+        "disableRetry": true
+      },
+      "body": {
+        "body": null,
+        "contentType": null
+      },
+      "name": "digest-auth-headers",
+      "method": "GET",
+      "params": [],
+      "headers": [],
+      "endpoint": "<<url>>",
+      "testScript": "pw.test(\"Status code is not 200\", ()=> { pw.expect(pw.response.status).not.toBe(200);}); \n pw.test(\"Receives the www-authenticate header\", ()=> { pw.expect(pw.response.headers['www-authenticate']).not.toBeType('string');});",
+      "preRequestScript": "",
+      "responses": {},
+      "requestVariables": []
+    }
+  ],
+  "auth": {
+    "authType": "inherit",
+    "authActive": true
+  },
+  "headers": []
+}

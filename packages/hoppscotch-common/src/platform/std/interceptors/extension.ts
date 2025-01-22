@@ -7,13 +7,13 @@ import {
   InterceptorError,
   RequestRunResult,
 } from "~/services/interceptor.service"
-import { cloneDeep } from "lodash-es"
 import { computed, readonly, ref } from "vue"
 import { browserIsChrome, browserIsFirefox } from "~/helpers/utils/userAgent"
 import SettingsExtension from "~/components/settings/Extension.vue"
 import InterceptorsExtensionSubtitle from "~/components/interceptors/ExtensionSubtitle.vue"
 import InterceptorsErrorPlaceholder from "~/components/interceptors/ErrorPlaceholder.vue"
 import { until } from "@vueuse/core"
+import { preProcessRequest } from "./helpers"
 
 export const defineSubscribableObject = <T extends object>(obj: T) => {
   const proxyObject = {
@@ -53,31 +53,6 @@ export const defineSubscribableObject = <T extends object>(obj: T) => {
 // TODO: Rework this to deal with individual requests rather than cancel all
 export const cancelRunningExtensionRequest = () => {
   window.__POSTWOMAN_EXTENSION_HOOK__?.cancelRequest()
-}
-
-const preProcessRequest = (req: AxiosRequestConfig): AxiosRequestConfig => {
-  const reqClone = cloneDeep(req)
-
-  // If the parameters are URLSearchParams, inject them to URL instead
-  // This prevents marshalling issues with structured cloning of URLSearchParams
-  if (reqClone.params instanceof URLSearchParams) {
-    try {
-      const url = new URL(reqClone.url ?? "")
-
-      for (const [key, value] of reqClone.params.entries()) {
-        url.searchParams.append(key, value)
-      }
-
-      reqClone.url = url.toString()
-    } catch (e) {
-      // making this a non-empty block, so we can make the linter happy.
-      // we should probably use, allowEmptyCatch, or take the time to do something with the caught errors :)
-    }
-
-    reqClone.params = {}
-  }
-
-  return reqClone
 }
 
 export type ExtensionStatus = "available" | "unknown-origin" | "waiting"

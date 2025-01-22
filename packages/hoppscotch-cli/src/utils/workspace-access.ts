@@ -3,6 +3,8 @@ import {
   Environment,
   EnvironmentSchemaVersion,
   HoppCollection,
+  HoppRESTAuth,
+  HoppRESTHeaders,
   HoppRESTRequest,
 } from "@hoppscotch/data";
 
@@ -34,6 +36,7 @@ interface WorkspaceRequest {
 
 /**
  * Transforms the incoming list of workspace requests by applying `JSON.parse` to the `request` field.
+ * It includes the `v` field indicating the schema version, but migration is handled already at the `parseCollectionData()` helper function.
  *
  * @param {WorkspaceRequest[]} requests - An array of workspace request objects to be transformed.
  * @returns {HoppRESTRequest[]} The transformed array of requests conforming to the `HoppRESTRequest` type.
@@ -65,6 +68,8 @@ export const transformWorkspaceEnvironment = (
     return variable;
   });
 
+  // The response doesn't include a way to infer the schema version, so it's set to the latest version
+  // Any relevant migrations have to be accounted here
   return {
     v: EnvironmentSchemaVersion,
     variables: transformedEnvVars,
@@ -84,10 +89,19 @@ export const transformWorkspaceCollections = (
   return collections.map((collection) => {
     const { id, title, data, requests, folders } = collection;
 
-    const parsedData = data ? JSON.parse(data) : {};
+    const parsedData: { auth?: HoppRESTAuth; headers?: HoppRESTHeaders } = data
+      ? JSON.parse(data)
+      : {};
+
     const { auth = { authType: "inherit", authActive: true }, headers = [] } =
       parsedData;
 
+    const migratedHeaders = headers.map((header) =>
+      header.description ? header : { ...header, description: "" }
+    );
+
+    // The response doesn't include a way to infer the schema version, so it's set to the latest version
+    // Any relevant migrations have to be accounted here
     return {
       v: CollectionSchemaVersion,
       id,
@@ -95,7 +109,7 @@ export const transformWorkspaceCollections = (
       folders: transformWorkspaceCollections(folders),
       requests: transformWorkspaceRequests(requests),
       auth,
-      headers,
+      headers: migratedHeaders,
     };
   });
 };

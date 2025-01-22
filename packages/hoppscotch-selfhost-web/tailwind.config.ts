@@ -11,6 +11,7 @@ export default {
         upperSecondaryStickyFold: "var(--upper-secondary-sticky-fold)",
         upperTertiaryStickyFold: "var(--upper-tertiary-sticky-fold)",
         upperFourthStickyFold: "var(--upper-fourth-sticky-fold)",
+        upperRunnerStickyFold: "var(--upper-runner-sticky-fold)",
         upperMobilePrimaryStickyFold: "var(--upper-mobile-primary-sticky-fold)",
         upperMobileSecondaryStickyFold:
           "var(--upper-mobile-secondary-sticky-fold)",

@@ -1,4 +1,6 @@
-import { authEvents$, def as platformAuth } from "@platform/auth/auth.platform"
+import * as E from "fp-ts/Either"
+import { entityReference } from "verzod"
+
 import {
   createEnvironment,
   deleteEnvironment,
@@ -9,13 +11,14 @@ import {
   setGlobalEnvVariables,
   updateEnvironment,
 } from "@hoppscotch/common/newstore/environments"
+import { authEvents$, def as platformAuth } from "@platform/auth/auth.platform"
 
-import { EnvironmentsPlatformDef } from "@hoppscotch/common/src/platform/environments"
 import { runGQLSubscription } from "@hoppscotch/common/helpers/backend/GQLClient"
+import { EnvironmentsPlatformDef } from "@hoppscotch/common/src/platform/environments"
 
 import { environnmentsSyncer } from "@platform/environments/environments.sync"
 
-import * as E from "fp-ts/Either"
+import { GlobalEnvironment } from "@hoppscotch/data"
 import { runDispatchWithOutSyncing } from "@lib/sync"
 import {
   createUserGlobalEnvironment,
@@ -99,8 +102,16 @@ async function loadGlobalEnvironments() {
     const globalEnv = res.right.me.globalEnvironments
 
     if (globalEnv) {
+      const globalEnvVariableEntries = JSON.parse(globalEnv.variables)
+
+      const result = entityReference(GlobalEnvironment).safeParse(
+        globalEnvVariableEntries
+      )
+
       runDispatchWithOutSyncing(() => {
-        setGlobalEnvVariables(JSON.parse(globalEnv.variables))
+        setGlobalEnvVariables(
+          result.success ? result.data : globalEnvVariableEntries
+        )
         setGlobalEnvID(globalEnv.id)
       })
     }

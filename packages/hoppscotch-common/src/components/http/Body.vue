@@ -35,6 +35,7 @@
                 @click="
                   () => {
                     body.contentType = null
+                    body.body = null
                     hide()
                   }
                 "
@@ -76,6 +77,7 @@
             </div>
           </template>
         </tippy>
+        <AppInspection :inspection-results="tabResults" />
         <HoppButtonSecondary
           v-tippy="{ theme: 'tooltip', allowHTML: true }"
           :title="t('request.override_help')"
@@ -106,6 +108,10 @@
       v-else-if="body.contentType === 'application/x-www-form-urlencoded'"
       v-model="body"
       :envs="envs"
+    />
+    <HttpBodyBinary
+      v-else-if="body.contentType === 'application/octet-stream'"
+      v-model="body"
     />
     <HttpRawBody v-else-if="body.contentType !== null" v-model="body" />
     <HoppSmartPlaceholder
@@ -144,6 +150,9 @@ import IconInfo from "~icons/lucide/info"
 import IconRefreshCW from "~icons/lucide/refresh-cw"
 import { RESTOptionTabs } from "./RequestOptions.vue"
 import { AggregateEnvironment } from "~/newstore/environments"
+import { useService } from "dioc/vue"
+import { RESTTabService } from "~/services/tab/rest"
+import { InspectionService } from "~/services/inspection"
 
 const colorMode = useColorMode()
 const t = useI18n()
@@ -195,4 +204,12 @@ const isContentTypeAlreadyExist = () => {
 
 // Template refs
 const tippyActions = ref<any | null>(null)
+
+const tabs = useService(RESTTabService)
+const inspectionService = useService(InspectionService)
+
+const tabResults = inspectionService.getResultViewFor(
+  tabs.currentTabID.value,
+  (result) => result.locations.type === "body-content-type-header"
+)
 </script>

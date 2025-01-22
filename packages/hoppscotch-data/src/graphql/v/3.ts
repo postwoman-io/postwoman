@@ -2,7 +2,7 @@ import { z } from "zod"
 
 import { defineVersion } from "verzod"
 
-import { HoppRESTAuthOAuth2 } from "../../rest"
+import { HoppRESTAuthOAuth2 } from "../../rest/v/3"
 import {
   HoppGQLAuthAPIKey,
   HoppGQLAuthBasic,
@@ -12,7 +12,7 @@ import {
   V2_SCHEMA,
 } from "./2"
 
-export { HoppRESTAuthOAuth2 as HoppGQLAuthOAuth2 } from "../../rest"
+export { HoppRESTAuthOAuth2 as HoppGQLAuthOAuth2 } from "../../rest/v/3"
 
 export type HoppGqlAuthOAuth2 = z.infer<typeof HoppRESTAuthOAuth2>
 

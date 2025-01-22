@@ -39,7 +39,9 @@
                 :active="item.key === authType"
                 @click="
                   () => {
-                    item.handler ? item.handler() : (auth.authType = item.key)
+                    item.handler
+                      ? item.handler()
+                      : (auth = { ...auth, authType: item.key } as HoppRESTAuth)
                     hide()
                   }
                 "
@@ -149,6 +151,9 @@
         <div v-if="auth.authType === 'aws-signature'">
           <HttpAuthorizationAWSSign v-model="auth" :envs="envs" />
         </div>
+        <div v-if="auth.authType === 'digest'">
+          <HttpAuthorizationDigest v-model="auth" :envs="envs" />
+        </div>
       </div>
       <div
         class="z-[9] sticky top-upperTertiaryStickyFold h-full min-w-[12rem] max-w-1/3 flex-shrink-0 overflow-auto overflow-x-auto bg-primary p-4"
@@ -184,7 +189,12 @@ import IconHelpCircle from "~icons/lucide/help-circle"
 import IconTrash2 from "~icons/lucide/trash-2"
 
 import { getDefaultAuthCodeOauthFlowParams } from "~/services/oauth/flows/authCode"
-import { HoppRESTAuth, HoppRESTAuthOAuth2 } from "@hoppscotch/data"
+import {
+  HoppRESTAuth,
+  HoppRESTAuthAWSSignature,
+  HoppRESTAuthDigest,
+  HoppRESTAuthOAuth2,
+} from "@hoppscotch/data"
 
 const t = useI18n()
 
@@ -236,14 +246,38 @@ const selectAPIKeyAuthType = () => {
 }
 
 const selectAWSSignatureAuthType = () => {
+  const {
+    accessKey = "",
+    secretKey = "",
+    region = "",
+    serviceName = "",
+    addTo = "HEADERS",
+  } = auth.value as HoppRESTAuthAWSSignature
+
   auth.value = {
     ...auth.value,
     authType: "aws-signature",
-    addTo: "HEADERS",
-    accessKey: "",
-    secretKey: "",
-    region: "",
-    serviceName: "",
+    addTo,
+    accessKey,
+    secretKey,
+    region,
+    serviceName,
+  }
+}
+
+const selectDigestAuthType = () => {
+  const {
+    username = "",
+    password = "",
+    algorithm = "MD5",
+  } = auth.value as HoppRESTAuthDigest
+
+  auth.value = {
+    ...auth.value,
+    authType: "digest",
+    username,
+    password,
+    algorithm,
   } as HoppRESTAuth
 }
 
@@ -259,6 +293,11 @@ const authTypes: AuthType[] = [
   {
     key: "basic",
     label: "Basic Auth",
+  },
+  {
+    key: "digest",
+    label: "Digest Auth",
+    handler: selectDigestAuthType,
   },
   {
     key: "bearer",

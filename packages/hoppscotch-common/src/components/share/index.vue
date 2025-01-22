@@ -507,6 +507,7 @@ const openRequestInNewTab = (request: HoppRESTRequest) => {
   restTab.createNewTab({
     isDirty: false,
     request,
+    type: "request",
   })
 }
 

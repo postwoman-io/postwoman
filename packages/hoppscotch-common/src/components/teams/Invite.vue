@@ -34,8 +34,9 @@
             <div
               v-for="(invitee, index) in successInvites"
               :key="`invitee-${index}`"
+              class="flex items-center"
             >
-              <p class="flex items-center">
+              <p class="flex items-center flex-1">
                 <component
                   :is="IconMailCheck"
                   class="svg-icons mr-4 text-green-500"
@@ -69,6 +70,7 @@
             <div
               v-for="(invitee, index) in failedInvites"
               :key="`invitee-${index}`"
+              class="flex flex-col"
             >
               <p class="flex items-center">
                 <component
@@ -77,7 +79,7 @@
                 />
                 <span class="truncate">{{ invitee.email }}</span>
               </p>
-              <p class="ml-8 mt-2 text-red-500">
+              <p class="ml-8 mt-1 text-secondaryLight text-tiny">
                 {{ getErrorMessage(invitee.error) }}
               </p>
             </div>
@@ -660,6 +662,8 @@ const getErrorMessage = (error: SendInvitesErrorType) => {
       return t("team.already_member")
     case "team_invite/member_has_invite":
       return t("team.member_has_invite")
+    case "user/not_found":
+      return t("team.user_not_found")
   }
 }
 

@@ -1,0 +1,249 @@
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Tag of the version to build
+        required: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-22.04, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout hoppscotch/hoppscotch
+      uses: actions/checkout@v3
+      with:
+        repository: hoppscotch/hoppscotch
+        ref: main
+        token: ${{ secrets.CHECKOUT_GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install Rust targets (Mac)
+      if: matrix.platform == 'macos-latest'
+      run: |
+        rustup target add aarch64-apple-darwin
+        rustup target add x86_64-apple-darwin
+
+    - name: Install additional tools (Linux)
+      if: matrix.platform == 'ubuntu-22.04'
+      run: |
+        # Install Tauri CLI (binary)
+        curl -LO "https://github.com/tauri-apps/tauri/releases/download/tauri-cli-v2.0.1/cargo-tauri-x86_64-unknown-linux-gnu.tgz"
+        tar -xzf cargo-tauri-x86_64-unknown-linux-gnu.tgz
+        chmod +x cargo-tauri
+        sudo mv cargo-tauri /usr/local/bin/tauri
+
+        # Install Trunk (binary)
+        curl -LO "https://github.com/thedodd/trunk/releases/download/v0.17.5/trunk-x86_64-unknown-linux-gnu.tar.gz"
+        tar -xzf trunk-x86_64-unknown-linux-gnu.tar.gz
+        chmod +x trunk
+        sudo mv trunk /usr/local/bin/
+
+    - name: Install additional tools (Mac)
+      if: matrix.platform == 'macos-latest'
+      run: |
+        # Install Tauri CLI (binary)
+        mkdir __dist/
+        cd __dist/
+        curl -LO "https://github.com/tauri-apps/tauri/releases/download/tauri-cli-v2.0.1/cargo-tauri-aarch64-apple-darwin.zip"
+        unzip cargo-tauri-aarch64-apple-darwin.zip
+        chmod +x cargo-tauri
+        sudo mv cargo-tauri /usr/local/bin/tauri
+
+    - name: Install system dependencies (Ubuntu only)
+      if: matrix.platform == 'ubuntu-22.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+    - name: Setting up Windows Environment and injecting before bundle command (Windows only)
+      if: matrix.platform == 'windows-latest'
+      shell: bash
+      env:
+        WINDOWS_SIGN_COMMAND: trusted-signing-cli -e ${{ secrets.AZURE_ENDPOINT }} -a ${{ secrets.AZURE_CODE_SIGNING_NAME }} -c ${{ secrets.AZURE_CERT_PROFILE_NAME }} %1
+      run: |
+        cd packages/hoppscotch-agent
+        # Inject signing command into main conf.
+        cat './src-tauri/tauri.conf.json' | jq '.bundle .windows += { "signCommand": env.WINDOWS_SIGN_COMMAND}' > './src-tauri/temp.json' && mv './src-tauri/temp.json' './src-tauri/tauri.conf.json'
+        # Inject signing command into portable conf.
+        cat './src-tauri/tauri.portable.conf.json' | jq '.bundle .windows += { "signCommand": env.WINDOWS_SIGN_COMMAND}' > './src-tauri/temp_portable.json' && mv './src-tauri/temp_portable.json' './src-tauri/tauri.portable.conf.json'
+        cargo install trusted-signing-cli@0.3.0
+
+    - name: Set platform-specific variables
+      run: |
+        if [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
+          echo "target_arch=$(rustc -Vv | grep host | awk '{print $2}')" >> $GITHUB_ENV
+          echo "target_ext=" >> $GITHUB_ENV
+          echo "target_os_name=linux" >> $GITHUB_ENV
+        elif [ "${{ matrix.platform }}" = "windows-latest" ]; then
+          echo "target_arch=x86_64-pc-windows-msvc" >> $GITHUB_ENV
+          echo "target_ext=.exe" >> $GITHUB_ENV
+          echo "target_os_name=win" >> $GITHUB_ENV
+        elif [ "${{ matrix.platform }}" = "macos-latest" ]; then
+          echo "target_os_name=mac" >> $GITHUB_ENV
+        fi
+
+    - name: Setup macOS code signing
+      if: matrix.platform == 'macos-latest'
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+        security create-keychain -p $KEYCHAIN_PASSWORD build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p $KEYCHAIN_PASSWORD build.keychain
+        security import certificate.p12 -k build.keychain -P $APPLE_CERTIFICATE_PASSWORD -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
+
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        cd packages/hoppscotch-agent
+        pnpm install --filter hoppscotch-agent
+
+    - name: Build Tauri app (Linux)
+      if: matrix.platform == 'ubuntu-22.04'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.AGENT_TAURI_SIGNING_PRIVATE_KEY }}
+        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.AGENT_TAURI_SIGNING_PASSWORD }}
+      run: |
+        cd packages/hoppscotch-agent
+        pnpm tauri build --verbose -b deb -b appimage -b updater
+
+    - name: Build Tauri app (Mac)
+      if: matrix.platform == 'macos-latest'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.AGENT_TAURI_SIGNING_PRIVATE_KEY }}
+        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.AGENT_TAURI_SIGNING_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      run: |
+        cd packages/hoppscotch-agent
+        pnpm tauri build --verbose --target x86_64-apple-darwin
+        pnpm tauri build --verbose --target aarch64-apple-darwin
+
+    - name: Build Tauri app (Windows)
+      if: matrix.platform == 'windows-latest'
+      shell: powershell
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.AGENT_TAURI_SIGNING_PRIVATE_KEY }}
+        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.AGENT_TAURI_SIGNING_PASSWORD }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      run: |
+        cd packages/hoppscotch-agent
+        # Build the portable version first and move it.
+        # This way the next build will regenerate `hoppscotch-agent.exe`.
+        pnpm tauri build --verbose --config src-tauri/tauri.portable.conf.json -- --no-default-features --features portable
+        Rename-Item -Path "src-tauri/target/release/hoppscotch-agent.exe" -NewName "hoppscotch-agent-portable.exe"
+
+        # Build the installer version.
+        pnpm tauri build --verbose -b msi -b updater
+
+    - name: Zip portable executable (Windows)
+      if: matrix.platform == 'windows-latest'
+      shell: powershell
+      run: |
+        Compress-Archive -Path "packages/hoppscotch-agent/src-tauri/target/release/hoppscotch-agent-portable.exe" -DestinationPath "packages/hoppscotch-agent/src-tauri/target/release/Hoppscotch_Agent_win_x64_portable.zip"
+
+    - name: Prepare artifacts
+      shell: bash
+      run: |
+        mkdir artifacts
+        mkdir artifacts/sigs
+        if [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
+          mv packages/hoppscotch-agent/src-tauri/target/release/bundle/appimage/*.AppImage artifacts/Hoppscotch_Agent_linux_x64.AppImage
+          mv packages/hoppscotch-agent/src-tauri/target/release/bundle/appimage/*.AppImage.sig artifacts/sigs/Hoppscotch_Agent_linux_x64.AppImage.sig
+          mv packages/hoppscotch-agent/src-tauri/target/release/bundle/deb/*.deb artifacts/Hoppscotch_Agent_linux_x64.deb
+        elif [ "${{ matrix.platform }}" = "macos-latest" ]; then
+          mv packages/hoppscotch-agent/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*_x64.dmg artifacts/Hoppscotch_Agent_mac_x64.dmg
+          mv packages/hoppscotch-agent/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz artifacts/Hoppscotch_Agent_mac_update_x64.tar.gz
+          mv packages/hoppscotch-agent/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz.sig artifacts/sigs/Hoppscotch_Agent_mac_update_x64.tar.gz.sig
+          mv packages/hoppscotch-agent/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*_aarch64.dmg artifacts/Hoppscotch_Agent_mac_aarch64.dmg
+          mv packages/hoppscotch-agent/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz artifacts/Hoppscotch_Agent_mac_update_aarch64.tar.gz
+          mv packages/hoppscotch-agent/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz.sig artifacts/sigs/Hoppscotch_Agent_mac_update_aarch64.tar.gz.sig
+        elif [ "${{ matrix.platform }}" = "windows-latest" ]; then
+          mv packages/hoppscotch-agent/src-tauri/target/release/bundle/msi/*_x64_en-US.msi artifacts/Hoppscotch_Agent_win_x64.msi
+          mv packages/hoppscotch-agent/src-tauri/target/release/bundle/msi/*_x64_en-US.msi.sig artifacts/sigs/Hoppscotch_Agent_win_x64.msi.sig
+          mv packages/hoppscotch-agent/src-tauri/target/release/Hoppscotch_Agent_win_x64_portable.zip artifacts/Hoppscotch_Agent_win_x64_portable.zip
+        fi
+
+    - name: Generate checksums (Linux)
+      if: matrix.platform == 'ubuntu-22.04'
+      run: |
+        cd artifacts
+        mkdir shas
+        for file in *; do
+          if [ -f "$file" ]; then
+            sha256sum "$file" > "shas/${file}.sha256"
+          fi
+        done
+
+    - name: Generate checksums (Mac)
+      if: matrix.platform == 'macos-latest'
+      run: |
+        cd artifacts
+        mkdir shas
+        for file in *; do
+          if [ -f "$file" ]; then
+            shasum -a 256 "$file" > "shas/${file}.sha256"
+          fi
+        done
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Hoppscotch_Agent-${{ matrix.platform }}
+        path: artifacts/*

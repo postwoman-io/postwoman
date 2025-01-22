@@ -69,6 +69,10 @@ watch(
 )
 
 const saveCollection = () => {
+  if (props.loadingState) {
+    return
+  }
+
   if (editingName.value.trim() === "") {
     toast.error(t("collection.invalid_name"))
     return

@@ -26,6 +26,11 @@ import { isHoppCLIError } from "./checks";
 import { arrayFlatMap, arraySort, tupleToRecord } from "./functions/array";
 import { getEffectiveFinalMetaData, getResolvedVariables } from "./getters";
 import { toFormData } from "./mutators";
+import {
+  DigestAuthParams,
+  fetchInitialDigestAuthInfo,
+  generateDigestAuthHeader,
+} from "./auth/digest";
 
 /**
  * Runs pre-request-script runner over given request which extracts set ENVs and
@@ -114,6 +119,15 @@ export async function getEffectiveRESTRequest(
     return _effectiveFinalParams;
   }
   const effectiveFinalParams = _effectiveFinalParams.right;
+
+  // Parsing final-body with applied ENVs.
+  const _effectiveFinalBody = getFinalBodyFromRequest(
+    request,
+    resolvedVariables
+  );
+  if (E.isLeft(_effectiveFinalBody)) {
+    return _effectiveFinalBody;
+  }
 
   // Authentication
   if (request.auth.authActive) {
@@ -232,17 +246,50 @@ export async function getEffectiveRESTRequest(
           });
         });
       }
+    } else if (request.auth.authType === "digest") {
+      const { method, endpoint } = request as HoppRESTRequest;
+
+      // Step 1: Fetch the initial auth info (nonce, realm, etc.)
+      const authInfo = await fetchInitialDigestAuthInfo(
+        parseTemplateString(endpoint, resolvedVariables),
+        method,
+        request.auth.disableRetry
+      );
+
+      // Step 2: Set up the parameters for the digest authentication header
+      const digestAuthParams: DigestAuthParams = {
+        username: parseTemplateString(request.auth.username, resolvedVariables),
+        password: parseTemplateString(request.auth.password, resolvedVariables),
+        realm: request.auth.realm
+          ? parseTemplateString(request.auth.realm, resolvedVariables)
+          : authInfo.realm,
+        nonce: request.auth.nonce
+          ? parseTemplateString(authInfo.nonce, resolvedVariables)
+          : authInfo.nonce,
+        endpoint: parseTemplateString(endpoint, resolvedVariables),
+        method,
+        algorithm: request.auth.algorithm ?? authInfo.algorithm,
+        qop: request.auth.qop
+          ? parseTemplateString(request.auth.qop, resolvedVariables)
+          : authInfo.qop,
+        opaque: request.auth.opaque
+          ? parseTemplateString(request.auth.opaque, resolvedVariables)
+          : authInfo.opaque,
+        reqBody: typeof request.body.body === "string" ? request.body.body : "",
+      };
+
+      // Step 3: Generate the Authorization header
+      const authHeaderValue = await generateDigestAuthHeader(digestAuthParams);
+
+      effectiveFinalHeaders.push({
+        active: true,
+        key: "Authorization",
+        value: authHeaderValue,
+        description: "",
+      });
     }
   }
 
-  // Parsing final-body with applied ENVs.
-  const _effectiveFinalBody = getFinalBodyFromRequest(
-    request,
-    resolvedVariables
-  );
-  if (E.isLeft(_effectiveFinalBody)) {
-    return _effectiveFinalBody;
-  }
   const effectiveFinalBody = _effectiveFinalBody.right;
 
   if (
@@ -313,7 +360,7 @@ export async function getEffectiveRESTRequest(
 function getFinalBodyFromRequest(
   request: HoppRESTRequest,
   resolvedVariables: EnvironmentVariable[]
-): E.Either<HoppCLIError, string | null | FormData> {
+): E.Either<HoppCLIError, string | null | FormData | File> {
   if (request.body.contentType === null) {
     return E.right(null);
   }
@@ -375,17 +422,33 @@ function getFinalBodyFromRequest(
           ? x.value.map((v) => ({
               key: parseTemplateString(x.key, resolvedVariables),
               value: v as string | Blob,
+              contentType: x.contentType,
             }))
           : [
               {
                 key: parseTemplateString(x.key, resolvedVariables),
                 value: parseTemplateString(x.value, resolvedVariables),
+                contentType: x.contentType,
               },
             ]
       ),
       toFormData,
       E.right
     );
+  }
+
+  if (request.body.contentType === "application/octet-stream") {
+    const body = request.body.body;
+
+    if (!body) {
+      return E.right(null);
+    }
+
+    if (!(body instanceof File)) {
+      return E.right(null);
+    }
+
+    return E.right(body);
   }
 
   return pipe(

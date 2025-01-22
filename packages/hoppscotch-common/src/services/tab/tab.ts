@@ -20,7 +20,10 @@ export abstract class TabService<Doc>
   extends Service
   implements TabServiceInterface<Doc>
 {
-  protected tabMap = reactive(new Map<string, HoppTab<Doc>>())
+  protected tabMap = reactive(new Map<string, HoppTab<Doc>>()) as Map<
+    string,
+    HoppTab<Doc>
+  > // TODO: The implicit cast is necessary as the reactive unwraps the inner types, creating weird type errors, this needs to be refactored and removed
   protected tabOrdering = ref<string[]>(["test"])
 
   public currentTabID = refWithControl("test", {

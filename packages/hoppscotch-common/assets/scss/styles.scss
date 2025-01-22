@@ -344,26 +344,44 @@ pre.ace_editor {
 
 .info-response {
   color: var(--status-info-color);
+  &.outlined {
+    border: 1px solid var(--status-info-color);
+  }
 }
 
 .success-response {
   color: var(--status-success-color);
+  &.outlined {
+    border: 1px solid var(--status-success-color);
+  }
 }
 
 .redirect-response {
   color: var(--status-redirect-color);
+  &.outlined {
+    border: 1px solid var(--status-redirect-color);
+  }
 }
 
 .critical-error-response {
   color: var(--status-critical-error-color);
+  &.outlined {
+    border: 1px solid var(--status-critical-error-color);
+  }
 }
 
 .server-error-response {
   color: var(--status-server-error-color);
+  &.outlined {
+    border: 1px solid var(--status-server-error-color);
+  }
 }
 
 .missing-data-response {
   color: var(--status-missing-data-color);
+  &.outlined {
+    border: 1px solid var(--status-missing-data-color);
+  }
 }
 
 .toasted-container {
@@ -560,9 +578,24 @@ details[open] summary .indicator {
   }
 }
 
-.env-highlight {
-  @apply text-accentContrast;
+.env-highlight,
+.predefined-variable-highlight {
+  // forcing the text colour to be white inside a higlighted environment variable and predefined variable
+  @apply text-accentContrast #{!important};
+  span {
+    @apply text-accentContrast #{!important};
+  }
 
+  // setting the text colour to be visible when it's selected and common item is highlighted
+  .cm-selectionMatch {
+    @apply text-secondaryDark #{!important};
+    span {
+      @apply text-secondaryDark #{!important};
+    }
+  }
+}
+
+.env-highlight {
   &.request-variable-highlight {
     @apply bg-amber-500;
     @apply hover:bg-amber-600;
@@ -581,6 +614,18 @@ details[open] summary .indicator {
   &.environment-not-found-highlight {
     @apply bg-red-500;
     @apply hover:bg-red-600;
+  }
+}
+
+.predefined-variable-highlight {
+  &.predefined-variable-valid {
+    @apply bg-yellow-500;
+    @apply hover:bg-yellow-600;
+  }
+
+  &.predefined-variable-invalid {
+    @apply hover:bg-red-300;
+    @apply bg-red-300;
   }
 }
 

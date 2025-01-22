@@ -43,5 +43,5 @@ export interface EffectiveHoppRESTRequest extends HoppRESTRequest {
     active: boolean;
     description: string;
   }[];
-  effectiveFinalBody: FormData | string | null;
+  effectiveFinalBody: FormData | string | File | null;
 }

@@ -2,7 +2,6 @@ import { ref } from "vue"
 import {
   createClient,
   TypedDocumentNode,
-  dedupExchange,
   OperationContext,
   fetchExchange,
   makeOperation,
@@ -69,7 +68,6 @@ const createSubscriptionClient = () => {
 const createHoppClient = () => {
   const exchanges = [
     // devtoolsExchange,
-    dedupExchange,
     authExchange(async (): Promise<AuthConfig> => {
       const probableUser = platform.auth.getProbableUser()
       if (probableUser !== null)

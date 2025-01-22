@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "name": "iteration-data-tests-coll",
+  "folders": [],
+  "requests": [
+    {
+      "v": "3",
+      "endpoint": "<<URL>>",
+      "name": "test1",
+      "params": [],
+      "headers": [],
+      "method": "POST",
+      "auth": { "authType": "none", "authActive": true },
+      "preRequestScript": "",
+      "testScript": "// Iteration data is prioritised over environment variables \n const { data, headers } = pw.response.body;\n  pw.expect(headers['host']).toBe('echo.hoppscotch.io')\n // Falls back to environment variables for missing entries in data export\n  pw.expect(data).toInclude('overriden-body-key-at-environment')\n  pw.expect(data).toInclude('body_value')",
+      "body": {
+        "contentType": "application/json",
+        "body": "{\n  \"<<BODY_KEY>>\":\"<<BODY_VALUE>>\"\n}"
+      },
+      "requestVariables": []
+    }
+  ]
+}

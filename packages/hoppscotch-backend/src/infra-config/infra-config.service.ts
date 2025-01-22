@@ -29,15 +29,18 @@ import {
   getEncryptionRequiredInfraConfigEntries,
   getMissingInfraConfigEntries,
   stopApp,
+  syncInfraConfigWithEnvFile,
 } from './helper';
 import { EnableAndDisableSSOArgs, InfraConfigArgs } from './input-args';
 import { AuthProvider } from 'src/auth/helper';
+import { PubSubService } from 'src/pubsub/pubsub.service';
 
 @Injectable()
 export class InfraConfigService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly pubsub: PubSubService,
   ) {}
 
   // Following fields are not updatable by `infraConfigs` Mutation. Use dedicated mutations for these fields instead.
@@ -47,6 +50,7 @@ export class InfraConfigService implements OnModuleInit {
     InfraConfigEnum.ANALYTICS_USER_ID,
     InfraConfigEnum.IS_FIRST_TIME_INFRA_SETUP,
     InfraConfigEnum.MAILER_SMTP_ENABLE,
+    InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
   ];
   // Following fields can not be fetched by `infraConfigs` Query. Use dedicated queries for these fields instead.
   EXCLUDE_FROM_FETCH_CONFIGS = [
@@ -65,8 +69,11 @@ export class InfraConfigService implements OnModuleInit {
    */
   async initializeInfraConfigTable() {
     try {
+      const defaultInfraConfigs = await getDefaultInfraConfigs();
+
       // Adding missing InfraConfigs to the database (with encrypted values)
-      const propsToInsert = await getMissingInfraConfigEntries();
+      const propsToInsert =
+        await getMissingInfraConfigEntries(defaultInfraConfigs);
 
       if (propsToInsert.length > 0) {
         await this.prisma.infraConfig.createMany({ data: propsToInsert });
@@ -74,7 +81,7 @@ export class InfraConfigService implements OnModuleInit {
 
       // Encrypting previous InfraConfigs that are required to be encrypted
       const encryptionRequiredEntries =
-        await getEncryptionRequiredInfraConfigEntries();
+        await getEncryptionRequiredInfraConfigEntries(defaultInfraConfigs);
 
       if (encryptionRequiredEntries.length > 0) {
         const dbOperations = encryptionRequiredEntries.map((dbConfig) => {
@@ -87,8 +94,25 @@ export class InfraConfigService implements OnModuleInit {
         await Promise.allSettled(dbOperations);
       }
 
+      // Sync the InfraConfigs with the .env file, if .env file updates later on
+      const envFileChangesRequired = await syncInfraConfigWithEnvFile();
+      if (envFileChangesRequired.length > 0) {
+        const dbOperations = envFileChangesRequired.map((dbConfig) => {
+          const { id, ...dataObj } = dbConfig;
+          return this.prisma.infraConfig.update({
+            where: { id: dbConfig.id },
+            data: dataObj,
+          });
+        });
+        await Promise.allSettled(dbOperations);
+      }
+
       // Restart the app if needed
-      if (propsToInsert.length > 0 || encryptionRequiredEntries.length > 0) {
+      if (
+        propsToInsert.length > 0 ||
+        encryptionRequiredEntries.length > 0 ||
+        envFileChangesRequired.length > 0
+      ) {
         stopApp();
       }
     } catch (error) {
@@ -111,6 +135,17 @@ export class InfraConfigService implements OnModuleInit {
    * @returns InfraConfig model
    */
   cast(dbInfraConfig: DBInfraConfig) {
+    switch (dbInfraConfig.name) {
+      case InfraConfigEnum.USER_HISTORY_STORE_ENABLED:
+        dbInfraConfig.value =
+          dbInfraConfig.value === 'true'
+            ? ServiceStatus.ENABLE
+            : ServiceStatus.DISABLE;
+        break;
+      default:
+        break;
+    }
+
     const plainValue = dbInfraConfig.isEncrypted
       ? decrypt(dbInfraConfig.value)
       : dbInfraConfig.value;
@@ -321,6 +356,11 @@ export class InfraConfigService implements OnModuleInit {
     );
     if (E.isLeft(isUpdated)) return E.left(isUpdated.left);
 
+    this.pubsub.publish(
+      `infra_config/${configName}/updated`,
+      isUpdated.right.value,
+    );
+
     return E.right(true);
   }
 
@@ -331,10 +371,10 @@ export class InfraConfigService implements OnModuleInit {
    * @returns Either true or an error
    */
   async enableAndDisableSSO(providerInfo: EnableAndDisableSSOArgs[]) {
-    const allowedAuthProviders = this.configService
-      .get<string>('INFRA.VITE_ALLOWED_AUTH_PROVIDERS')
-      .split(',');
+    const infra = await this.get(InfraConfigEnum.VITE_ALLOWED_AUTH_PROVIDERS);
+    if (E.isLeft(infra)) return E.left(infra.left);
 
+    const allowedAuthProviders = infra.right.value.split(',');
     let updatedAuthProviders = allowedAuthProviders;
 
     const infraConfigMap = await this.getInfraConfigsMap();
@@ -430,6 +470,19 @@ export class InfraConfigService implements OnModuleInit {
     return (
       this.configService.get<string>('INFRA.MAILER_SMTP_ENABLE') === 'true'
     );
+  }
+
+  /**
+   * Check if user history is enabled or not
+   * @returns InfraConfig model
+   */
+  async isUserHistoryEnabled() {
+    const infraConfig = await this.get(
+      InfraConfigEnum.USER_HISTORY_STORE_ENABLED,
+    );
+
+    if (E.isLeft(infraConfig)) return E.left(infraConfig.left);
+    return E.right(infraConfig.right);
   }
 
   /**

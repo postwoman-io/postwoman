@@ -1,0 +1,3 @@
+mutation ToggleUserHistoryStore($status: ServiceStatus!) {
+  toggleUserHistoryStore(status: $status)
+}

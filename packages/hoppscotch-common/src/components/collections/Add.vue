@@ -69,6 +69,10 @@ watch(
 )
 
 const addNewCollection = () => {
+  if (props.loadingState) {
+    return
+  }
+
   if (!editingName.value) {
     toast.error(t("collection.invalid_name"))
     return

@@ -58,6 +58,16 @@
       "update_failure": "Failed to update smtp configurations!!",
       "user": "MAILER USER"
     },
+    "history_configs": {
+      "description": "Disable or enable tracking history of sent requests from the Hoppscotch app",
+      "title": "History Configurations",
+      "enable_history": "Enable History",
+      "clear_history": "Clear existing history",
+      "clear_failure": "Failed to clear history!!",
+      "clear_success": "History cleared successfully.",
+      "toggle_failure": "Failed to toggle history!!",
+      "clear_confirm": "Are you sure you want to clear all history?"
+    },
     "reset": {
       "confirm_reset": "Hoppscotch server must restart to reflect the new changes. Confirm the reset of server configurations?",
       "description": "Default configurations will be loaded as specified in the environment file",
@@ -96,7 +106,7 @@
     "last_used_on": "Last used on",
     "no_expiration": "No expiration",
     "no_expiration_verbose": "This token will never expire!",
-    "section_description": "Manage your Hoppscotch users through APIs with Infra tokens",
+    "section_description": "Manage your Hoppscotch users through APIs with Infra tokens.",
     "section_title": "Infra Tokens",
     "tab_title": "Infra Tokens",
     "token_expires_on": "This token will expire on",
@@ -247,6 +257,11 @@
     "users_to_admin_success": "Selected users are elevated to admin status!!",
     "users_to_admin_failure": "Failed to elevate selected users to admin status!!"
   },
+  "support": {
+    "description": "Get help from the Hoppscotch community",
+    "documentation": "Documentation",
+    "more_info": "More Info"
+  },
   "teams": {
     "add_member": "Add Member",
     "add_members": "Add Members",
@@ -325,6 +340,7 @@
     "invalid_user": "Invalid User",
     "invite_load_list_error": "Unable to Load Invited Users List",
     "invite_user": "Invite User",
+    "invite_users_description": "Invite your team members to join Hoppscotch.",
     "invited_by": "Invited By",
     "invited_on": "Invited On",
     "invited_users": "Invited Users",
@@ -341,6 +357,7 @@
     "not_available": "Not Available",
     "not_found": "User not found",
     "pending_invites": "Pending Invites",
+    "pending_invites_description": "Manage and track pending user invitations with clear status and actions.",
     "remove_admin_privilege": "Remove Admin Privilege",
     "remove_admin_status": "Remove Admin Status",
     "rename": "Rename",

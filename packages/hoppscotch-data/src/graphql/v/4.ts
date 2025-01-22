@@ -2,7 +2,7 @@ import { z } from "zod"
 
 import { defineVersion } from "verzod"
 
-import { HoppRESTAuthOAuth2 } from "../../rest"
+import { HoppRESTAuthOAuth2 } from "../../rest/v/5"
 import {
   HoppGQLAuthAPIKey as HoppGQLAuthAPIKeyOld,
   HoppGQLAuthBasic,
@@ -12,7 +12,7 @@ import {
 } from "./2"
 import { V3_SCHEMA } from "./3"
 
-export { HoppRESTAuthOAuth2 as HoppGQLAuthOAuth2 } from "../../rest"
+export { HoppRESTAuthOAuth2 as HoppGQLAuthOAuth2 } from "../../rest/v/5"
 
 export const HoppGQLAuthAPIKey = HoppGQLAuthAPIKeyOld.extend({
   addTo: z.enum(["HEADERS", "QUERY_PARAMS"]).catch("HEADERS"),

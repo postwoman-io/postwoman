@@ -19,9 +19,9 @@
   },
   "exports": {
     ".": {
+      "type": "./dist/index.d.ts",
       "import": "./dist/hoppscotch-data.js",
-      "require": "./dist/hoppscotch-data.cjs",
-      "type": "./dist/index.d.ts"
+      "require": "./dist/hoppscotch-data.cjs"
     }
   },
   "repository": {
@@ -35,16 +35,18 @@
   },
   "homepage": "https://github.com/hoppscotch/hoppscotch#readme",
   "devDependencies": {
-    "@types/lodash": "4.14.200",
-    "typescript": "5.2.2",
-    "vite": "4.5.0"
+    "@types/lodash": "4.17.10",
+    "@types/uuid": "10.0.0",
+    "typescript": "5.6.3",
+    "vite": "5.4.9"
   },
   "dependencies": {
-    "fp-ts": "2.16.1",
-    "io-ts": "2.2.20",
+    "fp-ts": "2.16.9",
+    "io-ts": "2.2.21",
     "lodash": "4.17.21",
     "parser-ts": "0.7.0",
-    "verzod": "0.2.2",
-    "zod": "3.22.4"
+    "uuid": "10.0.0",
+    "verzod": "0.2.4",
+    "zod": "3.23.8"
   }
 }

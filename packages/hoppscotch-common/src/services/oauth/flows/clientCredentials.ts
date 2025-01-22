@@ -9,6 +9,7 @@ import * as E from "fp-ts/Either"
 import { InterceptorService } from "~/services/interceptor.service"
 import { useToast } from "~/composables/toast"
 import { ClientCredentialsGrantTypeParams } from "@hoppscotch/data"
+import { AxiosRequestConfig } from "axios"
 
 const interceptorService = getService(InterceptorService)
 
@@ -18,13 +19,13 @@ const ClientCredentialsFlowParamsSchema = ClientCredentialsGrantTypeParams.pick(
     clientID: true,
     clientSecret: true,
     scopes: true,
+    clientAuthentication: true,
   }
 ).refine(
   (params) => {
     return (
       params.authEndpoint.length >= 1 &&
       params.clientID.length >= 1 &&
-      params.clientSecret.length >= 1 &&
       (!params.scopes || params.scopes.length >= 1)
     )
   },
@@ -43,34 +44,20 @@ export const getDefaultClientCredentialsFlowParams =
     clientID: "",
     clientSecret: "",
     scopes: undefined,
+    clientAuthentication: "IN_BODY",
   })
 
-const initClientCredentialsOAuthFlow = async ({
-  clientID,
-  clientSecret,
-  scopes,
-  authEndpoint,
-}: ClientCredentialsFlowParams) => {
+const initClientCredentialsOAuthFlow = async (
+  payload: ClientCredentialsFlowParams
+) => {
   const toast = useToast()
 
-  const formData = new URLSearchParams()
-  formData.append("grant_type", "client_credentials")
-  formData.append("client_id", clientID)
-  formData.append("client_secret", clientSecret)
+  const requestPayload =
+    payload.clientAuthentication === "AS_BASIC_AUTH_HEADERS"
+      ? getPayloadForViaBasicAuthHeader(payload)
+      : getPayloadForViaBody(payload)
 
-  if (scopes) {
-    formData.append("scope", scopes)
-  }
-
-  const { response } = interceptorService.runRequest({
-    url: authEndpoint,
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    data: formData.toString(),
-  })
+  const { response } = interceptorService.runRequest(requestPayload)
 
   const res = await response
 
@@ -181,3 +168,58 @@ export default createFlowConfig(
   initClientCredentialsOAuthFlow,
   handleRedirectForAuthCodeOauthFlow
 )
+
+const getPayloadForViaBasicAuthHeader = (
+  payload: Omit<ClientCredentialsFlowParams, "clientAuthentication">
+): AxiosRequestConfig => {
+  const { clientID, clientSecret, scopes, authEndpoint } = payload
+
+  const basicAuthToken = btoa(`${clientID}:${clientSecret}`)
+
+  const formData = new URLSearchParams()
+
+  formData.append("grant_type", "client_credentials")
+
+  if (scopes) {
+    formData.append("scope", scopes)
+  }
+
+  return {
+    method: "POST",
+    url: authEndpoint,
+    headers: {
+      Authorization: `Basic ${basicAuthToken}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    data: formData.toString(),
+  }
+}
+
+const getPayloadForViaBody = (
+  payload: Omit<ClientCredentialsFlowParams, "clientAuthentication">
+) => {
+  const { clientID, clientSecret, scopes, authEndpoint } = payload
+
+  const formData = new URLSearchParams()
+  formData.append("grant_type", "client_credentials")
+  formData.append("client_id", clientID)
+
+  if (clientSecret) {
+    formData.append("client_secret", clientSecret)
+  }
+
+  if (scopes) {
+    formData.append("scope", scopes)
+  }
+
+  return {
+    method: "POST",
+    url: authEndpoint,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    data: formData.toString(),
+  }
+}

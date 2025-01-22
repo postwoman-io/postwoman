@@ -56,6 +56,9 @@ import { useI18n } from '../composables/i18n';
 const t = useI18n();
 
 // Get Metrics Data
-const { fetching, error, data } = useQuery({ query: MetricsDocument });
+const { fetching, error, data } = useQuery({
+  query: MetricsDocument,
+  variables: {},
+});
 const metrics = computed(() => data?.value?.infra);
 </script>

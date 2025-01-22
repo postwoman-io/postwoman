@@ -231,7 +231,7 @@ const showImportFailedError = () => {
   toast.error(t("import.failed"))
 }
 
-const handleImportToStore = async (gqlCollections: HoppCollection[]) => {
+const handleImportToStore = (gqlCollections: HoppCollection[]) => {
   appendGraphqlCollections(gqlCollections)
   toast.success(t("state.file_imported"))
 }

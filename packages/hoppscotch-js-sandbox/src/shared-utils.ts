@@ -43,10 +43,8 @@ const setEnv = (
       selectedEnv.value = envValue
     }
   } else if (indexInGlobal >= 0) {
-    if ("value" in global[indexInGlobal]) {
-      // eslint-disable-next-line @typescript-eslint/no-extra-semi
-      ;(global[indexInGlobal] as { value: string }).value = envValue
-    }
+    if ("value" in global[indexInGlobal])
+      (global[indexInGlobal] as { value: string }).value = envValue
   } else {
     selected.push({
       key: envName,
@@ -219,14 +217,14 @@ export function preventCyclicObjects(
 
   try {
     jsonString = JSON.stringify(obj)
-  } catch (e) {
+  } catch (_) {
     return E.left("Stringification failed")
   }
 
   try {
     const parsedJson = JSON.parse(jsonString)
     return E.right(parsedJson)
-  } catch (err) {
+  } catch (_) {
     return E.left("Parsing failed")
   }
 }

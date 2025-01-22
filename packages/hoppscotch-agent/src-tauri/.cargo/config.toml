@@ -1,0 +1,25 @@
+# Enable static linking for C runtime library on Windows.
+#
+# Rust uses the msvc toolchain on Windows,
+# which by default dynamically links the C runtime (CRT) to the binary.
+#
+# This creates a runtime dependency on the Visual C++ Redistributable (`vcredist`),
+# meaning the target machine must have `vcredist` installed for the application to run.
+#
+# Since `portable` version doesn't have an installer,
+# we can't rely on it to install dependencies, so this config.
+#
+# Basically:
+# - The `+crt-static` flag instructs the Rust compiler to statically link the C runtime for Windows builds.\
+# - To avoids runtime errors related to missing `vcredist` installations.
+# - Results in a larger binary size because the runtime is bundled directly into the executable.
+#
+# For MSVC targets specifically, it will compile code with `/MT` or static linkage.
+# See: - RFC 1721: https://rust-lang.github.io/rfcs/1721-crt-static.html
+# - Rust Reference - Runtime: https://doc.rust-lang.org/reference/runtime.html
+# - MSVC Linking Options: https://docs.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library
+# - Rust Issue #37406: https://github.com/rust-lang/rust/issues/37406
+# - Tauri Issue #3048: https://github.com/tauri-apps/tauri/issues/3048
+# - Rust Linkage: https://doc.rust-lang.org/reference/linkage.html
+[target.'cfg(windows)']
+rustflags = ["-C", "target-feature=+crt-static"]

@@ -14,6 +14,12 @@ RUN pnpm fetch
 COPY . .
 RUN pnpm install -f --offline
 
+RUN npm uninstall -g cross-spawn && \
+    npm cache clean --force && \
+    # Remove any remaining old versions
+    find /usr/local/lib/node_modules -name "cross-spawn" -type d -exec rm -rf {} + && \
+    # Install cross-spawn v7 globally
+    npm install -g cross-spawn@^7.0.6 --force
 
 FROM base_builder AS backend_builder
 WORKDIR /usr/src/app/packages/hoppscotch-backend
@@ -26,6 +32,13 @@ RUN pnpm exec prisma generate
 FROM node:20-alpine3.19 AS backend
 RUN apk add caddy
 RUN npm install -g pnpm
+
+RUN npm uninstall -g cross-spawn && \
+    npm cache clean --force && \
+    # Remove any remaining old versions
+    find /usr/local/lib/node_modules -name "cross-spawn" -type d -exec rm -rf {} + && \
+    # Install cross-spawn v7 globally
+    npm install -g cross-spawn@^7.0.6 --force
 
 COPY --from=base_builder  /usr/src/app/packages/hoppscotch-backend/backend.Caddyfile /etc/caddy/backend.Caddyfile
 COPY --from=backend_builder /dist/backend /dist/backend
@@ -106,6 +119,12 @@ RUN apk add caddy
 RUN apk add tini curl
 
 RUN npm install -g pnpm
+RUN npm uninstall -g cross-spawn && \
+    npm cache clean --force && \
+    # Remove any remaining old versions
+    find /usr/local/lib/node_modules -name "cross-spawn" -type d -exec rm -rf {} + && \
+    # Install cross-spawn v7 globally
+    npm install -g cross-spawn@^7.0.6 --force
 
 # Copy necessary files
 # Backend files
@@ -130,6 +149,8 @@ HEALTHCHECK --interval=2s CMD /bin/sh /healthcheck.sh
 WORKDIR /dist/backend
 
 CMD ["node", "/usr/src/app/aio_run.mjs"]
+
+# NOTE: Although these ports are exposed, the HOPP_ALTERNATE_AIO_PORT variable can be used to assign a user-specified port
 EXPOSE 3170
 EXPOSE 3000
 EXPOSE 3100

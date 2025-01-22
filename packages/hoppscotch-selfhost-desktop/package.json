@@ -1,7 +1,7 @@
 {
   "name": "@hoppscotch/selfhost-desktop",
   "private": true,
-  "version": "2024.8.3",
+  "version": "2024.12.1",
   "type": "module",
   "scripts": {
     "dev:vite": "vite",
@@ -36,7 +36,7 @@
     "tauri": "link:@tauri-apps/api/tauri",
     "tauri-plugin-store-api": "0.0.0",
     "util": "0.12.5",
-    "verzod": "0.2.2",
+    "verzod": "0.2.4",
     "vue": "3.3.9",
     "workbox-window": "6.6.0",
     "zod": "3.22.4"

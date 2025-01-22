@@ -12,7 +12,7 @@ import {
 
 import { v2_baseCollectionSchema, V2_SCHEMA } from "./2"
 
-const v3_baseCollectionSchema = v2_baseCollectionSchema.extend({
+export const v3_baseCollectionSchema = v2_baseCollectionSchema.extend({
   v: z.literal(3),
 
   // AWS Signature Authorization type addition

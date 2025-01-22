@@ -38,7 +38,10 @@ export function getSuitableLenses(response: HoppRESTResponse): Lens[] {
   )
     return []
 
-  const contentType = response.headers.find((h) => h.key === "content-type")
+  // Lowercase the content-type key because HTTP Headers are case-insensitive by spec
+  const contentType = response.headers.find(
+    (h) => h.key.toLowerCase() === "content-type"
+  )
 
   if (!contentType) return [rawLens]
 

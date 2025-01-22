@@ -117,9 +117,8 @@ export class AdminResolver {
     })
     userUIDs: string[],
   ): Promise<UserDeletionResult[]> {
-    const deletionResults = await this.adminService.removeUserAccounts(
-      userUIDs,
-    );
+    const deletionResults =
+      await this.adminService.removeUserAccounts(userUIDs);
     if (E.isLeft(deletionResults)) throwErr(deletionResults.left);
     return deletionResults.right;
   }
@@ -357,6 +356,16 @@ export class AdminResolver {
   ): Promise<boolean> {
     const res = await this.adminService.deleteShortcode(code);
     if (E.isLeft(res)) throwErr(res.left);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Revoke all User History',
+  })
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async revokeAllUserHistoryByAdmin(): Promise<boolean> {
+    const isDeleted = await this.adminService.deleteAllUserHistory();
+    if (E.isLeft(isDeleted)) throwErr(isDeleted.left);
     return true;
   }
 

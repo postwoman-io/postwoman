@@ -77,7 +77,7 @@ watch(props.response, () => {
   imageSource.value = ""
   const buf = props.response.body
   const bytes = new Uint8Array(buf)
-  const blob = new Blob([bytes.buffer])
+  const blob = new Blob([bytes.buffer], { type: responseType.value })
 
   const reader = new FileReader()
   reader.onload = ({ target }) => {
@@ -91,7 +91,7 @@ onMounted(() => {
   imageSource.value = ""
   const buf = props.response.body
   const bytes = new Uint8Array(buf)
-  const blob = new Blob([bytes.buffer])
+  const blob = new Blob([bytes.buffer], { type: responseType.value })
 
   const reader = new FileReader()
   reader.onload = ({ target }) => {

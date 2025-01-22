@@ -6,6 +6,8 @@ import {
   HoppRESTAuth,
   HoppRESTRequest,
   HoppRESTHeaders,
+  HoppRESTRequestResponse,
+  HoppCollection,
 } from "@hoppscotch/data"
 import { entityReference } from "verzod"
 import { z } from "zod"
@@ -25,6 +27,8 @@ const ThemeColorSchema = z.enum([
 
 const BgColorSchema = z.enum(["system", "light", "dark", "black"])
 
+const EncodeMode = z.enum(["enable", "disable", "auto"])
+
 const SettingsDefSchema = z.object({
   syncCollections: z.boolean(),
   syncHistory: z.boolean(),
@@ -40,6 +44,7 @@ const SettingsDefSchema = z.object({
   }),
   THEME_COLOR: ThemeColorSchema,
   BG_COLOR: BgColorSchema,
+  ENCODE_MODE: EncodeMode.catch("enable"),
   TELEMETRY_ENABLED: z.boolean(),
   EXPAND_NAVIGATION: z.boolean(),
   SIDEBAR: z.boolean(),
@@ -64,43 +69,25 @@ const SettingsDefSchema = z.object({
       importCurl: z.boolean().catch(true),
       codeGen: z.boolean().catch(true),
       cookie: z.boolean().catch(true),
+      multipartFormdata: z.boolean().catch(true),
     })
   ),
 
   HAS_OPENED_SPOTLIGHT: z.optional(z.boolean()),
   ENABLE_AI_EXPERIMENTS: z.optional(z.boolean()),
+  AI_REQUEST_NAMING_STYLE: z
+    .string()
+    .optional()
+    .catch("DESCRIPTIVE_WITH_SPACES"),
 })
-
-// Common properties shared across REST & GQL collections
-const HoppCollectionSchemaCommonProps = z
-  .object({
-    v: z.number(),
-    name: z.string(),
-    id: z.optional(z.string()),
-  })
-  .strict()
 
 const HoppRESTRequestSchema = entityReference(HoppRESTRequest)
 
 const HoppGQLRequestSchema = entityReference(HoppGQLRequest)
 
-// @ts-expect-error recursive schema
-const HoppRESTCollectionSchema = HoppCollectionSchemaCommonProps.extend({
-  folders: z.array(z.lazy(() => HoppRESTCollectionSchema)),
-  requests: z.optional(z.array(HoppRESTRequestSchema)),
+const HoppRESTCollectionSchema = entityReference(HoppCollection)
 
-  auth: z.optional(HoppRESTAuth),
-  headers: z.optional(HoppRESTHeaders),
-}).strict()
-
-// @ts-expect-error recursive schema
-const HoppGQLCollectionSchema = HoppCollectionSchemaCommonProps.extend({
-  folders: z.array(z.lazy(() => HoppGQLCollectionSchema)),
-  requests: z.optional(z.array(HoppGQLRequestSchema)),
-
-  auth: z.optional(HoppGQLAuth),
-  headers: z.optional(z.array(GQLHeader)),
-}).strict()
+const HoppGQLCollectionSchema = entityReference(HoppCollection)
 
 export const VUEX_SCHEMA = z.object({
   postwoman: z.optional(
@@ -249,8 +236,6 @@ const EnvironmentVariablesSchema = z.union([
   }),
 ])
 
-export const GLOBAL_ENV_SCHEMA = z.array(EnvironmentVariablesSchema)
-
 const OperationTypeSchema = z.enum([
   "subscription",
   "query",
@@ -277,8 +262,7 @@ const HoppGQLSaveContextSchema = z.nullable(
       .object({
         originLocation: z.literal("user-collection"),
         folderPath: z.string(),
-        // TODO: Investigate why this field is not populated at times
-        requestIndex: z.optional(z.number()),
+        requestIndex: z.number(),
       })
       .strict(),
     z
@@ -499,6 +483,7 @@ const HoppRESTSaveContextSchema = z.nullable(
         originLocation: z.literal("user-collection"),
         folderPath: z.string(),
         requestIndex: z.number(),
+        exampleID: z.optional(z.string()),
       })
       .strict(),
     z
@@ -507,6 +492,7 @@ const HoppRESTSaveContextSchema = z.nullable(
         requestID: z.string(),
         teamID: z.optional(z.string()),
         collectionID: z.optional(z.string()),
+        exampleID: z.optional(z.string()),
       })
       .strict(),
   ])
@@ -528,10 +514,39 @@ export const REST_TAB_STATE_SCHEMA = z
     orderedDocs: z.array(
       z.object({
         tabID: z.string(),
-        doc: z
-          .object({
+        doc: z.union([
+          z.object({
+            type: z.literal("test-runner").catch("test-runner"),
+            config: z.object({
+              delay: z.number(),
+              iterations: z.number(),
+              keepVariableValues: z.boolean(),
+              persistResponses: z.boolean(),
+              stopOnError: z.boolean(),
+            }),
+            status: z.enum(["idle", "running", "stopped", "error"]),
+            collection: HoppRESTCollectionSchema,
+            collectionType: z.enum(["my-collections", "team-collections"]),
+            collectionID: z.optional(z.string()),
+            resultCollection: z.optional(HoppRESTCollectionSchema),
+            testRunnerMeta: z.object({
+              totalRequests: z.number(),
+              completedRequests: z.number(),
+              totalTests: z.number(),
+              passedTests: z.number(),
+              failedTests: z.number(),
+              totalTime: z.number(),
+            }),
+            request: z.nullable(entityReference(HoppRESTRequest)),
+            response: z.nullable(HoppRESTResponseSchema),
+            testResults: z.optional(z.nullable(HoppTestResultSchema)),
+            isDirty: z.boolean(),
+            inheritedProperties: z.optional(HoppInheritedPropertySchema),
+          }),
+          z.object({
             // !Versioned entity
             request: entityReference(HoppRESTRequest),
+            type: z.literal("request").catch("request"),
             isDirty: z.boolean(),
             saveContext: z.optional(HoppRESTSaveContextSchema),
             response: z.optional(z.nullable(HoppRESTResponseSchema)),
@@ -540,8 +555,14 @@ export const REST_TAB_STATE_SCHEMA = z
             optionTabPreference: z.optional(z.enum(validRestOperations)),
             inheritedProperties: z.optional(HoppInheritedPropertySchema),
             cancelFunction: z.optional(z.function()),
-          })
-          .strict(),
+          }),
+          z.object({
+            type: z.literal("example-response").catch("example-response"),
+            response: HoppRESTRequestResponse,
+            saveContext: z.optional(HoppRESTSaveContextSchema),
+            isDirty: z.boolean(),
+          }),
+        ]),
       })
     ),
   })

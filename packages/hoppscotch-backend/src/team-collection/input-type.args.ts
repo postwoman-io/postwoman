@@ -47,14 +47,12 @@ export class RenameTeamCollectionArgs {
   @Field(() => ID, {
     name: 'collectionID',
     description: 'ID of the collection',
-    deprecationReason: 'Switch to updateTeamCollection mutation instead',
   })
   collectionID: string;
 
   @Field({
     name: 'newTitle',
     description: 'The updated title of the collection',
-    deprecationReason: 'Switch to updateTeamCollection mutation instead',
   })
   newTitle: string;
 }

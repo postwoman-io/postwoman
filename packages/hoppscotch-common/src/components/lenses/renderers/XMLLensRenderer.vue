@@ -25,6 +25,22 @@
           @click="downloadResponse"
         />
         <HoppButtonSecondary
+          v-if="response.body && !isEditable"
+          v-tippy="{ theme: 'tooltip', allowHTML: true }"
+          :title="
+            isSavable
+              ? `${t(
+                  'action.save_as_example'
+                )} <kbd>${getSpecialKey()}</kbd><kbd>E</kbd>`
+              : t('response.please_save_request')
+          "
+          :icon="IconSave"
+          :class="{
+            'opacity-75 cursor-not-allowed select-none': !isSavable,
+          }"
+          @click="isSavable ? saveAsExample() : null"
+        />
+        <HoppButtonSecondary
           v-if="response.body"
           v-tippy="{ theme: 'tooltip', allowHTML: true }"
           :title="`${t(
@@ -43,6 +59,7 @@
 
 <script setup lang="ts">
 import IconWrapText from "~icons/lucide/wrap-text"
+import IconSave from "~icons/lucide/save"
 import { computed, ref, reactive } from "vue"
 import { flow, pipe } from "fp-ts/function"
 import * as S from "fp-ts/string"
@@ -62,36 +79,67 @@ import { getPlatformSpecialKey as getSpecialKey } from "~/helpers/platformutils"
 import { objFieldMatches } from "~/helpers/functional/object"
 import { useNestedSetting } from "~/composables/settings"
 import { toggleNestedSetting } from "~/newstore/settings"
+import { HoppRESTRequestResponse } from "@hoppscotch/data"
 
 const t = useI18n()
 
 const props = defineProps<{
-  response: HoppRESTResponse & { type: "success" | "fail" }
+  response:
+    | (HoppRESTResponse & { type: "success" | "fail" })
+    | HoppRESTRequestResponse
+  isEditable: boolean
+  isSavable: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: "save-as-example"): void
 }>()
 
 const { responseBodyText } = useResponseBody(props.response)
 
-const responseType = computed(() =>
-  pipe(
-    props.response,
-    O.fromPredicate(objFieldMatches("type", ["fail", "success"] as const)),
-    O.chain(
-      // Try getting content-type
-      flow(
-        (res) => res.headers,
-        A.findFirst((h) => h.key.toLowerCase() === "content-type"),
-        O.map(flow((h) => h.value, S.split(";"), RNEA.head, S.toLowerCase))
-      )
-    ),
-    O.getOrElse(() => "text/plain")
+const isHttpResponse = computed(() => {
+  return (
+    "type" in props.response &&
+    (props.response.type === "success" || props.response.type === "fail")
   )
-)
+})
+
+const responseType = computed(() => {
+  if (isHttpResponse.value) {
+    return pipe(
+      props.response,
+      O.fromPredicate(objFieldMatches("type", ["fail", "success"] as const)),
+      O.chain(
+        // Try getting content-type
+        flow(
+          (res) => res.headers,
+          A.findFirst((h) => h.key.toLowerCase() === "content-type"),
+          O.map(flow((h) => h.value, S.split(";"), RNEA.head, S.toLowerCase))
+        )
+      ),
+      O.getOrElse(() => "text/plain")
+    )
+  }
+
+  return "text/plain"
+})
+
+const responseName = computed(() => {
+  if ("type" in props.response) {
+    if (props.response.type === "success") {
+      return props.response.req.name
+    }
+    return "Untitled"
+  }
+
+  return props.response.name
+})
 
 const { downloadIcon, downloadResponse } = useDownloadResponse(
   responseType.value,
   responseBodyText,
   t("filename.lens", {
-    request_name: props.response.req.name,
+    request_name: responseName.value,
   })
 )
 
@@ -100,13 +148,17 @@ const { copyIcon, copyResponse } = useCopyResponse(responseBodyText)
 const xmlResponse = ref<any | null>(null)
 const WRAP_LINES = useNestedSetting("WRAP_LINES", "httpResponseBody")
 
+const saveAsExample = () => {
+  emit("save-as-example")
+}
+
 useCodemirror(
   xmlResponse,
   responseBodyText,
   reactive({
     extendedEditorConfig: {
       mode: "application/xml",
-      readOnly: true,
+      readOnly: !props.isEditable,
       lineWrapping: WRAP_LINES,
     },
     linter: null,
@@ -117,4 +169,7 @@ useCodemirror(
 
 defineActionHandler("response.file.download", () => downloadResponse())
 defineActionHandler("response.copy", () => copyResponse())
+defineActionHandler("response.save-as-example", () => {
+  props.isSavable ? saveAsExample() : null
+})
 </script>

@@ -9,7 +9,11 @@ import {
   settingsStore,
 } from "@hoppscotch/common/newstore/settings"
 
-import { HoppCollection, HoppRESTRequest } from "@hoppscotch/data"
+import {
+  generateUniqueRefId,
+  HoppCollection,
+  HoppRESTRequest,
+} from "@hoppscotch/data"
 
 import { getSyncInitFunction, StoreSyncDefinitionOf } from "../../lib/sync"
 import { createMapper } from "../../lib/sync/mapper"
@@ -53,6 +57,7 @@ const recursivelySyncCollections = async (
         authActive: true,
       },
       headers: collection.headers ?? [],
+      _ref_id: collection._ref_id,
     }
     const res = await createRESTRootUserCollection(
       collection.name,
@@ -69,9 +74,11 @@ const recursivelySyncCollections = async (
               authActive: true,
             },
             headers: [],
+            _ref_id: generateUniqueRefId("coll"),
           }
 
       collection.id = parentCollectionID
+      collection._ref_id = returnedData._ref_id ?? generateUniqueRefId("coll")
       collection.auth = returnedData.auth
       collection.headers = returnedData.headers
       removeDuplicateRESTCollectionOrFolder(parentCollectionID, collectionPath)
@@ -86,6 +93,7 @@ const recursivelySyncCollections = async (
         authActive: true,
       },
       headers: collection.headers ?? [],
+      _ref_id: collection._ref_id,
     }
 
     const res = await createRESTChildUserCollection(
@@ -105,9 +113,11 @@ const recursivelySyncCollections = async (
               authActive: true,
             },
             headers: [],
+            _ref_id: generateUniqueRefId("coll"),
           }
 
       collection.id = childCollectionId
+      collection._ref_id = returnedData._ref_id ?? generateUniqueRefId("coll")
       collection.auth = returnedData.auth
       collection.headers = returnedData.headers
 

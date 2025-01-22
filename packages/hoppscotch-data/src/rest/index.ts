@@ -12,39 +12,53 @@ import V2_VERSION, { HoppRESTRequestVariables } from "./v/2"
 import V3_VERSION from "./v/3"
 import V4_VERSION from "./v/4"
 import V5_VERSION from "./v/5"
-import V6_VERSION, { HoppRESTReqBody } from "./v/6"
-import V7_VERSION, { HoppRESTAuth } from "./v/7"
-
-import { HoppRESTParams, HoppRESTHeaders } from "./v/7"
+import V6_VERSION from "./v/6"
+import V7_VERSION, { HoppRESTHeaders, HoppRESTParams } from "./v/7"
+import V8_VERSION from "./v/8"
+import V9_VERSION from "./v/9"
+import V10_VERSION, { HoppRESTReqBody } from "./v/10"
+import V11_VERSION, { HoppRESTAuth, HoppRESTRequestResponses } from "./v/11"
 
 export * from "./content-types"
 
 export {
-  FormDataKeyValue,
   HoppRESTAuthBasic,
   HoppRESTAuthBearer,
   HoppRESTAuthInherit,
   HoppRESTAuthNone,
-  HoppRESTReqBodyFormData,
 } from "./v/1"
-export {
-  ClientCredentialsGrantTypeParams,
-  ImplicitOauthFlowParams,
-  PasswordGrantTypeParams,
-} from "./v/3"
 
 export { HoppRESTRequestVariables } from "./v/2"
+
+export { ImplicitOauthFlowParams } from "./v/3"
+
 export { HoppRESTAuthAPIKey } from "./v/4"
 
 export { AuthCodeGrantTypeParams } from "./v/5"
-export { HoppRESTReqBody } from "./v/6"
+
 export {
-  HoppRESTAuth,
   HoppRESTAuthAWSSignature,
-  HoppRESTAuthOAuth2,
   HoppRESTHeaders,
   HoppRESTParams,
 } from "./v/7"
+
+export { HoppRESTAuthDigest, PasswordGrantTypeParams } from "./v/8"
+
+export { FormDataKeyValue } from "./v/9"
+
+export {
+  HoppRESTResponseOriginalRequest,
+  HoppRESTRequestResponse,
+  HoppRESTRequestResponses,
+} from "./v/11"
+
+export { HoppRESTReqBody } from "./v/10"
+
+export {
+  HoppRESTAuthOAuth2,
+  HoppRESTAuth,
+  ClientCredentialsGrantTypeParams,
+} from "./v/11"
 
 const versionedObject = z.object({
   // v is a stringified number
@@ -52,7 +66,7 @@ const versionedObject = z.object({
 })
 
 export const HoppRESTRequest = createVersionedEntity({
-  latestVersion: 7,
+  latestVersion: 11,
   versionMap: {
     0: V0_VERSION,
     1: V1_VERSION,
@@ -62,6 +76,10 @@ export const HoppRESTRequest = createVersionedEntity({
     5: V5_VERSION,
     6: V6_VERSION,
     7: V7_VERSION,
+    8: V8_VERSION,
+    9: V9_VERSION,
+    10: V10_VERSION,
+    11: V11_VERSION,
   },
   getVersion(data) {
     // For V1 onwards we have the v string storing the number
@@ -101,9 +119,10 @@ const HoppRESTRequestEq = Eq.struct<HoppRESTRequest>({
     (arr) => arr.filter((v: any) => v.key !== "" && v.value !== ""),
     lodashIsEqualEq
   ),
+  responses: lodashIsEqualEq,
 })
 
-export const RESTReqSchemaVersion = "7"
+export const RESTReqSchemaVersion = "11"
 
 export type HoppRESTParam = HoppRESTRequest["params"][number]
 export type HoppRESTHeader = HoppRESTRequest["headers"][number]
@@ -183,6 +202,14 @@ export function safelyExtractRESTRequest(
         req.requestVariables = result.data
       }
     }
+
+    if ("responses" in x) {
+      const result = HoppRESTRequestResponses.safeParse(x.responses)
+
+      if (result.success) {
+        req.responses = result.data
+      }
+    }
   }
 
   return req
@@ -216,6 +243,7 @@ export function getDefaultRESTRequest(): HoppRESTRequest {
       body: null,
     },
     requestVariables: [],
+    responses: {},
   }
 }
 

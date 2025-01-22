@@ -9,7 +9,6 @@ import {
   MAGIC_LINK_EXPIRED,
   VERIFICATION_TOKEN_DATA_NOT_FOUND,
   USER_NOT_FOUND,
-  USERS_NOT_FOUND,
 } from 'src/errors';
 import { MailerService } from 'src/mailer/mailer.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -18,8 +17,6 @@ import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import * as O from 'fp-ts/Option';
 import { VerifyMagicDto } from './dto/verify-magic.dto';
-import { DateTime } from 'luxon';
-import * as argon2 from 'argon2';
 import * as E from 'fp-ts/Either';
 import { ConfigService } from '@nestjs/config';
 import { InfraConfigService } from 'src/infra-config/infra-config.service';

@@ -1,0 +1,56 @@
+[package]
+name = "hoppscotch-agent"
+version = "0.1.3"
+description = "A cross-platform HTTP request agent for Hoppscotch for advanced request handling including custom headers, certificates, proxies, and local system integration."
+authors = ["AndrewBastin", "CuriousCorrelation"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "hoppscotch_agent_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.1", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.4", features = ["tray-icon", "image-png"] }
+tauri-plugin-shell = "2.0.1"
+tauri-plugin-autostart = { version = "2.0.1", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.40.0", features = ["full"] }
+dashmap = { version = "6.1.0", features = ["serde"] }
+axum = { version = "0.7.7" }
+axum-extra = { version = "0.9.4", features = ["typed-header"] }
+tower-http = { version = "0.6.1", features = ["cors"] }
+tokio-util = "0.7.12"
+uuid = { version = "1.11.0", features = [ "v4", "fast-rng" ] }
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8.5"
+log = "0.4.22"
+env_logger = "0.11.5"
+hoppscotch-relay = { path = "../../hoppscotch-relay" }
+thiserror = "1.0.64"
+tauri-plugin-store = "2.1.0"
+x25519-dalek = { version = "2.0.1", features = ["getrandom"] }
+base16 = "0.2.1"
+aes-gcm = { version = "0.10.3", features = ["aes"] }
+tauri-plugin-updater = "2.0.2"
+tauri-plugin-dialog = "2.0.1"
+lazy_static = "1.5.0"
+tauri-plugin-single-instance = "2.0.1"
+tauri-plugin-http = { version = "2.0.1", features = ["gzip"] }
+native-dialog = "0.7.0"
+
+[target.'cfg(windows)'.dependencies]
+tempfile = { version = "3.13.0" }
+winreg = { version = "0.52.0" }
+
+[dev-dependencies]
+mockito = "1.5.0"
+
+[features]
+default = ["tauri-plugin-autostart"]
+portable = []

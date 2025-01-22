@@ -20,6 +20,8 @@ import { encrypt, stringToJson, taskEitherValidateArraySeq } from 'src/utils';
 import { UserDataHandler } from './user.data.handler';
 import { User as DbUser } from '@prisma/client';
 import { OffsetPaginationArgs } from 'src/types/input-types.args';
+import { GetUserWorkspacesResponse } from 'src/infra-token/request-response.dto';
+import { TeamMemberRole } from 'src/team/team.model';
 
 @Injectable()
 export class UserService {
@@ -597,5 +599,53 @@ export class UserService {
     }
 
     return E.right(true);
+  }
+
+  async fetchUserWorkspaces(userUid: string) {
+    const user = await this.prisma.user.findUnique({ where: { uid: userUid } });
+    if (!user) return E.left(USER_NOT_FOUND);
+
+    const team = await this.prisma.team.findMany({
+      where: {
+        members: {
+          some: {
+            userUid,
+          },
+        },
+      },
+      include: {
+        members: {
+          select: {
+            userUid: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    const workspaces: GetUserWorkspacesResponse[] = [];
+    team.forEach((t) => {
+      const ownerCount = t.members.filter(
+        (m) => m.role === TeamMemberRole.OWNER,
+      ).length;
+      const editorCount = t.members.filter(
+        (m) => m.role === TeamMemberRole.EDITOR,
+      ).length;
+      const viewerCount = t.members.filter(
+        (m) => m.role === TeamMemberRole.VIEWER,
+      ).length;
+      const memberCount = t.members.length;
+
+      workspaces.push({
+        id: t.id,
+        name: t.name,
+        role: t.members.find((m) => m.userUid === userUid)?.role,
+        owner_count: ownerCount,
+        editor_count: editorCount,
+        viewer_count: viewerCount,
+        member_count: memberCount,
+      });
+    });
+    return E.right(workspaces);
   }
 }
