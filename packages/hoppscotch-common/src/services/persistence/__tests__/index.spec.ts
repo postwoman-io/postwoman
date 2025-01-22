@@ -772,58 +772,56 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup collections persistence", () => {
+    describe("setup collections persistence", () => {
       // Keys read from localStorage across test cases
-      const collectionsKey = "collections"
-      const collectionsGraphqlKey = "collectionsGraphql"
+      const collectionsRESTKey = `${STORE_NAMESPACE}:${STORE_KEYS.REST_COLLECTIONS}`
+      const collectionsGraphqlKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_COLLECTIONS}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsKey}" read from localStorage doesn't match the schema`, async () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsRESTKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `collections`
         // `v` -> `number`
         const restCollectionsData = [{ ...REST_COLLECTIONS_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          collectionsKey,
-          JSON.stringify(restCollectionsData)
-        )
+        await setStoreItem(collectionsRESTKey, restCollectionsData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
         await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
 
         expect(toastErrorFn).toHaveBeenCalledWith(
-          expect.stringContaining(collectionsKey)
+          expect.stringContaining(collectionsRESTKey)
         )
         expect(setItemSpy).toHaveBeenCalledWith(
-          `${collectionsKey}-backup`,
-          JSON.stringify(restCollectionsData)
+          `${collectionsRESTKey}-backup`,
+          expect.stringContaining(JSON.stringify(restCollectionsData))
         )
       })
 
-      it(`REST collections schema parsing succeeds if there is no "${collectionsKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
-        window.localStorage.removeItem(collectionsKey)
+      it(`REST collections schema parsing succeeds if there is no "${collectionsRESTKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
+        window.localStorage.removeItem(collectionsRESTKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
         await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
 
-        expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsRESTKey)
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`shows an error and sets the entry as a backup in localStorage if "${collectionsGraphqlKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `collectionsGraphql`
         // `v` -> `number`
         const graphqlCollectionsData = [{ ...GQL_COLLECTIONS_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          collectionsGraphqlKey,
-          JSON.stringify(graphqlCollectionsData)
-        )
+        await setStoreItem(collectionsGraphqlKey, graphqlCollectionsData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -837,11 +835,11 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${collectionsGraphqlKey}-backup`,
-          JSON.stringify(graphqlCollectionsData)
+          expect.stringContaining(JSON.stringify(graphqlCollectionsData))
         )
       })
 
-      it(`GQL history schema parsing succeeds if there is no "${collectionsGraphqlKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
+      it(`GQL collections schema parsing succeeds if there is no "${collectionsGraphqlKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
         window.localStorage.removeItem(collectionsGraphqlKey)
 
         const getItemSpy = spyOnGetItem()
@@ -852,7 +850,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(collectionsGraphqlKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsGraphqlKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it("reads REST and GQL collection entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", async () => {
@@ -890,29 +892,26 @@ describe("PersistenceService", () => {
         const restCollections = REST_COLLECTIONS_MOCK
         const gqlCollections = GQL_COLLECTIONS_MOCK
 
-        window.localStorage.setItem(
-          collectionsKey,
-          JSON.stringify(restCollections)
-        )
-
-        window.localStorage.setItem(
-          collectionsGraphqlKey,
-          JSON.stringify(gqlCollections)
-        )
+        await setStoreItem(collectionsRESTKey, restCollections)
+        await setStoreItem(collectionsGraphqlKey, gqlCollections)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
         await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
         expect(getItemSpy).toHaveBeenCalledWith(collectionsGraphqlKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(
-          collectionsKey,
+          collectionsRESTKey,
           collectionsGraphqlKey
         )
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(translateToNewGQLCollection).toHaveBeenCalled()
         expect(translateToNewRESTCollection).toHaveBeenCalled()
