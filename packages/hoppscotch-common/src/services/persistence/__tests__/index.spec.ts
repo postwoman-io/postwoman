@@ -45,7 +45,7 @@ import {
 } from "~/newstore/settings"
 import { GQLTabService } from "~/services/tab/graphql"
 import { RESTTabService } from "~/services/tab/rest"
-import { PersistenceService } from "../../persistence"
+import { PersistenceService, STORE_NAMESPACE } from "../../persistence"
 import {
   ENVIRONMENTS_MOCK,
   GLOBAL_ENV_MOCK,
@@ -64,6 +64,9 @@ import {
   WEBSOCKET_REQUEST_MOCK,
 } from "./__mocks__"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
+import { getKernelMode, initKernel } from "@hoppscotch/kernel"
+
+initKernel(getKernelMode())
 
 vi.mock("~/modules/i18n", () => {
   return {
@@ -1721,7 +1724,7 @@ describe("PersistenceService", () => {
     })
   })
 
-  it("`setLocalConfig` method sets a value in localStorage", () => {
+  it("`setLocalConfig` method sets a value in localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1729,11 +1732,14 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
+    await service.setLocalConfig(testKey, testValue)
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
   })
 
-  it("`getLocalConfig` method gets a value from localStorage", () => {
+  it("`getLocalConfig` method gets a value from localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1742,15 +1748,19 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    const retrievedValue = service.getLocalConfig(testKey)
+    await service.setLocalConfig(testKey, testValue)
+    const retrievedValue = await service.getLocalConfig(testKey)
 
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
-    expect(getItemSpy).toHaveBeenCalledWith(testKey)
+
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
+    expect(getItemSpy).toHaveBeenCalledWith(`${STORE_NAMESPACE}:${testKey}`)
     expect(retrievedValue).toBe(testValue)
   })
 
-  it("`removeLocalConfig` method clears a value in localStorage", () => {
+  it("`removeLocalConfig` method clears a value in localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1759,10 +1769,13 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    service.removeLocalConfig(testKey)
+    await service.setLocalConfig(testKey, testValue)
+    await service.removeLocalConfig(testKey)
 
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
-    expect(removeItemSpy).toHaveBeenCalledWith(testKey)
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
+    expect(removeItemSpy).toHaveBeenCalledWith(`${STORE_NAMESPACE}:${testKey}`)
   })
 })
