@@ -1280,7 +1280,7 @@ describe("PersistenceService", () => {
 
     describe("setup Socket.IO persistence", () => {
       // Key read from localStorage across test cases
-      const sioRequestKey = "SocketIORequest"
+      const sioRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.SOCKETIO}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${sioRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `SocketIORequest`
@@ -1290,7 +1290,7 @@ describe("PersistenceService", () => {
           v: "4",
         }
 
-        window.localStorage.setItem(sioRequestKey, JSON.stringify(request))
+        await setStoreItem(sioRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1304,7 +1304,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${sioRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
@@ -1319,7 +1319,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(sioRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sioRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`reads the "${sioRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SIOSessionStore" and updates localStorage entries`, async () => {
@@ -1333,8 +1337,7 @@ describe("PersistenceService", () => {
         })
 
         const request = SOCKET_IO_REQUEST_MOCK
-
-        window.localStorage.setItem(sioRequestKey, JSON.stringify(request))
+        await setStoreItem(sioRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1344,14 +1347,18 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(sioRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sioRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSIORequest).toHaveBeenCalledWith(request)
         expect(SIORequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
       })
     })
 
-    describe("setup SSE Persistence", () => {
+    describe("setup SSE persistence", () => {
       // Key read from localStorage across test cases
       const sseRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.SSE}`
 
@@ -1431,7 +1438,7 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("setup MQTT Persistence", () => {
+    describe("setup MQTT persistence", () => {
       // Key read from localStorage across test cases
       const mqttRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.MQTT}`
 
