@@ -1425,7 +1425,7 @@ describe("PersistenceService", () => {
 
     describe("setup MQTT Persistence", () => {
       // Key read from localStorage across test cases
-      const mqttRequestKey = "MQTTRequest"
+      const mqttRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.MQTT}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${mqttRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `MQTTRequest`
@@ -1435,7 +1435,7 @@ describe("PersistenceService", () => {
           url: "wss://test.mosquitto.org:8081",
         }
 
-        window.localStorage.setItem(mqttRequestKey, JSON.stringify(request))
+        await setStoreItem(mqttRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1449,7 +1449,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${mqttRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
@@ -1464,7 +1464,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(mqttRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(mqttRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
       it(`reads the ${mqttRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "MQTTSessionStore" and updates localStorage entries`, async () => {
@@ -1478,7 +1482,7 @@ describe("PersistenceService", () => {
         })
 
         const request = MQTT_REQUEST_MOCK
-        window.localStorage.setItem(mqttRequestKey, JSON.stringify(request))
+        await setStoreItem(mqttRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1488,7 +1492,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(mqttRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(mqttRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setMQTTRequest).toHaveBeenCalledWith(request)
         expect(MQTTRequest$.subscribe).toHaveBeenCalledWith(
