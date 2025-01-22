@@ -634,14 +634,14 @@ describe("PersistenceService", () => {
 
     describe("setup history persistence", () => {
       // Keys read from localStorage across test cases
-      const historyKey = "history"
-      const graphqlHistoryKey = "graphqlHistory"
+      const historyKey = `${STORE_NAMESPACE}:${STORE_KEYS.REST_HISTORY}`
+      const graphqlHistoryKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_HISTORY}`
 
       it(`shows an error and sets the entry as a backup in localStorage if "${historyKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `history`
         // `v` -> `number`
         const restHistoryData = [{ ...REST_HISTORY_MOCK, v: "1" }]
-        window.localStorage.setItem(historyKey, JSON.stringify(restHistoryData))
+        await setStoreItem(historyKey, restHistoryData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -655,7 +655,7 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${historyKey}-backup`,
-          JSON.stringify(restHistoryData)
+          expect.stringContaining(JSON.stringify(restHistoryData))
         )
       })
 
@@ -670,17 +670,18 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(historyKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(historyKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
       it(`shows an error and sets the entry as a backup in localStorage if "${graphqlHistoryKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `graphqlHistory`
         // `v` -> `number`
         const graphqlHistoryData = [{ ...GQL_HISTORY_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          graphqlHistoryKey,
-          JSON.stringify(graphqlHistoryData)
-        )
+        await setStoreItem(graphqlHistoryKey, graphqlHistoryData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -689,9 +690,12 @@ describe("PersistenceService", () => {
 
         expect(getItemSpy).toHaveBeenCalledWith(graphqlHistoryKey)
 
+        expect(toastErrorFn).toHaveBeenCalledWith(
+          expect.stringContaining(graphqlHistoryKey)
+        )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${graphqlHistoryKey}-backup`,
-          JSON.stringify(graphqlHistoryData)
+          expect.stringContaining(JSON.stringify(graphqlHistoryData))
         )
       })
 
@@ -706,7 +710,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(graphqlHistoryKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(graphqlHistoryKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
       it("reads REST and GQL history entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", async () => {
@@ -733,11 +741,11 @@ describe("PersistenceService", () => {
           }
         })
 
-        const stringifiedRestHistory = JSON.stringify(REST_HISTORY_MOCK)
-        const stringifiedGqlHistory = JSON.stringify(GQL_HISTORY_MOCK)
+        const restHistory = REST_HISTORY_MOCK
+        const gqlHistory = GQL_HISTORY_MOCK
 
-        window.localStorage.setItem(historyKey, stringifiedRestHistory)
-        window.localStorage.setItem(graphqlHistoryKey, stringifiedGqlHistory)
+        await setStoreItem(historyKey, restHistory)
+        await setStoreItem(graphqlHistoryKey, gqlHistory)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -751,17 +759,17 @@ describe("PersistenceService", () => {
           historyKey,
           graphqlHistoryKey
         )
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(translateToNewRESTHistory).toHaveBeenCalled()
         expect(translateToNewGQLHistory).toHaveBeenCalled()
 
-        // This ensures `updatedOn` field is treated as a `string`
-        const parsedRestHistory = JSON.parse(stringifiedRestHistory)
-        const parsedGqlHistory = JSON.parse(stringifiedGqlHistory)
-
-        expect(setRESTHistoryEntries).toHaveBeenCalledWith(parsedRestHistory)
-        expect(setGraphqlHistoryEntries).toHaveBeenCalledWith(parsedGqlHistory)
+        expect(setRESTHistoryEntries).toHaveBeenCalledWith(restHistory)
+        expect(setGraphqlHistoryEntries).toHaveBeenCalledWith(gqlHistory)
 
         expect(restHistoryStore.subject$.subscribe).toHaveBeenCalledWith(
           expect.any(Function)
@@ -1643,7 +1651,12 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
+
         expect(loadTabsFromPersistedStateFn).not.toHaveBeenCalled()
 
         expect(watchDebounced).toHaveBeenCalled()
@@ -1661,7 +1674,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(loadTabsFromPersistedStateFn).toHaveBeenCalledWith(tabState)
         expect(watchDebounced).toHaveBeenCalledWith(
@@ -1736,7 +1753,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(restTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
         expect(loadTabsFromPersistedStateFn).not.toHaveBeenCalled()
 
         expect(watchDebounced).toHaveBeenCalled()
@@ -1754,7 +1775,11 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(restTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(loadTabsFromPersistedStateFn).toHaveBeenCalledWith(tabState)
         expect(watchDebounced).toHaveBeenCalledWith(
