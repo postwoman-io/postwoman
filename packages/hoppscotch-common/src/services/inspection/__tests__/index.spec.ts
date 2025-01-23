@@ -1,7 +1,13 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { Inspector, InspectionService, InspectorResult } from "../"
 import { TestContainer } from "dioc/testing"
 import { ref } from "vue"
+import { RESTTabService } from "~/services/tab/rest"
+
+vi.mock("~/modules/i18n", () => ({
+  __esModule: true,
+  getI18n: () => (x: string) => x,
+}))
 
 const inspectorResultMock: InspectorResult[] = [
   {
@@ -29,6 +35,36 @@ describe("InspectionService", () => {
   describe("registerInspector", () => {
     it("should register an inspector", () => {
       const container = new TestContainer()
+
+      container.bindMock(RESTTabService, {
+        currentActiveTab: ref({
+          id: "test",
+          document: {
+            type: "request",
+            request: {},
+            response: null,
+            isDirty: false,
+            optionTabPreference: "params",
+          },
+        }),
+        tabMap: new Map([
+          [
+            "test",
+            {
+              id: "test",
+              document: {
+                type: "request",
+                request: {},
+                isDirty: false,
+                optionTabPreference: "params",
+              },
+            },
+          ],
+        ]),
+        tabOrdering: ref(["test"]),
+        currentTabID: ref("test"),
+      })
+
       const service = container.bind(InspectionService)
 
       service.registerInspector(testInspector)
@@ -40,6 +76,36 @@ describe("InspectionService", () => {
   describe("deleteTabInspectorResult", () => {
     it("should delete a tab's inspector results", () => {
       const container = new TestContainer()
+
+      container.bindMock(RESTTabService, {
+        currentActiveTab: ref({
+          id: "test",
+          document: {
+            type: "request",
+            request: {},
+            response: null,
+            isDirty: false,
+            optionTabPreference: "params",
+          },
+        }),
+        tabMap: new Map([
+          [
+            "test",
+            {
+              id: "test",
+              document: {
+                type: "request",
+                request: {},
+                isDirty: false,
+                optionTabPreference: "params",
+              },
+            },
+          ],
+        ]),
+        tabOrdering: ref(["test"]),
+        currentTabID: ref("test"),
+      })
+
       const service = container.bind(InspectionService)
 
       const tabID = "testTab"
