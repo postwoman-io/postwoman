@@ -24,4 +24,5 @@ export interface LoadResponse {
 }
 export declare function download(options: DownloadOptions): Promise<DownloadResponse>;
 export declare function load(options: LoadOptions): Promise<LoadResponse>;
+export declare function clear(): Promise<void>;
 //# sourceMappingURL=index.d.ts.map

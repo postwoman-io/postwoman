@@ -4,6 +4,7 @@ Default permissions for AppLoad plugin
 
 - `allow-load`
 - `allow-download`
+- `allow-clear`
 
 ## Permission Table
 
@@ -13,6 +14,32 @@ Default permissions for AppLoad plugin
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`appload:allow-clear`
+
+</td>
+<td>
+
+Enables the clear command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`appload:deny-clear`
+
+</td>
+<td>
+
+Denies the clear command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

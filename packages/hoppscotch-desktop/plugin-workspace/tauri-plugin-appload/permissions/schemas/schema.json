@@ -295,6 +295,16 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-clear"
+        },
+        {
+          "description": "Denies the clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-clear"
+        },
+        {
           "description": "Enables the download command without any pre-configured scope.",
           "type": "string",
           "const": "allow-download"

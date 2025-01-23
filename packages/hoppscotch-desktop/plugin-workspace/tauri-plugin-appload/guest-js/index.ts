@@ -36,3 +36,7 @@ export async function download(options: DownloadOptions): Promise<DownloadRespon
 export async function load(options: LoadOptions): Promise<LoadResponse> {
   return await invoke<LoadResponse>('plugin:appload|load', { options })
 }
+
+export async function clear(): Promise<void> {
+  return await invoke('plugin:appload|clear')
+}

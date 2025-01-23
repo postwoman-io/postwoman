@@ -86,6 +86,27 @@
           />
         </div>
       </div>
+      <div class="flex items-center justify-between mt-4 pt-4 border-t border-divider">
+        <div v-if="hasUnpinnedUrls">
+          <HoppButtonSecondary
+            :icon="IconLucideTrash2"
+            label="Clear unpinned history"
+            @click="clearUnpinned"
+          />
+        </div>
+        <HoppButtonSecondary
+          :icon="IconLucideTrash2"
+          label="Clear Cache"
+          :loading="isClearingCache"
+          :disabled="isClearingCache"
+          class="!text-red-500 hover:!text-red-600"
+          @click="handleClearCache"
+          v-tippy="{
+            content: 'Clear all cached bundles and temporary files',
+            theme: 'tooltip'
+          }"
+        />
+      </div>
     </form>
   </div>
 </template>
@@ -93,7 +114,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { LazyStore } from '@tauri-apps/plugin-store';
-import { download, load } from "@hoppscotch/plugin-appload";
+import { download, load, clear } from "@hoppscotch/plugin-appload";
 import { pipe } from 'fp-ts/function';
 import * as E from 'fp-ts/Either';
 
@@ -119,6 +140,7 @@ const recentUrls = ref<RecentUrl[]>([]);
 const appUrl = ref("");
 const error = ref("");
 const isLoading = ref(false);
+const isClearingCache = ref(false);
 
 const hasUnpinnedUrls = computed(() =>
   recentUrls.value.some(item => !item.pinned)
@@ -191,6 +213,19 @@ const togglePin = async (url: string) => {
 const clearUnpinned = async () => {
   recentUrls.value = recentUrls.value.filter(item => item.pinned);
   await saveRecentUrls();
+};
+
+const handleClearCache = async () => {
+  if (isClearingCache.value) return;
+
+  isClearingCache.value = true;
+  try {
+    await clear();
+  } catch (err) {
+    console.error('Failed to clear cache:', err);
+  } finally {
+    isClearingCache.value = false;
+  }
 };
 
 const handleConnect = async () => {

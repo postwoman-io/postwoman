@@ -6,5 +6,8 @@ async function download(options) {
 async function load(options) {
     return await invoke('plugin:appload|load', { options });
 }
+async function clear() {
+    return await invoke('plugin:appload|clear');
+}
 
-export { download, load };
+export { clear, download, load };

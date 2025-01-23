@@ -9,6 +9,7 @@ use tauri::{
 use crate::{
     bundle::BundleLoader,
     models::{DownloadOptions, DownloadResponse, LoadOptions, LoadResponse},
+    storage::{StorageError, StorageManager},
     ui, Result,
 };
 
@@ -111,4 +112,87 @@ pub async fn load<R: Runtime>(app: AppHandle<R>, options: LoadOptions) -> Result
 
     tracing::info!(?response, "Bundle loaded successfully");
     Ok(response)
+}
+
+#[command]
+pub async fn clear<R: Runtime>(app: AppHandle<R>) -> Result<()> {
+    tracing::info!("Starting bundle cleanup process");
+    let storage = app.state::<Arc<StorageManager>>();
+
+    let layout = storage.layout();
+
+    if layout.bundles_dir().exists() {
+        tracing::debug!("Clearing bundles directory");
+        tokio::fs::remove_dir_all(layout.bundles_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to clear bundles directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+        tokio::fs::create_dir(layout.bundles_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to recreate bundles directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+    }
+
+    if layout.cache_dir().exists() {
+        tracing::debug!("Clearing cache directory");
+        tokio::fs::remove_dir_all(layout.cache_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to clear cache directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+        tokio::fs::create_dir(layout.cache_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to recreate cache directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+    }
+
+    if layout.key_dir().exists() {
+        tracing::debug!("Clearing key directory");
+        tokio::fs::remove_dir_all(layout.key_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to clear key directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+        tokio::fs::create_dir(layout.key_dir()).await.map_err(|e| {
+            tracing::error!(error = %e, "Failed to recreate key directory");
+            crate::Error::Storage(StorageError::Io(e))
+        })?;
+    }
+
+    if layout.temp_dir().exists() {
+        tracing::debug!("Clearing temp directory");
+        tokio::fs::remove_dir_all(layout.temp_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to clear temp directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+        tokio::fs::create_dir(layout.temp_dir())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to recreate temp directory");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+    }
+
+    if layout.registry_path().exists() {
+        tracing::debug!("Removing registry.json");
+        tokio::fs::remove_file(layout.registry_path())
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "Failed to remove registry.json");
+                crate::Error::Storage(StorageError::Io(e))
+            })?;
+    }
+
+    tracing::info!("Bundle cleanup completed successfully");
+    Ok(())
 }

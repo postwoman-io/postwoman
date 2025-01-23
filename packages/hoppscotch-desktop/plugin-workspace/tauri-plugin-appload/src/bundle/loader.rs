@@ -4,7 +4,7 @@ use super::{BundleError, Result, VerifiedBundle};
 use crate::{
     api::ApiClient,
     cache::CacheManager,
-    storage::StorageManager,
+    storage::{StorageError, StorageManager},
     verification::{BundleVerifier, KeyManager},
 };
 
@@ -51,12 +51,21 @@ impl BundleLoader {
         server_url: &str,
         metadata: &crate::BundleMetadata,
     ) -> Result<Option<BundleInfo>> {
-        Ok(match self.storage.get_bundle_entry(server_url).await? {
-            // NOTE: Temp disabled for testing.
-            // Some(entry) if entry.version == metadata.version => {
-            //     tracing::info!(%server_url, "Bundle version matches, using cached version");
-            //     Some(self.load_existing_bundle(&entry.bundle_name).await?)
-            // }
+        match self.storage.get_bundle_entry(server_url).await? {
+            Some(entry) if entry.version == metadata.version => {
+                tracing::info!(%server_url, "Bundle version matches, checking cached version");
+                match self.load_existing_bundle(&entry.bundle_name).await {
+                    Ok(bundle) => {
+                        tracing::info!(%server_url, "Successfully loaded cached bundle");
+                        Ok(Some(bundle))
+                    }
+                    Err(BundleError::Storage(StorageError::BundleNotFound(_))) => {
+                        tracing::info!(%server_url, "Cached bundle not found, will download fresh copy");
+                        Ok(None)
+                    }
+                    Err(e) => Err(e),
+                }
+            }
             Some(entry) => {
                 tracing::info!(
                     %server_url,
@@ -67,13 +76,13 @@ impl BundleLoader {
                 self.storage
                     .delete_bundle(&entry.bundle_name, server_url)
                     .await?;
-                None
+                Ok(None)
             }
             None => {
                 tracing::info!(%server_url, "No existing bundle found, downloading");
-                None
+                Ok(None)
             }
-        })
+        }
     }
 
     async fn store_verified_bundle(

@@ -8,6 +8,10 @@ async function download(options) {
 async function load(options) {
     return await core.invoke('plugin:appload|load', { options });
 }
+async function clear() {
+    return await core.invoke('plugin:appload|clear');
+}
 
+exports.clear = clear;
 exports.download = download;
 exports.load = load;

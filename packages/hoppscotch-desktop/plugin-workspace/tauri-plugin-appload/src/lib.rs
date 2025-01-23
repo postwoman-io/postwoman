@@ -122,7 +122,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             tracing::info!("appload plugin setup complete.");
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::download, commands::load])
+        .invoke_handler(tauri::generate_handler![
+            commands::download,
+            commands::load,
+            commands::clear
+        ])
         .register_uri_scheme_protocol("app", move |ctx, req| {
             let app = ctx.app_handle();
             let uri = req.uri();
