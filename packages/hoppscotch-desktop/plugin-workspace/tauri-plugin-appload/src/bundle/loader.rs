@@ -156,7 +156,7 @@ impl BundleLoader {
         verifier.verify_bundle(&content, metadata).await?;
 
         let verified = VerifiedBundle::new(content.clone(), metadata.clone())?;
-        let name = self.generate_bundle_name(server_url, metadata);
+        let name = self.generate_bundle_name(server_url);
 
         tracing::info!(%server_url, "Storing verified bundle");
         self.storage
@@ -166,16 +166,13 @@ impl BundleLoader {
         Ok(BundleInfo { name, content })
     }
 
-    fn generate_bundle_name(&self, server_url: &str, metadata: &crate::BundleMetadata) -> String {
-        format!(
-            "{}_{}",
-            server_url
-                .split("://")
-                .nth(1)
-                .unwrap_or("unknown")
-                .replace(['/', '.', ':'], "_")
-                .trim_end_matches('_'),
-            metadata.version.replace('.', "_")
-        )
+    fn generate_bundle_name(&self, server_url: &str) -> String {
+        server_url
+            .split("://")
+            .nth(1)
+            .unwrap_or("unknown")
+            .replace(['/', '.', ':'], "_")
+            .trim_end_matches('_')
+            .to_string()
     }
 }
