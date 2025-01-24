@@ -13,7 +13,7 @@ interface HawkOptions {
   ext?: string
   app?: string
   dlg?: string
-  timestamp?: string
+  timestamp?: number
 }
 
 async function generateNonce(length: number = 6): Promise<string> {

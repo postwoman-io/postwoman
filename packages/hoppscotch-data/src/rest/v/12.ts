@@ -6,10 +6,7 @@ import {
 } from "./1"
 import { HoppRESTAuthAPIKey } from "./4"
 import { HoppRESTAuthAWSSignature } from "./7"
-import {
-  ClientCredentialsGrantTypeParams as ClientCredentialsGrantTypeParamsOld,
-  HoppRESTAuthDigest,
-} from "./8"
+import { HoppRESTAuthDigest } from "./8"
 
 import { z } from "zod"
 import { defineVersion } from "verzod"

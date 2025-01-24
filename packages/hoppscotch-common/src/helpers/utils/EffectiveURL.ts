@@ -35,6 +35,8 @@ import {
   fetchInitialDigestAuthInfo,
   generateDigestAuthHeader,
 } from "../auth/digest"
+import { calculateHawkHeader } from "../auth/hawk"
+
 export interface EffectiveHoppRESTRequest extends HoppRESTRequest {
   /**
    * The effective final URL.
@@ -44,7 +46,7 @@ export interface EffectiveHoppRESTRequest extends HoppRESTRequest {
   effectiveFinalURL: string
   effectiveFinalHeaders: HoppRESTHeaders
   effectiveFinalParams: HoppRESTParams
-  effectiveFinalBody: FormData | string | null | File
+  effectiveFinalBody: FormData | string | null | File | Blob
   effectiveFinalRequestVariables: { key: string; value: string }[]
 }
 
@@ -218,6 +220,43 @@ export const getComputedAuthHeaders = async (
         })
       })
     }
+  } else if (request.auth.authType === "hawk") {
+    const { method, endpoint } = req as HoppRESTRequest
+
+    const hawkHeader = await calculateHawkHeader({
+      url: parseTemplateString(endpoint, envVars), // URL
+      method: method, // HTTP method
+      id: parseTemplateString(request.auth.authId, envVars),
+      key: parseTemplateString(request.auth.authKey, envVars),
+      algorithm: request.auth.algorithm,
+
+      // advanced parameters (optional)
+      includePayloadHash: request.auth.includePayloadHash,
+      nonce: request.auth.nonce
+        ? parseTemplateString(request.auth.nonce, envVars)
+        : undefined,
+      ext: request.auth.ext
+        ? parseTemplateString(request.auth.ext, envVars)
+        : undefined,
+      app: request.auth.app
+        ? parseTemplateString(request.auth.app, envVars)
+        : undefined,
+      dlg: request.auth.dlg
+        ? parseTemplateString(request.auth.dlg, envVars)
+        : undefined,
+      timestamp: request.auth.timestamp
+        ? parseInt(parseTemplateString(request.auth.timestamp, envVars), 10)
+        : undefined,
+    })
+
+    console.log(hawkHeader)
+
+    headers.push({
+      active: true,
+      key: "Authorization",
+      value: hawkHeader,
+      description: "",
+    })
   }
 
   return headers
