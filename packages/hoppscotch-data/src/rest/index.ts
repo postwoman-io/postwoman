@@ -18,6 +18,7 @@ import V8_VERSION from "./v/8"
 import V9_VERSION from "./v/9"
 import V10_VERSION, { HoppRESTReqBody } from "./v/10"
 import V11_VERSION, { HoppRESTAuth, HoppRESTRequestResponses } from "./v/11"
+import V12_VERSION, { HoppRESTAuthHAWK } from "./v/12"
 
 export * from "./content-types"
 
@@ -60,13 +61,15 @@ export {
   ClientCredentialsGrantTypeParams,
 } from "./v/11"
 
+export { HoppRESTAuthHAWK } from "./v/12"
+
 const versionedObject = z.object({
   // v is a stringified number
   v: z.string().regex(/^\d+$/).transform(Number),
 })
 
 export const HoppRESTRequest = createVersionedEntity({
-  latestVersion: 11,
+  latestVersion: 12,
   versionMap: {
     0: V0_VERSION,
     1: V1_VERSION,
@@ -80,6 +83,7 @@ export const HoppRESTRequest = createVersionedEntity({
     9: V9_VERSION,
     10: V10_VERSION,
     11: V11_VERSION,
+    12: V12_VERSION,
   },
   getVersion(data) {
     // For V1 onwards we have the v string storing the number
@@ -122,7 +126,7 @@ const HoppRESTRequestEq = Eq.struct<HoppRESTRequest>({
   responses: lodashIsEqualEq,
 })
 
-export const RESTReqSchemaVersion = "11"
+export const RESTReqSchemaVersion = "12"
 
 export type HoppRESTParam = HoppRESTRequest["params"][number]
 export type HoppRESTHeader = HoppRESTRequest["headers"][number]
