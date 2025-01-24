@@ -128,11 +128,11 @@ export function authProviderCheck(
 }
 
 /**
- * Extract auth tokens from cookie headers of a request
+ * Extract cookie as key-value pairs from headers of a request
  * @param headers HTTP request headers containing auth tokens
- * @returns AuthTokens for JWT strategy to use
+ * @returns Cookie's key-value pairs
  */
-export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
+export const extractCookieAsKeyValuesFromHeaders = (headers: IncomingHttpHeaders) => {
   const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
 
   if (!cookieHeader) {
@@ -143,7 +143,7 @@ export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders)
 
   const cookieStr = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
 
-  const cookies = cookieStr.split(';')
+  const kv = cookieStr.split(';')
     .map(cookie => cookie.trim())
     .reduce((acc, curr) => {
       const [key, value] = curr.split('=');
@@ -151,15 +151,26 @@ export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders)
       return acc;
     }, {} as Record<string, string>);
 
-  if (!cookies[AuthTokenType.ACCESS_TOKEN] || !cookies[AuthTokenType.REFRESH_TOKEN]) {
+  return kv;
+};
+
+/**
+ * Extract auth tokens from cookie headers of a request
+ * @param headers HTTP request headers containing auth tokens
+ * @returns AuthTokens for JWT strategy to use
+ */
+export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieKV = extractCookieAsKeyValuesFromHeaders(headers);
+
+  if (!cookieKV[AuthTokenType.ACCESS_TOKEN] || !cookieKV[AuthTokenType.REFRESH_TOKEN]) {
     throw new HttpException(COOKIES_NOT_FOUND, 400, {
       cause: new Error(COOKIES_NOT_FOUND),
     });
   }
 
   return <AuthTokens>{
-    access_token: cookies[AuthTokenType.ACCESS_TOKEN],
-    refresh_token: cookies[AuthTokenType.REFRESH_TOKEN],
+    access_token: cookieKV[AuthTokenType.ACCESS_TOKEN],
+    refresh_token: cookieKV[AuthTokenType.REFRESH_TOKEN],
   };
 };
 
@@ -169,32 +180,16 @@ export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders)
  * @returns AccessTokens for JWT strategy to use
  */
 export const extractAccessTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
-  const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
+  const cookieKV = extractCookieAsKeyValuesFromHeaders(headers);
 
-  if (!cookieHeader) {
-    throw new HttpException(COOKIES_NOT_FOUND, 400, {
-      cause: new Error(COOKIES_NOT_FOUND),
-    });
-  }
-
-  const cookieStr = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
-
-  const cookies = cookieStr.split(';')
-    .map(cookie => cookie.trim())
-    .reduce((acc, curr) => {
-      const [key, value] = curr.split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-  if (!cookies[AuthTokenType.ACCESS_TOKEN]) {
+  if (!cookieKV[AuthTokenType.ACCESS_TOKEN]) {
     throw new HttpException(COOKIES_NOT_FOUND, 400, {
       cause: new Error(COOKIES_NOT_FOUND),
     });
   }
 
   return {
-    access_token: cookies[AuthTokenType.ACCESS_TOKEN],
+    access_token: cookieKV[AuthTokenType.ACCESS_TOKEN],
   };
 };
 
