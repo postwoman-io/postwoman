@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { download, load, clear } from "@hoppscotch/plugin-appload";
 import { pipe } from 'fp-ts/function';

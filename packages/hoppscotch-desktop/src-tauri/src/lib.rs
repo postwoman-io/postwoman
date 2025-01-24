@@ -4,6 +4,7 @@ use std::sync::OnceLock;
 
 use tauri::Emitter;
 use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_updater::UpdaterExt;
 
 static SERVER_PORT: OnceLock<u16> = OnceLock::new();
 
@@ -20,8 +21,21 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
-            let _ = app.handle()
+            let _ = app
+                .handle()
                 .plugin(tauri_plugin_updater::Builder::new().build())?;
+            Ok(())
+        })
+        .setup(|app| {
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(updater) = handle.updater() {
+                    if let Ok(Some(update)) = updater.check().await {
+                        let _ = update.download_and_install(|_, _| {}, || {}).await;
+                        handle.restart();
+                    }
+                }
+            });
             Ok(())
         })
         .setup(|app| {
