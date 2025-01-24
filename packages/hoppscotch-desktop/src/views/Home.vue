@@ -55,7 +55,7 @@
             <div
               class="flex-1 flex items-center cursor-pointer"
               :class="{ 'opacity-50': isLoading }"
-              @click="appUrl = item.url"
+              @click="() => connectToUrl(item.url)"
             >
               <IconLucideServer class="opacity-75 mr-4" />
               <div class="flex flex-col flex-1 min-w-0">
@@ -216,15 +216,15 @@ const handleClearCache = async () => {
   }
 };
 
-const handleConnect = async () => {
-  if (!appUrl.value || isLoading.value) return;
+const connectToUrl = async (url: string) => {
+  if (isLoading.value) return;
 
   isLoading.value = true;
   error.value = "";
 
   try {
     const normalizedUrl = pipe(
-      appUrl.value,
+      url,
       normalizeUrl,
       E.getOrElseW(err => { throw err })
     );
@@ -242,6 +242,11 @@ const handleConnect = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+const handleConnect = () => {
+  if (!appUrl.value) return;
+  connectToUrl(appUrl.value);
 };
 
 onMounted(async () => {
