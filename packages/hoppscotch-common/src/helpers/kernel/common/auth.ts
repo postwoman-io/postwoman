@@ -8,6 +8,8 @@ import { flow, pipe } from "fp-ts/function"
 type HoppAuth = HoppRESTRequest["auth"]
 type OAuth2GrantType = HoppRESTAuthOAuth2["grantTypeInfo"]
 
+export const defaultAuth: AuthType = { kind: "none" }
+
 const isAuthActive = (auth: HoppAuth): boolean =>
   auth.authActive && auth.authType !== "none" && auth.authType !== "inherit"
 
@@ -254,8 +256,6 @@ const getProcessor = (
       }
     })
   )
-
-const defaultAuth: AuthType = { kind: "none" }
 
 export const transformAuth = (auth: HoppAuth): TE.TaskEither<Error, AuthType> =>
   pipe(

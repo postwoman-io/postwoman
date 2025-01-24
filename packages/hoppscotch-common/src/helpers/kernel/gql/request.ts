@@ -1,12 +1,12 @@
 import * as TE from "fp-ts/TaskEither"
 import * as T from "fp-ts/Task"
-import * as O from "fp-ts/Option"
 import { pipe } from "fp-ts/function"
 
 import { AuthType, MediaType, content } from "@hoppscotch/kernel"
 import { HoppGQLRequest } from "@hoppscotch/data"
 
 import { transformAuth } from "~/helpers/kernel/common"
+import { defaultAuth } from "~/helpers/kernel/common/auth"
 import { filterActiveToRecord } from "~/helpers/functional/filter-active"
 
 const parseVariables = async (variables: string | null): Promise<unknown> => {
@@ -27,8 +27,7 @@ export const GQLRequest = {
 
     const auth = await pipe(
       transformAuth(request.auth),
-      TE.getOrElse(() => T.of<O.Option<AuthType>>(O.none)),
-      T.map(O.toUndefined)
+      TE.getOrElse(() => T.of<AuthType>(defaultAuth))
     )()
 
     const variables = await parseVariables(request.variables)
