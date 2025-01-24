@@ -151,6 +151,9 @@
         <div v-if="auth.authType === 'aws-signature'">
           <HttpAuthorizationAWSSign v-model="auth" :envs="envs" />
         </div>
+        <div v-if="auth.authType === 'hawk'">
+          <HttpAuthorizationHAWK v-model="auth" :envs="envs" />
+        </div>
         <div v-if="auth.authType === 'digest'">
           <HttpAuthorizationDigest v-model="auth" :envs="envs" />
         </div>
@@ -265,6 +268,13 @@ const selectAWSSignatureAuthType = () => {
   }
 }
 
+const selectHAWKAuthType = () => {
+  auth.value = {
+    ...auth.value,
+    authType: "hawk",
+  } as HoppRESTAuth
+}
+
 const selectDigestAuthType = () => {
   const {
     username = "",
@@ -317,6 +327,11 @@ const authTypes: AuthType[] = [
     key: "aws-signature",
     label: "AWS Signature",
     handler: selectAWSSignatureAuthType,
+  },
+  {
+    key: "hawk",
+    label: "HAWK",
+    handler: selectHAWKAuthType,
   },
 ]
 
