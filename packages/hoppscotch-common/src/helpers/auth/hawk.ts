@@ -1,5 +1,3 @@
-import { createHmac, randomBytes } from "crypto"
-
 interface HawkOptions {
   id: string
   key: string
@@ -18,27 +16,71 @@ interface HawkOptions {
   timestamp?: string
 }
 
+async function generateNonce(length: number = 6): Promise<string> {
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  return btoa(String.fromCharCode(...array))
+}
+
+async function hmacSign(
+  key: string,
+  message: string,
+  algorithm: "sha256" | "sha1"
+): Promise<string> {
+  const encoder = new TextEncoder()
+  const keyData = encoder.encode(key)
+  const messageData = encoder.encode(message)
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    {
+      name: "HMAC",
+      hash: { name: `SHA-${algorithm === "sha256" ? "256" : "1"}` },
+    },
+    false,
+    ["sign"]
+  )
+
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData)
+
+  return btoa(String.fromCharCode(...new Uint8Array(signature)))
+}
+
+async function getPayloadContent(
+  payload: string | FormData | File | null
+): Promise<string> {
+  if (!payload) return ""
+
+  if (payload instanceof FormData) {
+    const pairs: string[] = []
+    payload.forEach((value, key) => {
+      pairs.push(`${key}=${value}`)
+    })
+    return pairs.join("&")
+  }
+
+  if (payload instanceof File) {
+    return await payload.text()
+  }
+
+  return payload.toString()
+}
+
 export async function calculateHawkHeader(
   options: HawkOptions
 ): Promise<string> {
   const timestamp =
     options.timestamp || Math.floor(Date.now() / 1000).toString()
-  const nonce = options.nonce || randomBytes(6).toString("base64")
+  const nonce = options.nonce || (await generateNonce())
 
   const url = new URL(options.url)
   const port = url.port || (url.protocol === "https:" ? "443" : "80")
 
   let payloadHash = ""
   if (options.includePayloadHash && options.payload) {
-    const content =
-      options.payload instanceof FormData || options.payload instanceof File
-        ? await options.payload.text()
-        : options.payload.toString()
-
-    const hash = createHmac(options.algorithm, options.key)
-      .update(content)
-      .digest("base64")
-
+    const content = await getPayloadContent(options.payload)
+    const hash = await hmacSign(options.key, content, options.algorithm)
     payloadHash = `hash="${hash}"`
   }
 
@@ -55,9 +97,7 @@ export async function calculateHawkHeader(
     options.dlg || "",
   ].join("\n")
 
-  const mac = createHmac(options.algorithm, options.key)
-    .update(normalized)
-    .digest("base64")
+  const mac = await hmacSign(options.key, normalized, options.algorithm)
 
   const header = [
     `Hawk id="${options.id}"`,
