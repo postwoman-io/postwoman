@@ -13,7 +13,7 @@
         <HoppSmartInput
           v-model="appUrl"
           :disabled="isLoading"
-          placeholder="http://localhost:3000"
+          placeholder="localhost"
           :error="!!error"
           type="url"
           autofocus
@@ -77,17 +77,9 @@
             />
           </div>
         </div>
-
-        <div v-if="hasUnpinnedUrls" class="flex justify-end mt-4">
-          <HoppButtonSecondary
-            :icon="IconLucideTrash2"
-            label="Clear unpinned history"
-            @click="clearUnpinned"
-          />
-        </div>
       </div>
       <div class="flex items-center justify-between mt-4 pt-4 border-t border-divider">
-        <div v-if="hasUnpinnedUrls">
+        <div>
           <HoppButtonSecondary
             :icon="IconLucideTrash2"
             label="Clear unpinned history"
@@ -141,10 +133,6 @@ const appUrl = ref("");
 const error = ref("");
 const isLoading = ref(false);
 const isClearingCache = ref(false);
-
-const hasUnpinnedUrls = computed(() =>
-  recentUrls.value.some(item => !item.pinned)
-);
 
 const normalizeUrl = (url: string): E.Either<Error, string> => pipe(
   E.tryCatch(
@@ -244,12 +232,11 @@ const handleConnect = async () => {
     const downloadResp = await download({ serverUrl: normalizedUrl });
     if (!downloadResp.success) throw new Error("Failed to download bundle");
 
-    const loadResp = await load({ bundleName: downloadResp.bundleName, window: { title: "Hoppscotch" } });
-    if (!loadResp.success) throw new Error("Failed to load bundle");
-
     updateRecentUrl(normalizedUrl, downloadResp.version);
     await saveRecentUrls();
 
+    const loadResp = await load({ bundleName: downloadResp.bundleName, window: { title: "Hoppscotch" } });
+    if (!loadResp.success) throw new Error("Failed to load bundle");
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err);
   } finally {
