@@ -958,6 +958,48 @@ data2: {"type":"test2","typeId":"123"}`,
       responses: {},
     }),
   },
+  {
+    command: `curl --request GET \
+    --url https://echo.hoppscotch.io/ \
+    --header 'Authorization:Basic YXNkZmdoOjEyMzQ=' \
+    --header 'User-Agent:Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0'
+    --header 'foo:bar'`,
+    response: makeRESTRequest({
+      method: "GET",
+      name: "Untitled",
+      endpoint: "https://echo.hoppscotch.io/",
+      auth: {
+        authType: "basic",
+        authActive: true,
+        username: "asdfgh",
+        password: "1234",
+      },
+      body: {
+        contentType: null,
+        body: null,
+      },
+      params: [],
+      headers: [
+        {
+          active: true,
+          key: "User-Agent",
+          value:
+            "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
+          description: "",
+        },
+        {
+          active: true,
+          key: "foo",
+          value: "bar",
+          description: "",
+        },
+      ],
+      preRequestScript: "",
+      testScript: "",
+      requestVariables: [],
+      responses: {},
+    }),
+  },
 ]
 
 describe("Parse curl command to Hopp REST Request", () => {
