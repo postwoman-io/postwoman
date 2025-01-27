@@ -32,12 +32,15 @@
       <HoppSmartPlaceholder
         v-if="response.type === 'interceptor_error'"
         :src="`/images/states/${colorMode.value}/upload_error.svg`"
-        :alt="`response.error.humanMessage.heading(t) || ${t('error.network_fail')}`"
+        :alt="
+          response.error?.humanMessage?.heading?.(t) || t('error.network_fail')
+        "
         :heading="
-          response.error.humanMessage.heading(t) || t('error.network_fail')
+          response.error?.humanMessage?.heading?.(t) || t('error.network_fail')
         "
         :text="
-          response.error.humanMessage.description(t) || t('error.network_fail')
+          response.error?.humanMessage?.description?.(t) ||
+          t('error.network_fail')
         "
       >
         <template #body>

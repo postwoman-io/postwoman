@@ -91,8 +91,13 @@ export class InitializationService extends Service<InitEvent> {
   }
 
   private async initAuth() {
-    if (getKernelMode() == "desktop" && !this.initState.nativeKernelNetworking) {
-      throw new Error("Cannot initialize auth on desktop before native networking")
+    if (
+      getKernelMode() == "desktop" &&
+      !this.initState.nativeKernelNetworking
+    ) {
+      throw new Error(
+        "Cannot initialize auth on desktop before native networking"
+      )
     }
 
     if (!this.initState.persistenceFirst || !this.initState.tabs) {
