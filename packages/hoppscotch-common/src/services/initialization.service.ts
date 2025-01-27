@@ -12,13 +12,14 @@ import { NativeKernelInterceptorService } from "~/platform/std/kernel-intercepto
 
 import { performMigrations } from "~/helpers/migrations"
 import { initBackendGQLClient } from "~/helpers/backend/GQLClient"
+import { getKernelMode } from "@hoppscotch/kernel"
 
 type InitEvent =
   | { type: "STORE_READY" }
   | { type: "PERSISTENCE_FIRST_READY" }
   | { type: "PERSISTENCE_LATER_READY" }
   | { type: "TABS_READY" }
-  | { type: "KERNEL_NETWORKING_READY" }
+  | { type: "NATIVE_KERNEL_NETWORKING_READY" }
   | { type: "AUTH_READY" }
   | { type: "BACKEND_CLIENT_READY" }
   | { type: "SYNC_READY" }
@@ -34,7 +35,7 @@ export class InitializationService extends Service<InitEvent> {
     store: false,
     persistenceFirst: false,
     tabs: false,
-    kernelNetworking: false,
+    nativeKernelNetworking: false,
     auth: false,
     sync: false,
     persistenceLater: false,
@@ -79,17 +80,21 @@ export class InitializationService extends Service<InitEvent> {
     this.emit({ type: "TABS_READY" })
   }
 
-  private async initKernelNetworking() {
+  private async initNativeKernelNetworking() {
     const interceptorService = getService(KernelInterceptorService)
     const nativeInterceptorService = getService(NativeKernelInterceptorService)
     interceptorService.register(nativeInterceptorService)
     interceptorService.setActive("native")
 
-    this.initState.kernelNetworking = true
-    this.emit({ type: "KERNEL_NETWORKING_READY" })
+    this.initState.nativeKernelNetworking = true
+    this.emit({ type: "NATIVE_KERNEL_NETWORKING_READY" })
   }
 
   private async initAuth() {
+    if (getKernelMode() == "desktop" && !this.initState.nativeKernelNetworking) {
+      throw new Error("Cannot initialize auth on desktop before native networking")
+    }
+
     if (!this.initState.persistenceFirst || !this.initState.tabs) {
       throw new Error("Cannot initialize auth before persistence and tabs")
     }
@@ -138,7 +143,11 @@ export class InitializationService extends Service<InitEvent> {
   public async initPre() {
     await this.initStore()
     await this.initPersistenceFirst()
-    await this.initKernelNetworking()
+
+    if (getKernelMode() === "desktop") {
+      await this.initNativeKernelNetworking()
+    }
+
     await this.initBackendClient()
     await this.initTabs()
   }
