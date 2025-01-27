@@ -18,7 +18,7 @@ export const RESTRequest = {
     )()
 
     const content = await pipe(
-      transformContent(request.body),
+      transformContent(request),
       TE.getOrElse(() => T.of<O.Option<ContentType>>(O.none)),
       T.map(O.toUndefined)
     )()

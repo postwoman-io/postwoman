@@ -1,6 +1,4 @@
-use relay::{
-    error::RelayError, Request as RelayRequest, Response as RelayResponse,
-};
+use relay::{error::RelayError, Request as RelayRequest, Response as RelayResponse};
 use serde::{Deserialize, Serialize};
 
 pub type RunRequest = RelayRequest;

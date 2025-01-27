@@ -274,26 +274,16 @@ impl<'a> ContentHandler<'a> {
         self.set_form_content(content, media_type)
     }
 
-    fn set_urlencoded_content(
-        &mut self,
-        content: &HashMap<String, String>,
-        media_type: &MediaType,
-    ) -> Result<()> {
+    fn set_urlencoded_content(&mut self, content: &String, media_type: &MediaType) -> Result<()> {
         let mut headers = HashMap::new();
         headers.insert("Content-Type".to_string(), media_type.to_string());
 
         self.merge_and_commit_headers(headers)?;
 
-        let encoded: String = content
-            .iter()
-            .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-            .collect::<Vec<_>>()
-            .join("&");
-
-        tracing::debug!(encoded_length = encoded.len(), "Encoded form data");
+        tracing::debug!(content_length = content.len(), "URL-encoded form data");
 
         self.handle
-            .post_fields_copy(encoded.as_bytes())
+            .post_fields_copy(content.as_bytes())
             .map_err(|e| {
                 tracing::error!(error = %e, "Failed to set urlencoded content");
                 RelayError::Network {

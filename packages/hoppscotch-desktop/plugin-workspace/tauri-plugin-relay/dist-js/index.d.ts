@@ -51,7 +51,7 @@ export type ContentType = {
     mediaType: MediaType.MULTIPART_FORM;
 } | {
     kind: "urlencoded";
-    content: Record<string, string>;
+    content: string;
     mediaType: MediaType.APPLICATION_FORM;
 } | {
     kind: "stream";

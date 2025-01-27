@@ -5,8 +5,8 @@ import * as A from "fp-ts/Array"
 import { pipe } from "fp-ts/function"
 
 import { parseJSONAs } from "~/helpers/functional/json"
-import { HoppRESTReqBody } from "@hoppscotch/data"
 import { ContentType, MediaType, content } from "@hoppscotch/kernel"
+import { EffectiveHoppRESTRequest } from "~/helpers/utils/EffectiveURL"
 
 type FormDataValue = {
   kind: "file"
@@ -54,38 +54,42 @@ const Processors = {
         }))
       ),
 
-    process: (
-      formData: NonNullable<
-        Extract<HoppRESTReqBody, { contentType: "multipart/form-data" }>["body"]
-      >
-    ): TE.TaskEither<Error, ContentType> =>
+    process: (formData: FormData): TE.TaskEither<Error, ContentType> =>
       pipe(
-        formData,
-        A.filter(
-          (
-            item
-          ): item is Extract<(typeof formData)[number], { isFile: true }> =>
-            item.active && item.isFile
-        ),
-        A.chain((item) =>
-          pipe(
-            item.value,
-            A.filterMap(O.fromNullable),
-            A.map((file) => ({
-              key: item.key,
-              file,
-              contentType: item.contentType,
-            }))
-          )
-        ),
-        A.traverse(TE.ApplicativePar)(Processors.multipart.processFile),
-        TE.map(
-          A.reduce(
-            new Map<string, FormDataValue[]>(),
-            (acc, { key, value }) => {
-              acc.set(key, value)
-              return acc
+        TE.tryCatch(
+          async () => {
+            const entries = [] as {
+              key: string
+              file: Blob
+              contentType?: string
+            }[]
+            // @ts-expect-error
+            for (const [key, value] of formData.entries()) {
+              if (value instanceof Blob) {
+                entries.push({
+                  key,
+                  file: value,
+                  contentType: value.type || undefined,
+                })
+              }
             }
+            return entries
+          },
+          () => new Error("FormData processing failed")
+        ),
+        TE.chain((entries) =>
+          pipe(
+            entries,
+            A.traverse(TE.ApplicativePar)(Processors.multipart.processFile),
+            TE.map(
+              A.reduce(
+                new Map<string, FormDataValue[]>(),
+                (acc, { key, value }) => {
+                  acc.set(key, value)
+                  return acc
+                }
+              )
+            )
           )
         ),
         TE.map((entries) => content.multipart(entries))
@@ -93,7 +97,7 @@ const Processors = {
   },
 
   binary: {
-    process: (file: File): TE.TaskEither<Error, ContentType> =>
+    process: (file: Blob): TE.TaskEither<Error, ContentType> =>
       pipe(
         TE.tryCatch(
           () => file.arrayBuffer(),
@@ -102,8 +106,8 @@ const Processors = {
         TE.map((buffer) =>
           content.binary(
             new Uint8Array(buffer),
-            "application/octet-stream",
-            file.name
+            file.type || "application/octet-stream",
+            file instanceof File ? file.name : "unknown"
           )
         )
       ),
@@ -112,12 +116,8 @@ const Processors = {
   urlencoded: {
     process: (body: string): E.Either<Error, ContentType> =>
       pipe(
-        E.right(new URLSearchParams(body)),
-        E.map((params) => {
-          const contents: Record<string, string> = {}
-          params.forEach((value, key) => {
-            contents[key] = value
-          })
+        E.right(body),
+        E.map((contents) => {
           return content.urlencoded(contents)
         })
       ),
@@ -155,28 +155,36 @@ const getProcessor = (contentType: string) => {
 }
 
 export const transformContent = (
-  body: HoppRESTReqBody
+  request: EffectiveHoppRESTRequest
 ): TE.TaskEither<Error, O.Option<ContentType>> => {
-  if (!body.contentType || !body.body) {
+  const { body, effectiveFinalBody } = request
+
+  if (!body.contentType || !effectiveFinalBody) {
     return TE.right(O.none)
   }
 
   switch (body.contentType) {
     case "multipart/form-data":
-      return pipe(Processors.multipart.process(body.body), TE.map(O.some))
-
-    case "application/octet-stream":
+      if (!(effectiveFinalBody instanceof FormData)) {
+        return TE.right(O.none)
+      }
       return pipe(
-        O.fromNullable(body.body),
-        O.fold(
-          () => TE.right(O.none),
-          (file) => pipe(Processors.binary.process(file), TE.map(O.some))
-        )
+        Processors.multipart.process(effectiveFinalBody),
+        TE.map(O.some)
       )
 
+    case "application/octet-stream":
+      if (!(effectiveFinalBody instanceof Blob)) {
+        return TE.right(O.none)
+      }
+      return pipe(Processors.binary.process(effectiveFinalBody), TE.map(O.some))
+
     default:
+      if (typeof effectiveFinalBody !== "string") {
+        return TE.right(O.none)
+      }
       return pipe(
-        TE.fromEither(getProcessor(body.contentType)(body.body)),
+        TE.fromEither(getProcessor(body.contentType)(effectiveFinalBody)),
         TE.map(O.some)
       )
   }

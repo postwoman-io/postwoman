@@ -2812,7 +2812,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relay"
 version = "0.1.1"
-source = "git+https://github.com/CuriousCorrelation/relay.git#858bdd61b06bc94d14c92c07f69ea85fffe74288"
+source = "git+https://github.com/CuriousCorrelation/relay.git#82ae9507ba347fbc4a65b5419d4c39bea394f828"
 dependencies = [
  "bytes",
  "curl",

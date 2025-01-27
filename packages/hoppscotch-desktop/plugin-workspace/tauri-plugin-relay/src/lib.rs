@@ -36,7 +36,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     tracing::info!("Beginning relay plugin initialization");
 
     Builder::new("relay")
-        .invoke_handler(tauri::generate_handler![commands::execute, commands::cancel])
+        .invoke_handler(tauri::generate_handler![
+            commands::execute,
+            commands::cancel
+        ])
         .setup(|app, api| {
             tracing::info!("Setting up relay plugin");
 

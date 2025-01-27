@@ -22,7 +22,11 @@ export function createRESTNetworkRequestStream(
 
   const req = cloneDeep(request)
 
+  console.info("[helpers/network]: req", req)
+
   const execResult = RESTRequest.toRequest(req).then((kernelReq) => {
+    console.info("[helpers/network]: kernelReq", kernelReq)
+
     if (!kernelReq) {
       response.next({
         type: "network_fail",

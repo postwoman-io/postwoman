@@ -107,7 +107,7 @@ export type ContentType =
     | { kind: "form"; content: FormData; mediaType: MediaType.APPLICATION_FORM }
     | { kind: "binary"; content: Uint8Array; mediaType: MediaType.APPLICATION_OCTET | string; filename?: string }
     | { kind: "multipart"; content: FormData; mediaType: MediaType.MULTIPART_FORM }
-    | { kind: "urlencoded"; content: Record<string, string>; mediaType: MediaType.APPLICATION_FORM }
+    | { kind: "urlencoded"; content: string; mediaType: MediaType.APPLICATION_FORM }
     | { kind: "stream"; content: ReadableStream; mediaType: string }
 
 export interface RelayResponseBody {
@@ -545,7 +545,7 @@ export const content = {
         mediaType: MediaType.MULTIPART_FORM
     }),
 
-    urlencoded: (content: Record<string, string>): ContentType => ({
+    urlencoded: (content: string): ContentType => ({
         kind: "urlencoded",
         content,
         mediaType: MediaType.APPLICATION_FORM

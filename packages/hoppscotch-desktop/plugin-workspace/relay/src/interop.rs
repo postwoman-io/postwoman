@@ -95,7 +95,7 @@ pub enum ContentType {
     },
     #[serde(rename_all = "camelCase")]
     Urlencoded {
-        content: HashMap<String, String>,
+        content: String,
         media_type: MediaType,
     },
 }
