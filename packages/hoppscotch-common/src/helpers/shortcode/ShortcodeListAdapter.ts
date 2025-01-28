@@ -1,20 +1,16 @@
 import * as E from "fp-ts/Either"
 import { BehaviorSubject, Subscription } from "rxjs"
 import { Subscription as WSubscription } from "wonka"
-import {
-  GQLError,
-  runAuthOnlyGQLSubscription,
-  runGQLQuery,
-} from "../backend/GQLClient"
+import { GQLError, runAuthOnlyGQLSubscription } from "../backend/GQLClient"
 import {
   GetUserShortcodesQuery,
-  GetUserShortcodesDocument,
   ShortcodeCreatedDocument,
   ShortcodeDeletedDocument,
   ShortcodeUpdatedDocument,
 } from "../backend/graphql"
 import { BACKEND_PAGE_SIZE } from "../backend/helpers"
 import { Shortcode } from "./Shortcode"
+import { platform } from "~/platform"
 
 export default class ShortcodeListAdapter {
   error$: BehaviorSubject<GQLError<string> | null>
@@ -95,12 +91,8 @@ export default class ShortcodeListAdapter {
         ? this.shortcodes$.value[this.shortcodes$.value.length - 1].id
         : undefined
 
-    const result = await runGQLQuery({
-      query: GetUserShortcodesDocument,
-      variables: {
-        cursor: lastCodeID,
-      },
-    })
+    const result = await platform.backend.getUserShortcodes(lastCodeID)
+
     if (E.isLeft(result)) {
       this.error$.next(result.left)
       console.error(result.left)

@@ -7,8 +7,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue"
 import { useI18n } from "@composables/i18n"
+import { defineComponent } from "vue"
+import { useRoute } from "vue-router"
 import { initializeApp } from "~/helpers/app"
 import { platform } from "~/platform"
 
@@ -16,6 +17,7 @@ export default defineComponent({
   setup() {
     return {
       t: useI18n(),
+      route: useRoute(),
     }
   },
   data() {
@@ -28,6 +30,19 @@ export default defineComponent({
     initializeApp()
   },
   async mounted() {
+    const { redirect, ...queryParams } = this.route.query
+
+    if (redirect && Object.keys(queryParams).length) {
+      const url = new URL(("https://" + redirect) as string)
+
+      Object.entries(queryParams).forEach(([key, value]) => {
+        url.searchParams.set(key, value as string)
+      })
+
+      window.location.href = url.href
+      return
+    }
+
     this.signingInWithEmail = true
 
     try {

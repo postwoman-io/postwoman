@@ -3,9 +3,6 @@ import * as TE from "fp-ts/TaskEither"
 import { runMutation } from "../GQLClient"
 import { TeamName } from "../types/TeamName"
 import {
-  CreateTeamDocument,
-  CreateTeamMutation,
-  CreateTeamMutationVariables,
   DeleteTeamDocument,
   DeleteTeamMutation,
   DeleteTeamMutationVariables,
@@ -23,6 +20,7 @@ import {
   UpdateTeamMemberRoleMutation,
   UpdateTeamMemberRoleMutationVariables,
 } from "../graphql"
+import { platform } from "~/platform"
 
 type DeleteTeamErrors =
   | "team/not_required_role"
@@ -52,17 +50,12 @@ type RemoveTeamMemberErrors =
   | "team/invalid_id"
   | "team/not_required_role"
 
-export const createTeam = (name: TeamName) =>
-  pipe(
-    runMutation<
-      CreateTeamMutation,
-      CreateTeamMutationVariables,
-      CreateTeamErrors
-    >(CreateTeamDocument, {
-      name,
-    }),
+export const createTeam = (name: TeamName) => {
+  return pipe(
+    platform.backend.createTeam<CreateTeamErrors>(name),
     TE.map(({ createTeam }) => createTeam)
   )
+}
 
 export const deleteTeam = (teamID: string) =>
   runMutation<

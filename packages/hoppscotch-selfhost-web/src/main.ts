@@ -4,6 +4,7 @@ import { def as environmentsDef } from "./platform/environments/environments.pla
 import { def as collectionsDef } from "./platform/collections/collections.platform"
 import { def as settingsDef } from "./platform/settings/settings.platform"
 import { def as historyDef } from "./platform/history/history.platform"
+import { def as backendDef } from "@hoppscotch/common/platform/std/backend"
 import { browserInterceptor } from "@hoppscotch/common/platform/std/interceptors/browser"
 import { proxyInterceptor } from "@hoppscotch/common/platform/std/interceptors/proxy"
 import { ExtensionInspectorService } from "@hoppscotch/common/platform/std/inspections/extension.inspector"
@@ -47,4 +48,5 @@ createHoppApp("#app", {
     collectionImportSizeLimit: 50,
   },
   infra: InfraPlatform,
+  backend: backendDef,
 })

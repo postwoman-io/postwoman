@@ -24,6 +24,7 @@ import { useToast } from "@composables/toast"
 import { useI18n } from "@composables/i18n"
 import { platform } from "~/platform"
 import { defineActionHandler } from "~/helpers/actions"
+import { useRouter } from "vue-router"
 
 defineProps({
   outline: {
@@ -45,11 +46,26 @@ const logoutItem = ref<HTMLButtonElement>()
 
 const toast = useToast()
 const t = useI18n()
+const router = useRouter()
 
 const logout = async () => {
   try {
     await platform.auth.signOutUser()
     toast.success(`${t("auth.logged_out")}`)
+
+    const { organization } = platform
+
+    if (!organization) {
+      return
+    }
+
+    if (!organization.isDefaultCloudInstance) {
+      router.push({
+        name: "orgs-login-required",
+      })
+
+      window.location.reload()
+    }
   } catch (e) {
     console.error(e)
     toast.error(`${t("error.something_went_wrong")}`)

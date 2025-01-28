@@ -15,6 +15,8 @@ import { LimitsPlatformDef } from "./limits"
 import { SettingsPlatformDef } from "./settings"
 import { SpotlightPlatformDef } from "./spotlight"
 import { UIPlatformDef } from "./ui"
+import { BackendPlatformDef } from "./backend"
+import { OrganizationPlatformDef } from "./organization"
 
 export type PlatformDef = {
   ui?: UIPlatformDef
@@ -58,6 +60,8 @@ export type PlatformDef = {
   limits?: LimitsPlatformDef
   infra?: InfraPlatformDef
   experiments?: ExperimentsPlatformDef
+  backend: BackendPlatformDef
+  organization?: OrganizationPlatformDef
 }
 
 export let platform: PlatformDef
