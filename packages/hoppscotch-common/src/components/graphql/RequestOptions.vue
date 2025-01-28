@@ -72,11 +72,11 @@ import {
   connection,
 } from "~/helpers/graphql/connection"
 import { useService } from "dioc/vue"
-import { InterceptorService } from "~/services/interceptor.service"
 import { editGraphqlRequest } from "~/newstore/collections"
 import { GQLTabService } from "~/services/tab/graphql"
 import { HoppInheritedProperty } from "~/helpers/types/HoppInheritedProperties"
 import { HoppRESTHeaders } from "@hoppscotch/data"
+import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 
 const VALID_GQL_OPERATIONS = [
   "query",
@@ -87,7 +87,7 @@ const VALID_GQL_OPERATIONS = [
 
 export type GQLOptionTabs = (typeof VALID_GQL_OPERATIONS)[number]
 
-const interceptorService = useService(InterceptorService)
+const interceptorService = useService(KernelInterceptorService)
 
 const t = useI18n()
 const toast = useToast()
@@ -191,7 +191,7 @@ const runQuery = async (
   platform.analytics?.logEvent({
     type: "HOPP_REQUEST_RUN",
     platform: "graphql-query",
-    strategy: interceptorService.currentInterceptorID.value!,
+    strategy: interceptorService.current.value!.id,
   })
 }
 
