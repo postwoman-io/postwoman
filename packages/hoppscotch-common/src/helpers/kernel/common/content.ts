@@ -63,7 +63,8 @@ const Processors = {
               file: Blob
               contentType?: string
             }[]
-            // @ts-expect-error
+            // @ts-expect-error: `formData.entries` does exist but isn't visible,
+            // see `"lib": ["ESNext", "DOM"],` in `tsconfig.json`
             for (const [key, value] of formData.entries()) {
               if (value instanceof Blob) {
                 entries.push({
