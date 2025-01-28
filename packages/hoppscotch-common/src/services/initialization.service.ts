@@ -92,7 +92,7 @@ export class InitializationService extends Service<InitEvent> {
 
   private async initAuth() {
     if (
-      getKernelMode() == "desktop" &&
+      getKernelMode() === "desktop" &&
       !this.initState.nativeKernelNetworking
     ) {
       throw new Error(
