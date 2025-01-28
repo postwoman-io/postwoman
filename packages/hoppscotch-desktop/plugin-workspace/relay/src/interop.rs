@@ -110,7 +110,7 @@ pub struct TokenResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "snake_case")]
 pub enum GrantType {
     #[serde(rename_all = "camelCase")]
     AuthorizationCode {
