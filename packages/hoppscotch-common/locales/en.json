@@ -649,7 +649,7 @@
       "localaccess_unsupported": "Current interceptor does not support local access, please consider using Agent, Extension interceptors or the Desktop App"
     },
     "auth": {
-      "digest": "Agent interceptor is recommended when using Digest Authorization."
+      "digest": "Agent interceptor or the Hoppscotch Desktop app are recommended when using Digest Authorization."
     },
     "body": {
       "binary": "Sending binary data via the current interceptor is not supported yet."
