@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
-import { KernelInterceptor, KernelInterceptorService } from "../kernel-interceptor.service"
+import {
+  KernelInterceptor,
+  KernelInterceptorService,
+} from "../kernel-interceptor.service"
 import { TestContainer } from "dioc/testing"
 import { RelayRequest } from "@hoppscotch/kernel"
 
@@ -130,7 +133,9 @@ describe("KernelInterceptorService", () => {
       const container = new TestContainer()
       const service = container.bind(KernelInterceptorService)
 
-      expect(() => service.execute({} as RelayRequest)).toThrow("No active interceptor")
+      expect(() => service.execute({} as RelayRequest)).toThrow(
+        "No active interceptor"
+      )
     })
 
     it("calls execute on current interceptor", () => {
@@ -166,8 +171,8 @@ describe("KernelInterceptorService", () => {
           type: "unselectable",
           reason: {
             type: "text",
-            text: () => "Not available"
-          }
+            text: () => "Not available",
+          },
         },
         capabilities: {},
         execute: () => {
@@ -188,7 +193,7 @@ describe("KernelInterceptorService", () => {
       service.register(interceptor2)
       service.register(interceptor1)
 
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
 
       expect(service.current.value?.id).toBe("test2")
     })

@@ -182,7 +182,7 @@ export const connect = async (
   const poll = async () => {
     try {
       const kernelRequest = await GQLRequest.toRequest({
-        v: 7,
+        v: 8,
         name: "Introspection Query",
         url,
         headers,
@@ -252,7 +252,7 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     return runSubscription(options)
   }
 
-  const kernelService = getService(KernelInterceptorService)
+  const interceptorService = getService(KernelInterceptorService)
   const request = makeGQLRequest({
     name: options.name ?? "Untitled Request",
     url,
@@ -262,9 +262,9 @@ export const runGQLOperation = async (options: RunQueryOptions) => {
     auth,
   })
 
-  const result = await kernelService.execute(
-    await GQLRequest.toRequest(request)
-  ).response
+  const kernelRequest = await GQLRequest.toRequest(request)
+  console.info("[helpers/graphql/network]: kernelRequest", kernelRequest)
+  const result = await interceptorService.execute(kernelRequest).response
 
   if (E.isLeft(result)) {
     const error = result.left as RelayError

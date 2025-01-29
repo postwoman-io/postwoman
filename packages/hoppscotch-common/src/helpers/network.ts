@@ -24,10 +24,10 @@ export function createRESTNetworkRequestStream(
 
   console.info("[helpers/network]: req", req)
 
-  const execResult = RESTRequest.toRequest(req).then((kernelReq) => {
-    console.info("[helpers/network]: kernelReq", kernelReq)
+  const execResult = RESTRequest.toRequest(req).then((kernelRequest) => {
+    console.info("[helpers/network]: kernelRequest", kernelRequest)
 
-    if (!kernelReq) {
+    if (!kernelRequest) {
       response.next({
         type: "network_fail",
         req,
@@ -37,7 +37,7 @@ export function createRESTNetworkRequestStream(
       return
     }
 
-    return service.execute(kernelReq)
+    return service.execute(kernelRequest)
   })
 
   const service = getService(KernelInterceptorService)
