@@ -63,44 +63,45 @@
 }
 
 @mixin dark-theme {
-  --primary-color: #181818;
-  --primary-light-color: #1c1c1e;
-  --primary-dark-color: theme("colors.neutral.800");
-  --primary-contrast-color: theme("colors.neutral.900");
+  --primary-color: #383838;
+  --primary-light-color: #424244;
+  --primary-dark-color: theme("colors.neutral.600");
+  --primary-contrast-color: theme("colors.neutral.700");
 
-  --secondary-color: theme("colors.neutral.400");
-  --secondary-light-color: theme("colors.neutral.500");
-  --secondary-dark-color: theme("colors.zinc.50");
+  --secondary-color: theme("colors.neutral.300");
+  --secondary-light-color: theme("colors.neutral.400");
+  --secondary-dark-color: theme("colors.zinc.100");
 
-  --divider-color: #1f1f1f;
-  --divider-light-color: #1f1f1f;
-  --divider-dark-color: theme("colors.zinc.800");
+  --divider-color: #444444;
+  --divider-light-color: #444444;
+  --divider-dark-color: theme("colors.zinc.600");
 
-  --banner-info-color: theme("colors.stone.800");
-  --banner-warning-color: theme("colors.yellow.800");
-  --banner-error-color: theme("colors.red.800");
+  --banner-info-color: theme("colors.stone.600");
+  --banner-warning-color: theme("colors.yellow.600");
+  --banner-error-color: theme("colors.red.600");
 
-  --tooltip-color: theme("colors.neutral.100");
-  --popover-color: #1b1b1b;
+  --tooltip-color: theme("colors.neutral.200");
+  --popover-color: #2a2a2a;
 
-  --method-get-color: theme("colors.emerald.500");
-  --method-post-color: theme("colors.yellow.500");
-  --method-put-color: theme("colors.sky.500");
-  --method-patch-color: theme("colors.violet.500");
-  --method-delete-color: theme("colors.rose.500");
-  --method-head-color: theme("colors.teal.500");
-  --method-options-color: theme("colors.indigo.500");
-  --method-default-color: theme("colors.neutral.500");
+  --method-get-color: theme("colors.emerald.400");
+  --method-post-color: theme("colors.yellow.400");
+  --method-put-color: theme("colors.sky.400");
+  --method-patch-color: theme("colors.violet.400");
+  --method-delete-color: theme("colors.rose.400");
+  --method-head-color: theme("colors.teal.400");
+  --method-options-color: theme("colors.indigo.400");
+  --method-default-color: theme("colors.neutral.400");
 
-  --status-info-color: theme("colors.blue.500");
-  --status-success-color: theme("colors.green.500");
-  --status-redirect-color: theme("colors.amber.500");
-  --status-critical-error-color: theme("colors.red.500");
-  --status-server-error-color: theme("colors.rose.500");
-  --status-missing-data-color: theme("colors.slate.500");
+  --status-info-color: theme("colors.blue.400");
+  --status-success-color: theme("colors.green.400");
+  --status-redirect-color: theme("colors.amber.400");
+  --status-critical-error-color: theme("colors.red.400");
+  --status-server-error-color: theme("colors.rose.400");
+  --status-missing-data-color: theme("colors.slate.400");
 
   --editor-theme: "merbivore_soft";
 }
+
 
 @mixin black-theme {
   --primary-color: #0f0f0f;
