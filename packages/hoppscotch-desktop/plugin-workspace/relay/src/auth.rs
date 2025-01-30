@@ -1,24 +1,19 @@
 use curl::easy::Easy;
-
 use std::collections::HashMap;
 
 use crate::{
     error::{RelayError, Result},
-    header::HeadersBuilder,
     interop::{AuthType, GrantType, TokenResponse},
 };
 
 pub(crate) struct AuthHandler<'a> {
     handle: &'a mut Easy,
-    headers: HashMap<String, String>,
+    headers: &'a mut HashMap<String, String>,
 }
 
 impl<'a> AuthHandler<'a> {
-    pub(crate) fn new(handle: &'a mut Easy) -> Self {
-        Self {
-            handle,
-            headers: HashMap::new(),
-        }
+    pub(crate) fn new(handle: &'a mut Easy, headers: &'a mut HashMap<String, String>) -> Self {
+        Self { handle, headers }
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
@@ -61,11 +56,6 @@ impl<'a> AuthHandler<'a> {
         }
     }
 
-    fn commit_headers(&mut self) -> Result<()> {
-        tracing::info!(headers = ?self.headers, "Committing all headers");
-        HeadersBuilder::new(self.handle).add_headers(Some(&self.headers))
-    }
-
     fn set_basic_auth(&mut self, username: &str, password: &str) -> Result<()> {
         tracing::debug!(username = %username, "Setting basic auth credentials");
 
@@ -92,7 +82,7 @@ impl<'a> AuthHandler<'a> {
     fn set_bearer_auth(&mut self, token: &str) -> Result<()> {
         self.headers
             .insert("Authorization".to_string(), format!("Bearer {}", token));
-        self.commit_headers()
+        Ok(())
     }
 
     fn set_digest_auth(&mut self, username: &str, password: &str) -> Result<()> {

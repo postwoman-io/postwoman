@@ -1,4 +1,5 @@
 use curl::easy::Easy;
+use std::collections::HashMap;
 
 use crate::{
     auth::AuthHandler,
@@ -77,16 +78,16 @@ impl<'a> CurlRequest<'a> {
         tracing::debug!("Preparing request");
         self.setup_basics()?;
 
-        HeadersBuilder::new(self.handle).add_headers(self.request.headers.as_ref())?;
+        let mut headers = HashMap::new();
 
         if let Some(ref content) = self.request.content {
             tracing::trace!(content_type = ?content, "Setting request content");
-            ContentHandler::new(self.handle, self.request.headers.as_ref()).set_content(content)?;
+            ContentHandler::new(self.handle, &mut headers).set_content(content)?;
         }
 
         if let Some(ref auth) = self.request.auth {
             tracing::trace!(auth_type = ?auth, "Configuring authentication");
-            AuthHandler::new(self.handle).set_auth(auth)?;
+            AuthHandler::new(self.handle, &mut headers).set_auth(auth)?;
         }
 
         if let Some(ref security) = self.request.security {
@@ -122,6 +123,11 @@ impl<'a> CurlRequest<'a> {
                         cause: Some(e.to_string()),
                     })?;
             }
+        }
+
+        if let Some(ref request_headers) = self.request.headers {
+            headers.extend(request_headers.clone());
+            HeadersBuilder::new(self.handle).add_headers(Some(&headers))?;
         }
 
         Ok(())

@@ -1,44 +1,40 @@
-use std::{collections::HashMap, path::Path};
-
 use curl::easy::Easy;
+use http::HeaderName;
+use std::{collections::HashMap, path::Path};
 
 use crate::{
     error::{RelayError, Result},
-    header::HeadersBuilder,
     interop::{ContentType, FormValue, MediaType},
 };
 
 pub(crate) struct ContentHandler<'a> {
     handle: &'a mut Easy,
-    original_headers: HashMap<String, String>,
+    headers: &'a mut HashMap<String, String>,
 }
 
 impl<'a> ContentHandler<'a> {
-    pub(crate) fn new(handle: &'a mut Easy, headers: Option<&HashMap<String, String>>) -> Self {
-        tracing::debug!(
-            "Creating new ContentHandler with original headers: {:?}",
-            headers
-        );
-        Self {
-            handle,
-            original_headers: headers.cloned().unwrap_or_default(),
-        }
+    pub(crate) fn new(handle: &'a mut Easy, headers: &'a mut HashMap<String, String>) -> Self {
+        tracing::debug!("Creating new ContentHandler with headers: {:?}", headers);
+        Self { handle, headers }
     }
 
-    fn merge_and_commit_headers(&mut self, new_headers: HashMap<String, String>) -> Result<()> {
-        let mut merged = self.original_headers.clone();
+    fn merge_headers(&mut self, new_headers: HashMap<String, String>) {
         tracing::info!(
-            original_headers = ?self.original_headers,
+            original_headers = ?self.headers,
             new_headers = ?new_headers,
             "Merging headers"
         );
 
         for (key, value) in new_headers {
-            merged.insert(key, value);
+            if let Ok(header_name) = HeaderName::from_bytes(key.as_bytes()) {
+                let canonical_name = header_name.to_string();
+                self.headers.insert(canonical_name, value);
+            } else {
+                self.headers.insert(key, value);
+            }
         }
 
-        tracing::info!(merged_headers = ?merged, "Committing merged headers");
-        HeadersBuilder::new(self.handle).add_headers(Some(&merged))
+        tracing::info!(merged_headers = ?self.headers, "Headers merged");
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
@@ -103,9 +99,9 @@ impl<'a> ContentHandler<'a> {
 
     fn set_text_content(&mut self, content: &str, media_type: &MediaType) -> Result<()> {
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), media_type.to_string());
+        headers.insert("content-type".to_string(), media_type.to_string());
 
-        self.merge_and_commit_headers(headers)?;
+        self.merge_headers(headers);
 
         self.handle
             .post_fields_copy(content.as_bytes())
@@ -135,9 +131,9 @@ impl<'a> ContentHandler<'a> {
         })?;
 
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), media_type.to_string());
+        headers.insert("content-type".to_string(), media_type.to_string());
 
-        self.merge_and_commit_headers(headers)?;
+        self.merge_headers(headers);
 
         self.handle
             .post_fields_copy(json_str.as_bytes())
@@ -167,16 +163,16 @@ impl<'a> ContentHandler<'a> {
                 .and_then(|n| n.to_str())
                 .unwrap_or(name);
 
-            headers.insert("Content-Type".to_string(), media_type.to_string());
+            headers.insert("content-type".to_string(), media_type.to_string());
             headers.insert(
                 "Content-Disposition".to_string(),
                 format!("attachment; filename=\"{}\"", safe_name),
             );
         } else {
-            headers.insert("Content-Type".to_string(), media_type.to_string());
+            headers.insert("content-type".to_string(), media_type.to_string());
         }
 
-        self.merge_and_commit_headers(headers)?;
+        self.merge_headers(headers);
 
         self.handle.post_fields_copy(content).map_err(|e| {
             tracing::error!(error = %e, "Failed to set binary content");
@@ -196,9 +192,9 @@ impl<'a> ContentHandler<'a> {
         media_type: &MediaType,
     ) -> Result<()> {
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), media_type.to_string());
+        headers.insert("content-type".to_string(), media_type.to_string());
 
-        self.merge_and_commit_headers(headers)?;
+        self.merge_headers(headers);
 
         let mut form = curl::easy::Form::new();
 
@@ -276,9 +272,9 @@ impl<'a> ContentHandler<'a> {
 
     fn set_urlencoded_content(&mut self, content: &String, media_type: &MediaType) -> Result<()> {
         let mut headers = HashMap::new();
-        headers.insert("Content-Type".to_string(), media_type.to_string());
+        headers.insert("content-type".to_string(), media_type.to_string());
 
-        self.merge_and_commit_headers(headers)?;
+        self.merge_headers(headers);
 
         tracing::debug!(content_length = content.len(), "URL-encoded form data");
 

@@ -191,6 +191,8 @@ export const connect = async (
         auth: { authType: "none", authActive: false },
       })
 
+      console.info("[helpers/graphql/network]: kernelRequest", kernelRequest)
+
       const result = await kernelService.execute(kernelRequest).response
 
       if (E.isLeft(result)) throw new Error(result.left.toString())
