@@ -83,6 +83,7 @@ impl ResponseHandler {
     fn determine_media_type(&self) -> MediaType {
         tracing::trace!("Determining response content type");
 
+        // TODO: Check for other capitalizations, `content-type` or `CONTENT-TYPE`
         self.headers
             .get("Content-Type")
             .and_then(|content_type| content_type.parse::<Mime>().ok())

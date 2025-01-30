@@ -11,7 +11,7 @@ export type Method =
   | "CONNECT" // Create tunnel
   | "TRACE"   // Loop-back test
 
-export type Version = "HTTP/1.0" | "HTTP/1.1" | "HTTP/2" | "HTTP/3"
+export type Version = "HTTP/1.0" | "HTTP/1.1" | "HTTP/2.0" | "HTTP/3.0"
 
 export type StatusCode =
     | 100  // Continue

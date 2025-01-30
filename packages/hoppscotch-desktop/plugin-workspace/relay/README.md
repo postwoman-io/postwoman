@@ -25,7 +25,7 @@ relay = { git = "https://github.com/CuriousCorrelation/relay.git" }
 
 - 🦀 Blazingly fast!
 - HTTP client built on libcurl
-- HTTP/1.1, HTTP/2, HTTP/3 support
+- HTTP/1.1, HTTP/2.0, HTTP/3.0 support
 - Security with SSL/TLS certificate management
 - Proxy support with authentication
 - Multiple authentication methods (Basic, Bearer, Digest)
@@ -89,7 +89,7 @@ pub enum RelayError {
 
 - Rust 1.77.2 or later
 - OpenSSL development libraries
-- libcurl with SSL and HTTP/2 support
+- libcurl with SSL and HTTP/2.0 support
 
 > [!WARNING]
 > This crate uses custom forks of some dependencies for NTLM support and consistent OpenSSL backend across platforms.

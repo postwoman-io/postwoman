@@ -38,14 +38,7 @@ fn execute_request(request: &Request, cancel_token: &CancellationToken) -> Resul
     let mut curl_request = CurlRequest::new(&mut handle, request);
     curl_request.prepare()?;
 
-    tracing::debug!(
-        request_id = ?request.id,
-        method = ?request.method,
-        url = ?request.url,
-        headers = ?request.headers,
-        body = ?request.content,
-        "Full request details before sending"
-    );
+    tracing::debug!(request = ?request, "Full request details before sending");
 
     handle.verbose(true).map_err(|e| RelayError::Network {
         message: "Failed to set verbose mode".into(),
