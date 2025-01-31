@@ -10,7 +10,11 @@
       "toBeLevel5xx": "fn()",
       "toBeType": "fn(type: string)",
       "toHaveLength": "fn(length: number)",
-      "toInclude": "fn(value: ?)"
+      "toInclude": "fn(value: ?)",
+      "toBeGreaterThan": "fn(value: number)",
+      "toBeLessThan": "fn(value: number)",
+      "toBeGreaterThanOrEqual": "fn(value: number)",
+      "toBeLessThanOrEqual": "fn(value: number)"
     }
   },
   "pw": {
@@ -18,7 +22,8 @@
     "response": {
       "status": "number",
       "headers": "?",
-      "body": "?"
+      "body": "?",
+      "duration": "number"
     },
     "env": {
       "set": "fn(key: string, value: string)",

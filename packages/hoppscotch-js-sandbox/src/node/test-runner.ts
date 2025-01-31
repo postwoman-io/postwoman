@@ -148,6 +148,10 @@ const executeScriptInContext = (
                 "toBeType",
                 "toHaveLength",
                 "toInclude",
+                "toBeGreaterThan",
+                "toBeLessThan",
+                "toBeGreaterThanOrEqual",
+                "toBeLessThanOrEqual"
               ]
               matcherMethodNames.forEach((methodName) => {
                 matcherMethods[methodName] = expectFnResult.getSync(methodName)

@@ -46,4 +46,11 @@ pw.test("Status code is 5xx", ()=> {
     pw.expect(pw.response.status).toBeLevel5xx();
 });`,
   },
+  {
+    name: "Response Duration: Response time is less than 200ms",
+    script: `\n\n// Check response time is less than 200ms
+pw.test("Response time is less than 200ms", ()=> {
+   pw.expect(pw.response.duration).toBeLessThan(200);
+});`,
+  }
 ]
