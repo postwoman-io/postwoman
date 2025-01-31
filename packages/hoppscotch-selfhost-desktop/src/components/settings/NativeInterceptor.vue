@@ -47,6 +47,15 @@
         :label="'Proxy URL'"
         input-styles="input floating-input"
       />
+      <HoppSmartInput
+        v-if="allowProxy"
+        v-model="noProxy"
+        :autofocus="false"
+        styles="flex-1"
+        placeholder=" "
+        :label="'Proxy Bypass (Enter comma separated values to bypass proxy settings. Example: localhost, .example.com)'"
+        input-styles="input floating-input"
+      />
 
       <p class="my-1 text-secondaryLight">
         Hoppscotch native interceptor supports HTTP/HTTPS/SOCKS proxies along with NTLM and Basic Auth in those proxies. Include the username and password for the proxy authentication in the URL itself.
@@ -75,12 +84,18 @@ const showClientCertificatesModal = ref(false)
 
 const allowProxy = ref(false)
 const proxyURL = ref("")
+const noProxy = ref("")
+
+const noProxyArray = computed(() => {
+  return noProxy.value.split(",").map(item => item.trim())
+})
 
 const proxyInfo = computed<RequestProxyInfo>({
   get() {
     if (allowProxy.value) {
       return {
         url: proxyURL.value,
+        no_proxy: noProxyArray.value,
       }
     }
 
@@ -90,6 +105,7 @@ const proxyInfo = computed<RequestProxyInfo>({
     if (newData) {
       allowProxy.value = true
       proxyURL.value = newData.url
+      noProxy.value = newData.no_proxy.join(", ")
     } else {
       allowProxy.value = false
     }
