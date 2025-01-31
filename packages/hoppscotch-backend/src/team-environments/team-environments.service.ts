@@ -33,10 +33,9 @@ export class TeamEnvironmentsService {
    * @returns TeamEnvironment model
    */
   private cast(teamEnvironment: DBTeamEnvironment): TeamEnvironment {
+    let {id,name,teamID} = teamEnvironment    
     return {
-      id: teamEnvironment.id,
-      name: teamEnvironment.name,
-      teamID: teamEnvironment.teamID,
+      id,name,teamID
       variables: JSON.stringify(teamEnvironment.variables),
     };
   }
@@ -73,8 +72,7 @@ export class TeamEnvironmentsService {
 
     const result = await this.prisma.teamEnvironment.create({
       data: {
-        name: name,
-        teamID: teamID,
+        name,teamID
         variables: JSON.parse(variables),
       },
     });
@@ -99,7 +97,7 @@ export class TeamEnvironmentsService {
     try {
       const result = await this.prisma.teamEnvironment.delete({
         where: {
-          id: id,
+         id
         },
       });
 
@@ -130,7 +128,7 @@ export class TeamEnvironmentsService {
       if (!isTitleValid) return E.left(TEAM_ENVIRONMENT_SHORT_NAME);
 
       const result = await this.prisma.teamEnvironment.update({
-        where: { id: id },
+        where: { id },
         data: {
           name,
           variables: JSON.parse(variables),
