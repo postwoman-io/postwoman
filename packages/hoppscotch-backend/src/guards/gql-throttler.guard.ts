@@ -9,4 +9,7 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
     const ctx = gqlCtx.getContext();
     return { req: ctx.req, res: ctx.res };
   }
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    return req.ips.length ? req.ips[0] : req.ip; // individualize IP extraction to meet your own needs
+  }
 }
