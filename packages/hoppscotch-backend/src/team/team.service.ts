@@ -15,7 +15,6 @@ import {
 } from '../errors';
 import { PubSubService } from '../pubsub/pubsub.service';
 import { flow, pipe } from 'fp-ts/function';
-import * as TE from 'fp-ts/TaskEither';
 import * as TO from 'fp-ts/TaskOption';
 import * as O from 'fp-ts/Option';
 import * as E from 'fp-ts/Either';
@@ -264,37 +263,25 @@ export class TeamService implements UserDataHandler, OnModuleInit {
   }
 
   async getTeamsOfUser(uid: string, cursor: string | null): Promise<Team[]> {
-    if (!cursor) {
-      const entries = await this.prisma.teamMember.findMany({
-        take: 10,
-        where: {
-          userUid: uid,
-        },
-        include: {
-          team: true,
-        },
-      });
-
-      return entries.map((entry) => entry.team);
-    } else {
-      const entries = await this.prisma.teamMember.findMany({
-        take: 10,
-        skip: 1,
-        cursor: {
-          teamID_userUid: {
-            teamID: cursor,
-            userUid: uid,
-          },
-        },
-        where: {
-          userUid: uid,
-        },
-        include: {
-          team: true,
-        },
-      });
-      return entries.map((entry) => entry.team);
-    }
+    const entries = await this.prisma.teamMember.findMany({
+      take: 10,
+      skip: cursor ? 1 : 0,
+      cursor: cursor
+        ? {
+            teamID_userUid: {
+              teamID: cursor,
+              userUid: uid,
+            },
+          }
+        : undefined,
+      where: {
+        userUid: uid,
+      },
+      include: {
+        team: true,
+      },
+    });
+    return entries.map((entry) => entry.team);
   }
 
   async getTeamWithID(teamID: string): Promise<Team | null> {
@@ -309,19 +296,6 @@ export class TeamService implements UserDataHandler, OnModuleInit {
     } catch (_e) {
       return null;
     }
-  }
-
-  getTeamWithIDTE(teamID: string): TE.TaskEither<'team/invalid_id', Team> {
-    return pipe(
-      () => this.getTeamWithID(teamID),
-      TE.fromTask,
-      TE.chain(
-        TE.fromPredicate(
-          (x): x is Team => !!x,
-          () => TEAM_INVALID_ID,
-        ),
-      ),
-    );
   }
 
   /**
@@ -373,19 +347,6 @@ export class TeamService implements UserDataHandler, OnModuleInit {
     } catch (e) {
       return null;
     }
-  }
-
-  getTeamMemberTE(teamID: string, userUid: string) {
-    return pipe(
-      () => this.getTeamMember(teamID, userUid),
-      TE.fromTask,
-      TE.chain(
-        TE.fromPredicate(
-          (x): x is TeamMember => !!x,
-          () => TEAM_MEMBER_NOT_FOUND,
-        ),
-      ),
-    );
   }
 
   async getRoleOfUserInTeam(
@@ -488,25 +449,12 @@ export class TeamService implements UserDataHandler, OnModuleInit {
   ): Promise<TeamMember[]> {
     let teamMembers: DbTeamMember[];
 
-    if (!cursor) {
-      teamMembers = await this.prisma.teamMember.findMany({
-        take: 10,
-        where: {
-          teamID,
-        },
-      });
-    } else {
-      teamMembers = await this.prisma.teamMember.findMany({
-        take: 10,
-        skip: 1,
-        cursor: {
-          id: cursor,
-        },
-        where: {
-          teamID,
-        },
-      });
-    }
+    teamMembers = await this.prisma.teamMember.findMany({
+      take: 10,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      where: { teamID },
+    });
 
     const members = teamMembers.map(
       (entry) =>

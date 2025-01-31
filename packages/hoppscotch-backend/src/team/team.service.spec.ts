@@ -11,6 +11,7 @@ import {
 } from '../errors';
 import { mockDeep, mockReset } from 'jest-mock-extended';
 import * as O from 'fp-ts/Option';
+import { skip } from 'rxjs';
 
 const mockPrisma = mockDeep<PrismaService>();
 
@@ -755,6 +756,8 @@ describe('getMembersOfTeam', () => {
 
     expect(mockPrisma.teamMember.findMany).toHaveBeenCalledWith({
       take: 10,
+      skip: 0,
+      cursor: undefined,
       where: {
         teamID: team.id,
       },
@@ -806,6 +809,8 @@ describe('getTeamsOfUser', () => {
 
     expect(mockPrisma.teamMember.findMany).toHaveBeenCalledWith({
       take: 10,
+      skip: 0,
+      cursor: undefined,
       where: {
         userUid: dbTeamMember.userUid,
       },

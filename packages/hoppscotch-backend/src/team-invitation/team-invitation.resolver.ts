@@ -15,7 +15,11 @@ import * as TE from 'fp-ts/TaskEither';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import { Team, TeamMember, TeamMemberRole } from 'src/team/team.model';
-import { TEAM_INVITE_NO_INVITE_FOUND, USER_NOT_FOUND } from 'src/errors';
+import {
+  TEAM_INVALID_ID,
+  TEAM_INVITE_NO_INVITE_FOUND,
+  USER_NOT_FOUND,
+} from 'src/errors';
 import { GqlUser } from 'src/decorators/gql-user.decorator';
 import { User } from 'src/user/user.model';
 import { UseGuards } from '@nestjs/common';
@@ -50,10 +54,9 @@ export class TeamInvitationResolver {
     description: 'Get the team associated to the invite',
   })
   async team(@Parent() teamInvitation: TeamInvitation): Promise<Team> {
-    return pipe(
-      this.teamService.getTeamWithIDTE(teamInvitation.teamID),
-      TE.getOrElse(throwErr),
-    )();
+    const team = await this.teamService.getTeamWithID(teamInvitation.teamID);
+    if (!team) throwErr(TEAM_INVALID_ID);
+    return team;
   }
 
   @ResolveField(() => User, {

@@ -11,6 +11,7 @@ import {
   EMAIL_FAILED,
   INVALID_EMAIL,
   ONLY_ONE_ADMIN_ACCOUNT,
+  TEAM_INVALID_ID,
   TEAM_INVITE_ALREADY_MEMBER,
   TEAM_INVITE_NO_INVITE_FOUND,
   USERS_NOT_FOUND,
@@ -331,11 +332,11 @@ export class AdminService {
     const user = await this.userService.findUserByEmail(userEmail);
     if (O.isNone(user)) return E.left(USER_NOT_FOUND);
 
-    const teamMember = await this.teamService.getTeamMemberTE(
+    const teamMember = await this.teamService.getTeamMember(
       teamID,
       user.value.uid,
-    )();
-    if (E.isLeft(teamMember)) {
+    );
+    if (!teamMember) {
       const addedUser = await this.teamService.addMemberToTeamWithEmail(
         teamID,
         userEmail,
@@ -603,9 +604,9 @@ export class AdminService {
    * @returns an Either of `Team` or error
    */
   async getTeamInfo(teamID: string) {
-    const team = await this.teamService.getTeamWithIDTE(teamID)();
-    if (E.isLeft(team)) return E.left(team.left);
-    return E.right(team.right);
+    const team = await this.teamService.getTeamWithID(teamID);
+    if (!team) return E.left(TEAM_INVALID_ID);
+    return E.right(team);
   }
 
   /**
