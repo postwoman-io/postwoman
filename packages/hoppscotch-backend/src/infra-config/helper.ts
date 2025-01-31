@@ -41,6 +41,7 @@ const AuthProviderConfigurations = {
     InfraConfigEnum.MICROSOFT_CALLBACK_URL,
     InfraConfigEnum.MICROSOFT_SCOPE,
     InfraConfigEnum.MICROSOFT_TENANT,
+    InfraConfigEnum.MICROSOFT_PROMPT,
   ],
   [AuthProvider.EMAIL]:
     process.env.MAILER_USE_CUSTOM_CONFIGS === 'true'
@@ -236,6 +237,11 @@ export async function getDefaultInfraConfigs(): Promise<DefaultInfraConfig[]> {
       name: InfraConfigEnum.MICROSOFT_TENANT,
       value: process.env.MICROSOFT_TENANT,
       lastSyncedEnvFileValue: process.env.MICROSOFT_TENANT,
+      isEncrypted: false,
+    },
+    {
+      name: InfraConfigEnum.MICROSOFT_PROMPT,
+      value: process.env.MICROSOFT_PROMPT,
       isEncrypted: false,
     },
     {

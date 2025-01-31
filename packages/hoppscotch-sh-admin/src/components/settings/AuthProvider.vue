@@ -134,6 +134,11 @@ const providerConfigFields = <ProviderFieldMetadata[]>[
     key: 'tenant',
     applicableProviders: ['microsoft'],
   },
+  {
+    name: t('configs.auth_providers.prompt'),
+    key: 'prompt',
+    applicableProviders: ['microsoft'],
+  },
 ];
 
 const maskState = reactive<Record<SsoAuthProviders, ProviderFields>>({
@@ -155,6 +160,7 @@ const maskState = reactive<Record<SsoAuthProviders, ProviderFields>>({
     callback_url: true,
     scope: true,
     tenant: true,
+    prompt: true,
   },
 });
 
