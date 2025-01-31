@@ -735,7 +735,7 @@ const parseOpenAPIUrl = (
    * Relevant v3 reference: https://swagger.io/specification/#server-object
    **/
   if (objectHasProperty(doc, "servers")) {
-    return doc.servers?.[0].url ?? "<<baseUrl>>"
+    return doc.servers?.[0]?.url ?? "<<baseUrl>>"
   }
 
   // If the document is neither v2 nor v3 then return a env variable as placeholder
