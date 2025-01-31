@@ -83,6 +83,28 @@ export async function parseEnvsData(options: TestCmdEnvironmentOptions) {
       return variable;
     });
 
+    const hoppEnvPrefix = "HOPP_COL_ENV";
+    const hoppEnvVariables = Object.entries(process.env)
+      .filter(([key]) => key.startsWith(hoppEnvPrefix))
+      .map(([key, value]) => ({
+        key: key.replace(hoppEnvPrefix + "_", ""),
+        value: value || "",
+        secret: false,
+      }));
+
+    const finalEnvVariables = resolvedEnvVariables.map((variable) => {
+      const hoppEnvVariable = hoppEnvVariables.find(
+        (envVar) => envVar.key === variable.key
+      );
+      return hoppEnvVariable ? hoppEnvVariable : variable;
+    });
+
+    hoppEnvVariables.forEach((hoppEnvVariable) => {
+      if (!finalEnvVariables.some((envVar) => envVar.key === hoppEnvVariable.key)) {
+        finalEnvVariables.push(hoppEnvVariable);
+      }
+    });
+
     envPairs.push(...resolvedEnvVariables);
   }
 
