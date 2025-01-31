@@ -65,12 +65,7 @@
                         : undefined
                     "
                     :active-info-icon="contentTypeItem === body.contentType"
-                    @click="
-                      () => {
-                        body.contentType = contentTypeItem
-                        hide()
-                      }
-                    "
+                    @click="updateContentType(contentTypeItem, hide)"
                   />
                 </div>
               </div>
@@ -200,6 +195,16 @@ const isContentTypeAlreadyExist = () => {
     headers.value,
     A.some((e) => e.key.toLowerCase() === "content-type")
   )
+}
+
+const updateContentType = (contentTypeItem, hide) => {
+  if (contentTypeItem === 'none') {
+    body.contentType = null
+    headers.value = headers.value.filter(header => header.key.toLowerCase() !== 'content-type');
+  } else {
+    body.contentType = contentTypeItem
+  }
+  hide()
 }
 
 // Template refs
