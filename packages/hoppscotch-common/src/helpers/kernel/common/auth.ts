@@ -7,6 +7,7 @@ import { flow, pipe } from "fp-ts/function"
 
 type HoppAuth = HoppRESTRequest["auth"]
 type OAuth2GrantType = HoppRESTAuthOAuth2["grantTypeInfo"]
+type GrantType = Extract<AuthType, { kind: "oauth2" }>["grantType"]
 
 export const defaultAuth: AuthType = { kind: "none" }
 
@@ -172,45 +173,62 @@ const Processors: {
         grant,
         (g) =>
           pipe(
-            Guards.grants.authCode(g),
-            O.map((g) => ({
-              kind: "authorization_code" as const,
-              authEndpoint: g.authEndpoint,
-              tokenEndpoint: g.tokenEndpoint,
-              clientId: g.clientID,
-              clientSecret: g.clientSecret,
-            }))
-          ) ??
-          pipe(
-            Guards.grants.clientCreds(g),
-            O.map((g) => ({
-              kind: "client_credentials" as const,
-              tokenEndpoint: g.authEndpoint,
-              clientId: g.clientID,
-              clientSecret: g.clientSecret,
-            }))
-          ) ??
-          pipe(
-            Guards.grants.password(g),
-            O.map((g) => ({
-              kind: "password" as const,
-              tokenEndpoint: g.authEndpoint,
-              username: g.username,
-              password: g.password,
-            }))
-          ) ??
-          pipe(
-            Guards.grants.implicit(g),
-            O.map((g) => ({
-              kind: "implicit" as const,
-              authEndpoint: g.authEndpoint,
-              clientId: g.clientID,
-            }))
-          ) ??
-          O.none,
+            O.none as O.Option<GrantType>,
+            O.alt(() =>
+              pipe(
+                Guards.grants.authCode(g),
+                O.map(
+                  (g): GrantType => ({
+                    kind: "authorization_code",
+                    authEndpoint: g.authEndpoint,
+                    tokenEndpoint: g.tokenEndpoint,
+                    clientId: g.clientID,
+                    clientSecret: g.clientSecret,
+                  })
+                )
+              )
+            ),
+            O.alt(() =>
+              pipe(
+                Guards.grants.clientCreds(g),
+                O.map(
+                  (g): GrantType => ({
+                    kind: "client_credentials",
+                    tokenEndpoint: g.authEndpoint,
+                    clientId: g.clientID,
+                    clientSecret: g.clientSecret,
+                  })
+                )
+              )
+            ),
+            O.alt(() =>
+              pipe(
+                Guards.grants.password(g),
+                O.map(
+                  (g): GrantType => ({
+                    kind: "password",
+                    tokenEndpoint: g.authEndpoint,
+                    username: g.username,
+                    password: g.password,
+                  })
+                )
+              )
+            ),
+            O.alt(() =>
+              pipe(
+                Guards.grants.implicit(g),
+                O.map(
+                  (g): GrantType => ({
+                    kind: "implicit",
+                    authEndpoint: g.authEndpoint,
+                    clientId: g.clientID,
+                  })
+                )
+              )
+            )
+          ),
         E.fromOption(() => new Error("Invalid grant type"))
       ),
-
     process: flow(
       Guards.oauth2,
       E.fromOption(() => new Error("Invalid OAuth2 auth")),
