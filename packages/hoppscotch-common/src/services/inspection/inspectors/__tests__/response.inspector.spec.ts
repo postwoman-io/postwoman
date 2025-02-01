@@ -11,6 +11,16 @@ vi.mock("~/modules/i18n", () => ({
   getI18n: () => (x: string) => x,
 }))
 
+vi.mock("~/platform", () => ({
+  platform: {
+    experiments: {
+      aiExperiments: {
+        enableAIExperiments: false,
+      },
+    },
+  },
+}))
+
 describe("ResponseInspectorService", () => {
   beforeEach(() => {
     vi.stubGlobal("navigator", {

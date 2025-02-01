@@ -43,5 +43,11 @@ export type ExperimentsPlatformDef = {
     ) => Promise<
       E.Either<string, { modified_script: string; trace_id: string }>
     >
+    diagnoseError: (
+      requestInfo: string,
+      responseInfo: string
+    ) => Promise<
+      E.Either<string, { diagnosis: string; fix: string; trace_id: string }>
+    >
   }
 }

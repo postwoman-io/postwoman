@@ -1302,6 +1302,9 @@
     "generate_or_modify_prerequest_input_placeholder": "Enter a prompt to generate or modify the pre-request script",
     "generate_or_modify_test_script_input_placeholder": "Enter a prompt to generate or modify the test script",
     "modify_test_script_error": "Failed to modify test script",
-    "modify_prerequest_error": "Failed to modify pre-request script"
+    "modify_prerequest_error": "Failed to modify pre-request script",
+    "diagnosis_section": "AI Diagnosis and Fix",
+    "diagnosis": "Diagnosis",
+    "suggested_fix": "Fix"
   }
 }

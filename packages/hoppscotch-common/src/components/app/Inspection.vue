@@ -36,21 +36,26 @@
             <div
               class="flex flex-1 flex-col divide-y divide-dashed divide-dividerDark rounded border border-dashed border-dividerDark"
             >
-              <span
-                v-if="inspector.text.type === 'text'"
-                class="flex-1 px-3 py-2"
-              >
-                {{ inspector.text.text }}
-                <HoppSmartLink
-                  v-if="inspector.doc"
-                  blank
-                  :to="inspector.doc.link"
-                  class="text-accent transition hover:text-accentDark"
-                >
-                  {{ inspector.doc.text }}
-                  <icon-lucide-arrow-up-right class="svg-icons" />
-                </HoppSmartLink>
-              </span>
+              <template v-if="inspector.text.type === 'text'">
+                <span class="flex-1 px-3 py-2">
+                  {{ inspector.text.text }}
+                  <HoppSmartLink
+                    v-if="inspector.doc"
+                    blank
+                    :to="inspector.doc.link"
+                    class="text-accent transition hover:text-accentDark"
+                  >
+                    {{ inspector.doc.text }}
+                    <icon-lucide-arrow-up-right class="svg-icons" />
+                  </HoppSmartLink>
+                </span>
+              </template>
+              <template v-else-if="inspector.text.type === 'custom'">
+                <component
+                  :is="inspector.text.component"
+                  v-bind="inspector.text.componentProps"
+                />
+              </template>
               <span v-if="inspector.action" class="flex space-x-2 p-2">
                 <HoppButtonSecondary
                   :label="inspector.action.text"
