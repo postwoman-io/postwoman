@@ -1,0 +1,43 @@
+{
+  "v": 3,
+  "name": "HAWK Auth (success state) - collection",
+  "folders": [],
+  "requests": [
+    {
+      "v": "12",
+      "id": "cm0dm70cw000687bnxi830zz2",
+      "auth": {
+        "authType": "hawk",
+        "authActive": true,
+        "authId": "<<id>>",
+        "authKey": "<<key>>",
+        "algorithm": "<<algorithm>>",
+        "includePayloadHash": false,
+        "user": "<<user>>",
+        "nonce": "<<nonce>>",
+        "ext": "<<ext>>",
+        "app": "<<app>>",
+        "dlg": "<<dlg>>",
+        "timestamp": "<<timestamp>>"
+      },
+      "body": {
+        "body": null,
+        "contentType": null
+      },
+      "name": "hawk-auth-headers",
+      "method": "GET",
+      "params": [],
+      "headers": [],
+      "endpoint": "<<url>>",
+      "testScript": "pw.test(\"Status code is 200\", ()=> { pw.expect(pw.response.status).toBe(200);});",
+      "preRequestScript": "",
+      "responses": {},
+      "requestVariables": []
+    }
+  ],
+  "auth": {
+    "authType": "inherit",
+    "authActive": true
+  },
+  "headers": []
+}

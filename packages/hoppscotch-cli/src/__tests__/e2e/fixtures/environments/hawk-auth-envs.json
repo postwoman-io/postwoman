@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "id": "cm0dsn3v70004p4qk3l9b7sjm",
+  "name": "HAWK Auth - environments",
+  "variables": [
+    {
+      "key": "url",
+      "value": "https://postman-echo.com/auth/hawk"
+    },
+    {
+      "key": "id",
+      "value": "dh37fgj492je"
+    },
+    {
+      "key": "key",
+      "value": "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"
+    },
+    {
+      "key": "algorithm",
+      "value": "sha256"
+    },
+    {
+      "key": "user",
+      "value": ""
+    },
+    {
+      "key": "nonce",
+      "value": ""
+    },
+    {
+      "key": "ext",
+      "value": ""
+    },
+    {
+      "key": "app",
+      "value": ""
+    },
+    {
+      "key": "dlg",
+      "value": ""
+    },
+    {
+      "key": "timestamp",
+      "value": ""
+    }
+  ]
+}

@@ -69,7 +69,7 @@
     </div>
     <div class="flex flex-1 border-b border-dividerLight">
       <SmartEnvInput
-        v-model="auth.maxBody"
+        v-model="auth.maxBodySize"
         :auto-complete-env="true"
         placeholder="Max Body Size"
         :envs="envs"
