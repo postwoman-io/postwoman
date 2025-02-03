@@ -18,7 +18,7 @@ import V8_VERSION from "./v/8"
 import V9_VERSION from "./v/9"
 import V10_VERSION, { HoppRESTReqBody } from "./v/10"
 import V11_VERSION, { HoppRESTAuth, HoppRESTRequestResponses } from "./v/11"
-import V12_VERSION, { HoppRESTAuthHAWK } from "./v/12"
+import V12_VERSION from "./v/12"
 
 export * from "./content-types"
 
@@ -61,7 +61,7 @@ export {
   ClientCredentialsGrantTypeParams,
 } from "./v/11"
 
-export { HoppRESTAuthHAWK } from "./v/12"
+export { HoppRESTAuthHAWK, HoppRESTAuthAkamaiEdgeGrid } from "./v/12"
 
 const versionedObject = z.object({
   // v is a stringified number

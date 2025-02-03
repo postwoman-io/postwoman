@@ -28,7 +28,24 @@ export const HoppRESTAuthHAWK = z.object({
   timestamp: z.string().optional(),
 })
 
+export const HoppRESTAuthAkamaiEdgeGrid = z.object({
+  authType: z.literal("akamai"),
+  accessToken: z.string().catch(""),
+  clientToken: z.string().catch(""),
+  clientSecret: z.string().catch(""),
+
+  // Optional fields
+  nonce: z.string().optional(),
+  timestamp: z.string().optional(),
+  host: z.string().optional(),
+  headersToSign: z.string().optional(),
+  maxBodySize: z.string().optional(),
+})
+
 export type HoppRESTAuthHAWK = z.infer<typeof HoppRESTAuthHAWK>
+export type HoppRESTAuthAkamaiEdgeGrid = z.infer<
+  typeof HoppRESTAuthAkamaiEdgeGrid
+>
 
 export const HoppRESTAuth = z
   .discriminatedUnion("authType", [
@@ -41,6 +58,7 @@ export const HoppRESTAuth = z
     HoppRESTAuthAWSSignature,
     HoppRESTAuthDigest,
     HoppRESTAuthHAWK,
+    HoppRESTAuthAkamaiEdgeGrid,
   ])
   .and(
     z.object({

@@ -154,6 +154,9 @@
         <div v-if="auth.authType === 'hawk'">
           <HttpAuthorizationHAWK v-model="auth" :envs="envs" />
         </div>
+        <div v-if="auth.authType === 'akamai'">
+          <HttpAuthorizationAkamaiEG v-model="auth" :envs="envs" />
+        </div>
         <div v-if="auth.authType === 'digest'">
           <HttpAuthorizationDigest v-model="auth" :envs="envs" />
         </div>
