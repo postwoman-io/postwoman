@@ -304,6 +304,11 @@ export class TestRunnerService extends Service {
         this.updateRequestAtPath(tab.value.document.resultCollection!, path, {
           error: errorMsg,
           isLoading: false,
+          response: {
+            type: "network_fail",
+            error: "Unknown",
+            req: request,
+          },
         })
 
         if (options.stopOnError) {

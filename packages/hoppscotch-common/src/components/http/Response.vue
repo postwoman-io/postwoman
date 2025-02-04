@@ -9,7 +9,8 @@
     />
   </div>
   <HttpSaveResponseName
-    v-model="responseName"
+    v-model:response-name="responseName"
+    :has-same-name-response="hasSameNameResponse"
     :show="showSaveResponseName"
     @submit="onSaveAsExample"
     @hide-modal="showSaveResponseName = false"
@@ -56,10 +57,18 @@ const hasResponse = computed(
 const responseName = ref("")
 const showSaveResponseName = ref(false)
 
+const hasSameNameResponse = computed(() => {
+  return responseName.value
+    ? responseName.value in doc.value.request.responses
+    : false
+})
+
 const loading = computed(() => doc.value.response?.type === "loading")
 
 const saveAsExample = () => {
   showSaveResponseName.value = true
+
+  responseName.value = doc.value.request.name
 }
 
 const onSaveAsExample = () => {
@@ -124,8 +133,10 @@ const onSaveAsExample = () => {
         editRESTRequest(saveCtx.folderPath, saveCtx.requestIndex, req)
 
         toast.success(`${t("response.saved")}`)
+        responseName.value = ""
       } catch (e) {
         console.error(e)
+        responseName.value = ""
       }
     } else {
       runMutation(UpdateRequestDocument, {
@@ -137,10 +148,12 @@ const onSaveAsExample = () => {
       })().then((result) => {
         if (E.isLeft(result)) {
           toast.error(`${t("profile.no_permission")}`)
+          responseName.value = ""
         } else {
           doc.value.isDirty = false
 
           toast.success(`${t("request.saved")}`)
+          responseName.value = ""
         }
       })
     }

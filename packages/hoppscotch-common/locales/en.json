@@ -67,6 +67,25 @@
     "enable": "Enable",
     "disable": "Disable"
   },
+  "activity_logs": {
+    "ACTIVITY_LOG_DELETE": "Activity log has been deleted",
+    "WORKSPACE_CREATE": "Created new workspace {name}",
+    "WORKSPACE_RENAME": "Renamed workspace from {old_name} to {new_name}",
+    "WORKSPACE_USER_ADD": "{user} was added to the workspace as {role}",
+    "WORKSPACE_USER_INVITE": "{user} was invited by {inviteeEmail} as {role}",
+    "WORKSPACE_USER_INVITE_REVOKE": "Revoked invitation of {inviteeEmail} as {inviteeRole}",
+    "WORKSPACE_USER_INVITE_ACCEPT": "{inviteeEmail} accepted the invitation as {inviteeRole}",
+    "WORKSPACE_USER_REMOVE": "{user} was removed from the workspace",
+    "WORKSPACE_USER_ROLE_UPDATE": "{user}'s role was updated from {old_role} to {new_role}",
+    "COLLECTION_CREATE": "Created new collection {title}",
+    "COLLECTION_RENAME": "Renamed collection from {old_title} to {new_title}",
+    "COLLECTION_IMPORT": "Imported {count} collection(s)",
+    "COLLECTION_DELETE": "Deleted collection {title}",
+    "COLLECTION_DUPLICATE": "Duplicated collection {parentTitle}",
+    "REQUEST_CREATE": "Created new request {title}",
+    "REQUEST_RENAME": "Renamed request from {old_title} to {new_title}",
+    "REQUEST_DELETE": "Deleted request {title}"
+  },
   "add": {
     "new": "Add new",
     "star": "Add star"
@@ -263,6 +282,7 @@
   "confirm": {
     "close_unsaved_tab": "Are you sure you want to close this tab?",
     "close_unsaved_tabs": "Are you sure you want to close all tabs? {count} unsaved tabs will be lost.",
+    "delete_all_activity_logs": "Are you sure you want to delete all activity logs?",
     "exit_team": "Are you sure you want to leave this workspace?",
     "logout": "Are you sure you want to logout?",
     "remove_collection": "Are you sure you want to permanently delete this collection?",
@@ -317,11 +337,13 @@
     "generate_message": "Import any Hoppscotch collection to generate API documentation on-the-go."
   },
   "empty": {
+    "activity_logs": "No activity logs found",
     "authorization": "This request does not use any authorization",
     "body": "This request does not have a body",
     "collection": "Collection is empty",
     "collections": "Collections are empty",
     "documentation": "Connect to a GraphQL endpoint to view documentation",
+    "empty_schema": "No schema found",
     "endpoint": "Endpoint cannot be empty",
     "environments": "Environments are empty",
     "folder": "Folder is empty",
@@ -395,8 +417,11 @@
     "danger_zone": "Danger zone",
     "delete_account": "Your account is currently an owner in these workspaces:",
     "delete_account_description": "You must either remove yourself, transfer ownership, or delete these workspaces before you can delete your account.",
+    "delete_activity_log": "Failed to delete activity log",
+    "delete_all_activity_logs": "Failed to delete all activity logs",
     "empty_profile_name": "Profile name cannot be empty",
     "empty_req_name": "Empty Request Name",
+    "fetch_activity_logs": "Failed to fetch activity logs",
     "f12_details": "(F12 for details)",
     "gql_prettify_invalid_query": "Couldn't prettify an invalid query, solve query syntax errors and try again",
     "incomplete_config_urls": "Incomplete configuration URLs",
@@ -419,6 +444,7 @@
     "same_profile_name": "Updated profile name is same as the current profile name",
     "script_fail": "Could not execute pre-request script",
     "something_went_wrong": "Something went wrong",
+    "subscription_error": "Failed to subscribe to the topic: {error}",
     "test_script_fail": "Could not execute post-request script",
     "reading_files": "Error while reading one or more files.",
     "fetching_access_tokens_list": "Something went wrong while fetching the list of tokens",
@@ -462,11 +488,16 @@
     "connection_error_http": "Failed to fetch GraphQL Schema due to network error.",
     "connection_switch_new_url": "Switching to a tab will disconnected you from the active GraphQL connection. New connection URL is",
     "connection_switch_url": "You're connected to a GraphQL endpoint the connection URL is",
+    "deprecated": "Deprecated",
+    "mutation": "Mutation",
     "mutations": "Mutations",
     "schema": "Schema",
+    "show_depricated_values": "Show deprecated values",
+    "subscription": "Subscription",
     "subscriptions": "Subscriptions",
     "switch_connection": "Switch connection",
-    "url_placeholder": "Enter a GraphQL endpoint URL"
+    "url_placeholder": "Enter a GraphQL endpoint URL",
+    "query": "Query"
   },
   "graphql_collections": {
     "title": "GraphQL Collections"
@@ -736,6 +767,7 @@
     "preview_html": "Preview HTML",
     "raw": "Raw",
     "renamed": "Response renamed",
+    "same_name_inspector_warning": "Response name already exists for this request, if saved it will overwrite the existing response",
     "size": "Size",
     "status": "Status",
     "time": "Time",
@@ -801,6 +833,8 @@
     "ai_request_naming_style_camel_case": "Camel Case ( camelCase )",
     "ai_request_naming_style_snake_case": "Snake Case ( snake_case )",
     "ai_request_naming_style_pascal_case": "Pascal Case ( PascalCase )",
+    "ai_request_naming_style_custom": "Custom",
+    "ai_request_naming_style_custom_placeholder": "Enter your custom naming style template...",
     "sync": "Synchronise",
     "sync_collections": "Collections",
     "sync_description": "These settings are synced to cloud.",
@@ -1093,9 +1127,15 @@
     "failed": "Failed"
   },
   "team": {
+    "activity_logs": "Activity Logs",
     "already_member": "This email is associated with an existing user.",
     "create_new": "Create new workspace",
     "deleted": "Workspace deleted",
+    "delete_all_activity_logs": "Delete all activity logs",
+    "successfully_deleted_all_activity_logs": "Successfully deleted all activity logs",
+    "delete_activity_log": "Delete activity log",
+    "deleted_activity_log": "Deleted selected activity log",
+    "deleted_all_activity_logs": "Deleted all activity logs",
     "edit": "Edit Workspace",
     "email": "E-mail",
     "email_do_not_match": "Email doesn't match with your account details. Contact your workspace owner.",

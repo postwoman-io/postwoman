@@ -29,7 +29,7 @@
       <LensesHeadersRenderer v-model="maybeHeaders" :is-editable="false" />
     </HoppSmartTab>
     <HoppSmartTab
-      v-if="!isEditable"
+      v-if="doc.response?.type !== 'network_fail' && !isEditable"
       id="results"
       :label="t('test.results')"
       :indicator="showIndicator"
@@ -116,8 +116,17 @@ const maybeHeaders = computed(() => {
 })
 
 const requestHeaders = computed(() => {
-  if (!props.isTestRunner || !doc.value) return null
-  return doc.value.request.headers
+  if (
+    !props.isTestRunner ||
+    !doc.value.response ||
+    !(
+      doc.value.response.type === "success" ||
+      doc.value.response.type === "fail" ||
+      doc.value.response.type === "network_fail"
+    )
+  )
+    return null
+  return doc.value.response?.req.headers || doc.value.request.headers
 })
 
 const validLenses = computed(() => {
@@ -128,7 +137,10 @@ const validLenses = computed(() => {
 watch(
   validLenses,
   (newLenses: Lens[]) => {
-    if (newLenses.length === 0) return
+    if (newLenses.length === 0) {
+      selectedLensTab.value = "req-headers"
+      return
+    }
 
     const validRenderers = [
       ...newLenses.map((x) => x.renderer),

@@ -61,8 +61,15 @@
       />
     </template>
     <template #secondary>
+      <div
+        v-if="tab.document.status === 'running'"
+        class="flex flex-col items-center gap-4 justify-center h-full"
+      >
+        <HoppSmartSpinner />
+        <span> {{ t("collection_runner.running_collection") }}... </span>
+      </div>
       <HttpTestResponse
-        v-if="selectedRequest && selectedRequest.response"
+        v-else-if="selectedRequest && selectedRequest.response"
         v-model:document="selectedRequest"
         :show-response="tab.document.config.persistResponses"
       />
@@ -82,14 +89,6 @@
           />
         </template>
       </HoppSmartPlaceholder>
-
-      <div
-        v-else-if="tab.document.status === 'running'"
-        class="flex flex-col items-center gap-4 justify-center h-full"
-      >
-        <HoppSmartSpinner />
-        <span> {{ t("collection_runner.running_collection") }}... </span>
-      </div>
 
       <HoppSmartPlaceholder
         v-else-if="!selectedRequest"
@@ -304,6 +303,7 @@ const stopTests = () => {
 }
 
 const runAgain = async () => {
+  tab.value.document.request = null
   tab.value.document.resultCollection = undefined
   await nextTick()
   resetRunnerState()
