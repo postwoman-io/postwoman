@@ -45,7 +45,7 @@ COPY pnpm-lock.yaml .
 RUN pnpm fetch
 
 COPY . .
-RUN pnpm install -f --offline
+RUN pnpm install -f --prefer-offline
 
 
 
@@ -91,8 +91,12 @@ FROM base_builder AS fe_builder
 WORKDIR /usr/src/app/packages/hoppscotch-selfhost-web
 RUN pnpm run generate
 
-
-
+FROM rust:1-alpine AS webapp_server_builder
+WORKDIR /usr/src/app
+RUN apk add --no-cache musl-dev
+COPY . .
+WORKDIR /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server
+RUN cargo build --release
 
 FROM alpine:3.19.6 AS app
 RUN apk add nodejs curl
@@ -158,6 +162,17 @@ WORKDIR /site
 
 CMD ["node","/site/prod_run.mjs"]
 
+FROM node:20-alpine AS webapp_server
+COPY --from=webapp_server_builder /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server/target/release/webapp-server /usr/local/bin/
+RUN mkdir -p /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/dist /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/prod_run.mjs /site/prod_run.mjs
+RUN apk add nodejs npm
+RUN npm install -g @import-meta-env/cli
+WORKDIR /site
+CMD ["/bin/sh", "-c", "node /site/prod_run.mjs && webapp-server"]
+EXPOSE 3200
+
 FROM alpine:3.19.6 AS aio
 
 RUN apk add nodejs curl
@@ -189,6 +204,11 @@ COPY --from=base_builder /usr/src/app/packages/hoppscotch-backend/backend.Caddyf
 COPY --from=backend_builder /dist/backend /dist/backend
 COPY --from=base_builder /usr/src/app/packages/hoppscotch-backend/prod_run.mjs /dist/backend
 
+# Static Server
+COPY --from=webapp_server_builder /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server/target/release/webapp-server /usr/local/bin/
+RUN mkdir -p /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/dist /site/selfhost-web
+
 # FE Files
 COPY --from=base_builder /usr/src/app/aio_run.mjs /usr/src/app/aio_run.mjs
 COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/dist /site/selfhost-web
@@ -211,4 +231,5 @@ CMD ["node", "/usr/src/app/aio_run.mjs"]
 EXPOSE 3170
 EXPOSE 3000
 EXPOSE 3100
+EXPOSE 3200
 EXPOSE 80

@@ -81,6 +81,10 @@
                 />
 
                 <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+                <p
+                  v-if="currentBundle"
+                  class="text-sm text-center text-secondaryLight"
+                >Current bundle: {{ currentBundle.bundleName }} (v{{ currentBundle.version }})</p>
               </form>
             </div>
           </div>
@@ -92,7 +96,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import { download, load } from "tauri-plugin-hoppscotch-appload-api"
+import {
+  download,
+  load,
+  type DownloadResponse,
+} from "tauri-plugin-hoppscotch-appload-api"
 import IconMenu from "~icons/lucide/menu"
 import IconHome from "~icons/lucide/home"
 import IconSidebarOpen from "~icons/lucide/sidebar-open"
@@ -104,6 +112,7 @@ const isExpanded = ref(true)
 const appUrl = ref("")
 const error = ref("")
 const isLoading = ref(false)
+const currentBundle = ref<DownloadResponse | null>(null)
 
 async function handleSubmit() {
   if (!appUrl.value) {
@@ -115,15 +124,19 @@ async function handleSubmit() {
   error.value = ""
 
   try {
-    const bundleName = "default"
     const serverUrl = appUrl.value.startsWith("http")
       ? appUrl.value
       : `http://${appUrl.value}`
 
-    const downloadResponse = await download({ serverUrl, bundleName })
-    console.info(downloadResponse)
-    const loadResponse = await load({ name: bundleName, inline: true })
-    console.info(loadResponse)
+    const downloadResponse = await download({ serverUrl })
+    console.info("Downloaded bundle:", downloadResponse)
+    currentBundle.value = downloadResponse
+
+    const loadResponse = await load({
+      bundleName: downloadResponse.bundleName,
+      inline: true,
+    })
+    console.info("Loaded bundle:", loadResponse)
   } catch (e) {
     console.error(e)
     error.value = e instanceof Error ? e.message : "Failed to load app"

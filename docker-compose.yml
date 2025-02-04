@@ -62,7 +62,19 @@ services:
       - "3280:80"
       - "3100:3100"
 
-  # The service that spins up all 3 services at once in one container
+  # The static server for serving web content to desktop shell, hosted at port 3200
+  hoppscotch-webapp-server:
+    container_name: hoppscotch-webapp-server
+    env_file:
+      - ./.env
+    build:
+      dockerfile: prod.Dockerfile
+      context: .
+      target: webapp_server
+    ports:
+      - "3200:3200"
+
+  # The service that spins up all services at once in one container
   hoppscotch-aio:
     container_name: hoppscotch-aio
     restart: unless-stopped
@@ -79,6 +91,7 @@ services:
       - "3000:3000"
       - "3100:3100"
       - "3170:3170"
+      - "3200:3200"
       - "3080:80"
 
   # The preset DB service, you can delete/comment the below lines if

@@ -25,3 +25,4 @@ serde_json = { version = "1", features = [] }
 tauri-plugin-hoppscotch-appload = { path = "../tauri-plugin-hoppscotch-appload" }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tauri-plugin-store = "2"
