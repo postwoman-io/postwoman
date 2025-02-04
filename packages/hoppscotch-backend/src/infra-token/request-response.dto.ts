@@ -160,3 +160,26 @@ export class GetUserWorkspacesResponse {
   @Expose()
   member_count: number;
 }
+
+// POST v1/infra/users/:uid/memberships
+export class PostUserMembershipRequest {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  teamId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  role: TeamMemberRole;
+}
+
+export class PostUserMembershipResponse {
+  @ApiProperty()
+  @Expose()
+  membershipID: string;
+
+  @ApiProperty()
+  @Expose()
+  role: string;
+}

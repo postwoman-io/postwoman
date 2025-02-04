@@ -29,6 +29,8 @@ import {
   CreateUserInvitationResponse,
   DeleteUserResponse,
   GetUserWorkspacesResponse,
+  PostUserMembershipRequest,
+  PostUserMembershipResponse,
 } from './request-response.dto';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
@@ -43,10 +45,13 @@ import {
 } from '@nestjs/swagger';
 import { throwHTTPErr } from 'src/utils';
 import { UserService } from 'src/user/user.service';
+import { TeamService } from 'src/team/team.service';
 import {
   INFRA_TOKEN_CREATOR_NOT_FOUND,
   USER_NOT_FOUND,
   USERS_NOT_FOUND,
+  TEAMS_NOT_FOUND,
+  USER_ALREADY_IN_TEAM,
 } from 'src/errors';
 import { InfraTokenService } from './infra-token.service';
 import { InfraTokenInterceptor } from 'src/interceptors/infra-token.interceptor';
@@ -62,6 +67,7 @@ export class InfraTokensController {
     private readonly infraTokenService: InfraTokenService,
     private readonly adminService: AdminService,
     private readonly userService: UserService,
+    private readonly teamService: TeamService,
   ) {}
 
   @Post('user-invitations')
@@ -154,6 +160,53 @@ export class InfraTokensController {
     });
 
     return plainToInstance(GetUserResponse, users, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+  }
+
+  @Post('users/:uid/memberships')
+  @ApiOkResponse({
+    description: 'Adds user to a team',
+    type: [PostUserMembershipResponse],
+  })
+  @ApiNotFoundResponse({ type: ExceptionResponse })
+  async createUserMembership(
+    @Param('uid') uid: string,
+    @Body() body: PostUserMembershipRequest,
+  ) {
+    const user = await this.userService.findUserById(uid);
+    if (O.isNone(user)) {
+      throwHTTPErr({
+        message: USER_NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+    const team = await this.teamService.getTeamWithID(body.teamId);
+    if (null === team) {
+      throwHTTPErr({
+        message: TEAMS_NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+    const isUserAlreadyInTeam = await this.teamService.getRoleOfUserInTeam(
+      body.teamId,
+      uid,
+    );
+    if (null !== isUserAlreadyInTeam) {
+      throwHTTPErr({
+        message: USER_ALREADY_IN_TEAM,
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    const createdUserMembership = await this.teamService.addMemberToTeam(
+      body.teamId,
+      uid,
+      body.role,
+    );
+
+    return plainToInstance(PostUserMembershipResponse, createdUserMembership, {
       excludeExtraneousValues: true,
       enableImplicitConversion: true,
     });
