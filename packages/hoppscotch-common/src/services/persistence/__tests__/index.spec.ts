@@ -132,6 +132,16 @@ const spyOnSetItem = () => vi.spyOn(Storage.prototype, "setItem")
 
 const schemaVersionKey = `${STORE_NAMESPACE}:${STORE_KEYS.SCHEMA_VERSION}`
 
+const getStoreItem = async (key: string) => {
+  const storedData = window.localStorage.getItem(key)
+
+  if (!storedData) return
+
+  const parsedData = superjson.parse<{ data: string }>(storedData)
+
+  return JSON.stringify(parsedData.data)
+}
+
 const setStoreItem = async <T>(key: string, value: T) => {
   const storedData = {
     schemaVersion: 1,
@@ -1184,7 +1194,7 @@ describe("PersistenceService", () => {
       })
 
       it("logs an error to the console on failing to parse persisted secret environments", async () => {
-        window.localStorage.setItem(secretEnvironmentsKey, "invalid-json")
+        await setStoreItem(secretEnvironmentsKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
@@ -1202,7 +1212,7 @@ describe("PersistenceService", () => {
 
         expect(console.error).toHaveBeenCalledWith(
           `Failed parsing persisted SECRET_ENVIRONMENTS:`,
-          window.localStorage.getItem(secretEnvironmentsKey)
+          await getStoreItem(secretEnvironmentsKey)
         )
 
         expect(watchDebounced).toHaveBeenCalledWith(
@@ -1620,7 +1630,7 @@ describe("PersistenceService", () => {
         // `lastActiveTabID` -> `string`
         const gqlTabState = { ...GQL_TAB_STATE_MOCK, lastActiveTabID: 1234 }
 
-        setStoreItem(gqlTabStateKey, gqlTabState)
+        await setStoreItem(gqlTabStateKey, gqlTabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1687,7 +1697,7 @@ describe("PersistenceService", () => {
       })
 
       it("logs an error to the console on failing to parse persisted gql tab state", async () => {
-        window.localStorage.setItem(gqlTabStateKey, "invalid-json")
+        await setStoreItem(gqlTabStateKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
@@ -1700,7 +1710,7 @@ describe("PersistenceService", () => {
 
         expect(console.error).toHaveBeenCalledWith(
           `Failed parsing persisted GQL_TABS:`,
-          window.localStorage.getItem(gqlTabStateKey)
+          await getStoreItem(gqlTabStateKey)
         )
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),
@@ -1722,7 +1732,7 @@ describe("PersistenceService", () => {
         // `lastActiveTabID` -> `string`
         const restTabState = { ...REST_TAB_STATE_MOCK, lastActiveTabID: 1234 }
 
-        setStoreItem(restTabStateKey, restTabState)
+        await setStoreItem(restTabStateKey, restTabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
@@ -1788,7 +1798,7 @@ describe("PersistenceService", () => {
       })
 
       it("logs an error to the console on failing to parse persisted rest tab state", async () => {
-        window.localStorage.setItem(restTabStateKey, "invalid-json")
+        await setStoreItem(restTabStateKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
@@ -1801,7 +1811,7 @@ describe("PersistenceService", () => {
 
         expect(console.error).toHaveBeenCalledWith(
           `Failed parsing persisted REST_TABS:`,
-          window.localStorage.getItem(restTabStateKey)
+          await getStoreItem(restTabStateKey)
         )
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),

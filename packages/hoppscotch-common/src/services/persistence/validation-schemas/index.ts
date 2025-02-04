@@ -8,6 +8,7 @@ import {
   HoppRESTHeaders,
   HoppRESTRequestResponse,
   HoppCollection,
+  GlobalEnvironment,
 } from "@hoppscotch/data"
 import { entityReference } from "verzod"
 import { z } from "zod"
@@ -155,6 +156,8 @@ export const REST_COLLECTION_SCHEMA = HoppRESTCollectionSchema
 export const GQL_COLLECTION_SCHEMA = HoppGQLCollectionSchema
 
 export const ENVIRONMENTS_SCHEMA = z.array(entityReference(Environment))
+
+export const GLOBAL_ENVIRONMENT_SCHEMA = entityReference(GlobalEnvironment)
 
 export const SELECTED_ENV_INDEX_SCHEMA = z.nullable(
   z.discriminatedUnion("type", [
