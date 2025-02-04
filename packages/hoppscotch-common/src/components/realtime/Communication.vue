@@ -238,11 +238,19 @@ const clearContent = () => {
 const sendMessage = () => {
   if (!communicationBody.value) return
 
-  emit("send-message", {
-    eventName: eventName.value,
-    message: communicationBody.value,
-  })
-  clearContent()
+  try {
+    const message =
+      contentType.value === "JSON"
+        ? JSON.parse(communicationBody.value)
+        : communicationBody.value
+    emit("send-message", {
+      eventName: eventName.value,
+      message: message,
+    })
+    clearContent()
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const uploadPayload = async (e: Event) => {
