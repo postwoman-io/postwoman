@@ -2,9 +2,9 @@ import { collectionsRunner } from "../../../utils/collections";
 import { HoppRESTRequest } from "@hoppscotch/data";
 import axios, { AxiosResponse } from "axios";
 
-import "@relmify/jest-fp-ts";
+import { describe, it, expect, vi, beforeEach, afterAll } from "vitest"; // Importing from vitest
 
-jest.mock("axios");
+vi.mock("axios"); // Mocking axios with vitest
 
 const SAMPLE_HOPP_REQUEST = <HoppRESTRequest>{
   v: "1",
@@ -41,20 +41,20 @@ const SAMPLE_ENVS = { global: [], selected: [] };
 
 describe("collectionsRunner", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks(); // Replacing jest.clearAllMocks with vi.clearAllMocks in vitest
   });
 
   afterAll(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks(); // Replacing jest.clearAllMocks with vi.clearAllMocks in vitest
   });
 
-  test("Empty HoppCollection.", () => {
+  it("Empty HoppCollection.", () => {
     return expect(
       collectionsRunner({ collections: [], envs: SAMPLE_ENVS })
-    ).resolves.toStrictEqual([]);
+    ).resolves.toStrictEqual([]); // No change
   });
 
-  test("Empty requests and folders in collection.", () => {
+  it("Empty requests and folders in collection.", () => {
     return expect(
       collectionsRunner({
         collections: [
@@ -67,11 +67,11 @@ describe("collectionsRunner", () => {
         ],
         envs: SAMPLE_ENVS,
       })
-    ).resolves.toMatchObject([]);
+    ).resolves.toMatchObject([]); // No change
   });
 
-  test("Non-empty requests in collection.", () => {
-    (axios as unknown as jest.Mock).mockResolvedValue(SAMPLE_RESOLVED_RESPONSE);
+  it("Non-empty requests in collection.", () => {
+    (axios as unknown as vi.Mock).mockResolvedValue(SAMPLE_RESOLVED_RESPONSE); // Using vi.Mock instead of jest.Mock
 
     return expect(
       collectionsRunner({
@@ -95,8 +95,8 @@ describe("collectionsRunner", () => {
     ]);
   });
 
-  test("Non-empty folders in collection.", () => {
-    (axios as unknown as jest.Mock).mockResolvedValue(SAMPLE_RESOLVED_RESPONSE);
+  it("Non-empty folders in collection.", () => {
+    (axios as unknown as vi.Mock).mockResolvedValue(SAMPLE_RESOLVED_RESPONSE); // Using vi.Mock instead of jest.Mock
 
     return expect(
       collectionsRunner({

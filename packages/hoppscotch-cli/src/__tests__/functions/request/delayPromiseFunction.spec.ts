@@ -1,9 +1,11 @@
 import { hrtime } from "process";
+import { describe, it, expect, beforeEach } from "vitest"; // Import Vitest functions
 import { getDurationInSeconds } from "../../../utils/getters";
 import { delayPromiseFunction } from "../../../utils/request";
 
 describe("describePromiseFunction", () => {
   let promiseFunc = (): Promise<number> => new Promise((resolve) => resolve(2));
+  
   beforeEach(() => {
     promiseFunc = (): Promise<number> => new Promise((resolve) => resolve(2));
   });

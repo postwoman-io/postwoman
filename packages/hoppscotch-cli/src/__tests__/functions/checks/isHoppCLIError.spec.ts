@@ -1,19 +1,20 @@
 import { isHoppCLIError } from "../../../utils/checks";
+import { describe, it, expect } from "vitest"; // Importing from vitest
 
 describe("isHoppCLIError", () => {
-  test("NULL error value.", () => {
+  it("NULL error value.", () => {
     expect(isHoppCLIError(null)).toBeFalsy();
   });
 
-  test("Non-existing code property.", () => {
+  it("Non-existing code property.", () => {
     expect(isHoppCLIError({ name: "name" })).toBeFalsy();
   });
 
-  test("Invalid code value.", () => {
+  it("Invalid code value.", () => {
     expect(isHoppCLIError({ code: 2 })).toBeFalsy();
   });
 
-  test("Valid code value.", () => {
+  it("Valid code value.", () => {
     expect(isHoppCLIError({ code: "TEST_SCRIPT_ERROR" })).toBeTruthy();
   });
 });

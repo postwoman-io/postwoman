@@ -1,19 +1,20 @@
 import { isHoppErrnoException } from "../../../utils/checks";
+import { describe, it, expect } from "vitest"; // Importing from vitest
 
 describe("isHoppErrnoException", () => {
-  test("NULL exception value.", () => {
-    expect(isHoppErrnoException(null)).toBeFalsy();
+  it("NULL exception value.", () => {
+    expect(isHoppErrnoException(null)).toBeFalsy(); // No change
   });
 
-  test("Non-existing name property.", () => {
-    expect(isHoppErrnoException({ what: "what" })).toBeFalsy();
+  it("Non-existing name property.", () => {
+    expect(isHoppErrnoException({ what: "what" })).toBeFalsy(); // No change
   });
 
-  test("Invalid name value.", () => {
-    expect(isHoppErrnoException({ name: 3 })).toBeFalsy();
+  it("Invalid name value.", () => {
+    expect(isHoppErrnoException({ name: 3 })).toBeFalsy(); // No change
   });
 
-  test("Valid name value.", () => {
-    expect(isHoppErrnoException({ name: "name" })).toBeTruthy();
+  it("Valid name value.", () => {
+    expect(isHoppErrnoException({ name: "name" })).toBeTruthy(); // No change
   });
 });

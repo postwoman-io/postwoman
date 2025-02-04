@@ -132,7 +132,15 @@ Please note we have a code of conduct, please follow it in all your interactions
 
    ```bash
    pnpm install
-   pnpm run build
+   pnpm run build 
+   // only from `cd packages/hoppscotch-cli` else 
+   // ERR_PNPM_NO_SCRIPT  Missing script: build
+   
+   // if problems running 'pnpm run test' 
+   // 'rm -rf node_modules pnpm-lock.yaml'
+   // 'pnpm install'
+   pnpm run test
+
    ```
 
 2. In order to test locally, you can use two types of package linking:
@@ -144,6 +152,8 @@ Please note we have a code of conduct, please follow it in all your interactions
 
       // Then to use or test the CLI:
       pnpm exec hopp
+
+      //pnpm exec hopp will lead to recognition of pnpm test or pnpm run test
 
       // After testing, to remove the package linking:
       pnpm rm @hoppscotch/cli

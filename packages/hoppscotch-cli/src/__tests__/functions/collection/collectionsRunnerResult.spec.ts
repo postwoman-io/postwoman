@@ -16,20 +16,22 @@ const TRUE_RESULT_REPORT = {
   duration: { test: 1, request: 1, preRequest: 1 },
 };
 
+import { describe, it, expect } from "vitest";  // Importing from vitest
+
 describe("collectionsRunnerResult", () => {
-  test("Empty request-report.", () => {
-    expect(collectionsRunnerResult([])).toBeTruthy();
+  it("Empty request-report.", () => {
+    expect(collectionsRunnerResult([])).toBeTruthy(); // No change
   });
 
-  test("Atleast 1 false result in request-report.", () => {
+  it("Atleast 1 false result in request-report.", () => {
     expect(
       collectionsRunnerResult([FALSE_RESULT_REPORT, TRUE_RESULT_REPORT])
-    ).toBeFalsy();
+    ).toBeFalsy(); // No change
   });
 
-  test("All true result(s) in request-report.", () => {
+  it("All true result(s) in request-report.", () => {
     expect(
       collectionsRunnerResult([TRUE_RESULT_REPORT, TRUE_RESULT_REPORT])
-    ).toBeTruthy();
+    ).toBeTruthy(); // No change
   });
 });
