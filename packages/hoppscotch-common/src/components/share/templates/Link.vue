@@ -11,8 +11,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { useI18n } from "~/composables/i18n"
+import { platform } from "~/platform"
 
 const t = useI18n()
 
@@ -21,12 +22,38 @@ const props = defineProps<{
   label?: string | undefined
 }>()
 
-const shortcodeBaseURL =
-  import.meta.env.VITE_SHORTCODE_BASE_URL ?? "https://hopp.sh"
+const organizationDomain = ref<string>("")
+
+onMounted(async () => {
+  const { organization } = platform
+
+  if (!organization || organization.isDefaultCloudInstance) {
+    return
+  }
+
+  const orgInfo = await organization.getOrgInfo()
+
+  if (orgInfo) {
+    const { orgDomain } = orgInfo
+
+    organizationDomain.value = orgDomain
+  }
+})
+
+const shortcodeBaseURL = computed(() => {
+  const { organization } = platform
+
+  if (!organization || organization.isDefaultCloudInstance) {
+    return import.meta.env.VITE_SHORTCODE_BASE_URL ?? "https://hopp.sh"
+  }
+
+  const rootDomain = organization.getRootDomain()
+  return `https://${organizationDomain.value}.${rootDomain}`
+})
 
 const text = computed(() => {
   return props.label
     ? t(props.label)
-    : `${shortcodeBaseURL}/r/${props.link ?? "xxxx"}`
+    : `${shortcodeBaseURL.value}/r/${props.link ?? "xxxx"}`
 })
 </script>

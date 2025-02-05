@@ -141,28 +141,23 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent } from "vue"
-import { useRoute } from "vue-router"
+<script lang="ts" setup>
 import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
 import { pipe } from "fp-ts/function"
-import { GQLError } from "~/helpers/backend/GQLClient"
-import { useGQLQuery } from "@composables/graphql"
-import {
-  GetInviteDetailsDocument,
-  GetInviteDetailsQuery,
-  GetInviteDetailsQueryVariables,
-} from "~/helpers/backend/graphql"
-import { acceptTeamInvitation } from "~/helpers/backend/mutations/TeamInvitation"
-import { initializeApp } from "~/helpers/app"
-import { platform } from "~/platform"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
+
 import { onLoggedIn } from "@composables/auth"
 import { useReadonlyStream } from "@composables/stream"
 import { useToast } from "@composables/toast"
+import { invokeAction } from "@helpers/actions"
 import { useI18n } from "~/composables/i18n"
+import { initializeApp } from "~/helpers/app"
+import { GQLError } from "~/helpers/backend/GQLClient"
+import { acceptTeamInvitation } from "~/helpers/backend/mutations/TeamInvitation"
+import { platform } from "~/platform"
 import IconHome from "~icons/lucide/home"
-import { invokeAction } from "~/helpers/actions"
 
 type GetInviteDetailsError =
   | "team_invite/not_valid_viewer"
@@ -171,115 +166,94 @@ type GetInviteDetailsError =
   | "team_invite/email_do_not_match"
   | "team_invite/already_member"
 
-export default defineComponent({
-  layout: "empty",
+// Data properties
+const invalidLink = ref(false)
+const loading = ref(false)
+const revokedLink = ref(false)
+const inviteID = ref("")
+const joinTeamSuccess = ref(false)
 
-  setup() {
-    const route = useRoute()
+const route = useRoute()
 
-    const inviteDetails = useGQLQuery<
-      GetInviteDetailsQuery,
-      GetInviteDetailsQueryVariables,
-      GetInviteDetailsError
-    >({
-      query: GetInviteDetailsDocument,
-      variables: {
-        inviteID: route.query.id as string,
-      },
-      defer: true,
-    })
+const inviteDetails = platform.backend.getInviteDetails<GetInviteDetailsError>(
+  route.query.id as string
+)
 
-    onLoggedIn(() => {
-      if (typeof route.query.id === "string") {
-        inviteDetails.execute({
-          inviteID: route.query.id,
-        })
-      }
-    })
-
-    const probableUser = useReadonlyStream(
-      platform.auth.getProbableUserStream(),
-      platform.auth.getProbableUser()
-    )
-
-    const currentUser = useReadonlyStream(
-      platform.auth.getCurrentUserStream(),
-      platform.auth.getCurrentUser()
-    )
-
-    const loadingCurrentUser = computed(() => {
-      if (!probableUser.value) return false
-      else if (!currentUser.value) return true
-      return false
-    })
-
-    return {
-      E,
-      inviteDetails,
-      loadingCurrentUser,
-      currentUser,
-      toast: useToast(),
-      t: useI18n(),
-      IconHome,
-      invokeAction,
-    }
-  },
-  data() {
-    return {
-      invalidLink: false,
-      loading: false,
-      revokedLink: false,
-      inviteID: "",
-      joinTeamSuccess: false,
-    }
-  },
-  beforeMount() {
-    initializeApp()
-  },
-  mounted() {
-    if (typeof this.$route.query.id === "string") {
-      this.inviteID = this.$route.query.id
-    }
-    this.invalidLink = !this.inviteID
-    // TODO: check revokeTeamInvitation
-    // TODO: check login user already a member
-  },
-  methods: {
-    joinTeam() {
-      this.loading = true
-      pipe(
-        acceptTeamInvitation(this.inviteID),
-        TE.matchW(
-          () => {
-            this.loading = false
-            this.toast.error(`${this.t("error.something_went_wrong")}`)
-          },
-          () => {
-            this.joinTeamSuccess = true
-            this.loading = false
-          }
-        )
-      )()
-    },
-    getErrorMessage(error: GQLError<GetInviteDetailsError>) {
-      if (error.type === "network_error") {
-        return this.t("error.network_error")
-      }
-      switch (error.error) {
-        case "team_invite/not_valid_viewer":
-          return this.t("team.not_valid_viewer")
-        case "team_invite/not_found":
-          return this.t("team.not_found")
-        case "team_invite/no_invite_found":
-          return this.t("team.no_invite_found")
-        case "team_invite/already_member":
-          return this.t("team.already_member")
-        case "team_invite/email_do_not_match":
-          return this.t("team.email_do_not_match")
-        default:
-          return this.t("error.something_went_wrong")
-      }
-    },
-  },
+// Lifecycle hooks
+onBeforeMount(() => {
+  initializeApp()
 })
+
+onMounted(async () => {
+  if (typeof route.query.id === "string") {
+    inviteID.value = route.query.id
+  }
+  invalidLink.value = !inviteID.value
+  // TODO: check revokeTeamInvitation
+  // TODO: check if the logged-in user is already a member
+})
+
+onLoggedIn(async () => {
+  if (typeof route.query.id === "string") {
+    inviteDetails.execute({
+      inviteID: route.query.id,
+    })
+  }
+})
+
+const probableUser = useReadonlyStream(
+  platform.auth.getProbableUserStream(),
+  platform.auth.getProbableUser()
+)
+
+const currentUser = useReadonlyStream(
+  platform.auth.getCurrentUserStream(),
+  platform.auth.getCurrentUser()
+)
+
+const loadingCurrentUser = computed(() => {
+  if (!probableUser.value) return false
+  if (!currentUser.value) return true
+  return false
+})
+
+const toast = useToast()
+const t = useI18n()
+
+const joinTeam = () => {
+  loading.value = true
+  pipe(
+    acceptTeamInvitation(inviteID.value),
+    TE.matchW(
+      () => {
+        loading.value = false
+        toast.error(`${t("error.something_went_wrong")}`)
+      },
+      () => {
+        joinTeamSuccess.value = true
+        loading.value = false
+      }
+    )
+  )()
+}
+
+const getErrorMessage = (error: GQLError<GetInviteDetailsError>) => {
+  if (error.type === "network_error") {
+    return t("error.network_error")
+  }
+  switch (error.error) {
+    case "team_invite/not_valid_viewer":
+      return t("team.not_valid_viewer")
+    case "team_invite/not_found":
+      return t("team.not_found")
+    case "team_invite/no_invite_found":
+      return t("team.no_invite_found")
+    case "team_invite/already_member":
+      return t("team.already_member")
+    case "team_invite/email_do_not_match":
+      return t("team.email_do_not_match")
+    default:
+      return t("error.something_went_wrong")
+  }
+}
 </script>

@@ -198,7 +198,7 @@
 
 <script lang="ts" setup>
 import { useVModel } from "@vueuse/core"
-import { computed, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { PropType } from "vue"
 import { useI18n } from "~/composables/i18n"
 import IconMonitor from "~icons/lucide/monitor"
@@ -206,6 +206,7 @@ import IconSun from "~icons/lucide/sun"
 import IconMoon from "~icons/lucide/moon"
 import { TippyComponent } from "vue-tippy"
 import { HoppRESTRequest } from "@hoppscotch/data"
+import { platform } from "~/platform"
 
 const t = useI18n()
 
@@ -306,6 +307,25 @@ type EmbedOption = {
   }[]
   theme: "light" | "dark" | "system"
 }
+
+const organizationDomain = ref<string>("")
+
+onMounted(async () => {
+  const { organization } = platform
+
+  if (!organization || organization.isDefaultCloudInstance) {
+    return
+  }
+
+  const orgInfo = await organization.getOrgInfo()
+
+  if (orgInfo) {
+    const { orgDomain } = orgInfo
+
+    organizationDomain.value = orgDomain
+  }
+})
+
 const embedThemeIcon = computed(() => {
   if (embedOptions.value.theme === "system") {
     return IconMonitor
@@ -375,11 +395,19 @@ const linkVariants: LinkVariant[] = [
   },
 ]
 
-const shortcodeBaseURL =
-  import.meta.env.VITE_SHORTCODE_BASE_URL ?? "https://hopp.sh"
+const shortcodeBaseURL = computed(() => {
+  const { organization } = platform
+
+  if (!organization || organization.isDefaultCloudInstance) {
+    return import.meta.env.VITE_SHORTCODE_BASE_URL ?? "https://hopp.sh"
+  }
+
+  const rootDomain = organization.getRootDomain()
+  return `https://${organizationDomain.value}.${rootDomain}`
+})
 
 const copyEmbed = () => {
-  return `<iframe src="${shortcodeBaseURL}/e/${props.request?.id}" title="Hoppscotch Embed" style="width: 100%; height: 480px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.1);"></iframe>`
+  return `<iframe src="${shortcodeBaseURL.value}/e/${props.request?.id}" title="Hoppscotch Embed" style="width: 100%; height: 480px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.1);"></iframe>`
 }
 
 const copyButton = (
@@ -396,18 +424,18 @@ const copyButton = (
   }
 
   if (type === "markdown") {
-    return `[![Run in Hoppscotch](${shortcodeBaseURL}/${badge})](${shortcodeBaseURL}/r/${props.request?.id})`
+    return `[![Run in Hoppscotch](${shortcodeBaseURL.value}/${badge})](${shortcodeBaseURL.value}/r/${props.request?.id})`
   }
-  return `<a href="${shortcodeBaseURL}/r/${props.request?.id}"><img src="${shortcodeBaseURL}/${badge}" alt="Run in Hoppscotch" /></a>`
+  return `<a href="${shortcodeBaseURL.value}/r/${props.request?.id}"><img src="${shortcodeBaseURL.value}/${badge}" alt="Run in Hoppscotch" /></a>`
 }
 
 const copyLink = (variationID: string) => {
   if (variationID === "link1") {
-    return `${shortcodeBaseURL}/r/${props.request?.id}`
+    return `${shortcodeBaseURL.value}/r/${props.request?.id}`
   } else if (variationID === "link2") {
-    return `<a href="${shortcodeBaseURL}/r/${props.request?.id}">Run in Hoppscotch</a>`
+    return `<a href="${shortcodeBaseURL.value}/r/${props.request?.id}">Run in Hoppscotch</a>`
   }
-  return `[Run in Hoppscotch](${shortcodeBaseURL}/r/${props.request?.id})`
+  return `[Run in Hoppscotch](${shortcodeBaseURL.value}/r/${props.request?.id})`
 }
 
 const copyContent = ({

@@ -1,8 +1,8 @@
 import * as E from "fp-ts/Either"
 import { BehaviorSubject } from "rxjs"
-import { GQLError, runGQLQuery } from "../backend/GQLClient"
-import { GetMyTeamsDocument, GetMyTeamsQuery } from "../backend/graphql"
 import { platform } from "~/platform"
+import { GQLError } from "../backend/GQLClient"
+import { GetMyTeamsQuery } from "../backend/graphql"
 
 const BACKEND_PAGE_SIZE = 10
 const POLL_DURATION = 10000
@@ -68,13 +68,10 @@ export default class TeamListAdapter {
     const results: GetMyTeamsQuery["myTeams"] = []
 
     while (true) {
-      const result = await runGQLQuery({
-        query: GetMyTeamsDocument,
-        variables: {
-          cursor:
-            results.length > 0 ? results[results.length - 1].id : undefined,
-        },
-      })
+      const cursor =
+        results.length > 0 ? results[results.length - 1].id : undefined
+
+      const result = await platform.backend.getUserTeams(cursor)
 
       if (E.isLeft(result)) {
         this.error$.next(result.left)

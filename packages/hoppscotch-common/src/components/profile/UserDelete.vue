@@ -9,7 +9,7 @@
     <HoppButtonSecondary
       filled
       outline
-      :label="t('settings.delete_account')"
+      :label="t('settings.delete_account_short')"
       type="submit"
       @click="showDeleteAccountModal = true"
     />
@@ -74,7 +74,7 @@
       <template #footer>
         <span class="flex space-x-2">
           <HoppButtonPrimary
-            :label="t('settings.delete_account')"
+            :label="t('settings.delete_account_short')"
             :loading="deletingUser"
             filled
             outline
@@ -101,13 +101,13 @@
 <script setup lang="ts">
 import { pipe } from "fp-ts/function"
 import * as TE from "fp-ts/TaskEither"
-import { ref, watch } from "vue"
-import { GQLError, runGQLQuery } from "~/helpers/backend/GQLClient"
+import { GQLError } from "~/helpers/backend/GQLClient"
 import * as E from "fp-ts/Either"
+import { ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { useI18n } from "~/composables/i18n"
+import { GetMyTeamsQuery } from "~/helpers/backend/graphql"
 import { useToast } from "~/composables/toast"
-import { GetMyTeamsDocument, GetMyTeamsQuery } from "~/helpers/backend/graphql"
 import { deleteUser } from "~/helpers/backend/mutations/Profile"
 import { platform } from "~/platform"
 
@@ -129,10 +129,9 @@ watch(showDeleteAccountModal, (isModalOpen) => {
 
 const fetchMyTeams = async () => {
   loading.value = true
-  const result = await runGQLQuery({
-    query: GetMyTeamsDocument,
-    variables: {},
-  })
+
+  const result = await platform.backend.getUserTeams()
+
   loading.value = false
 
   if (E.isLeft(result)) {

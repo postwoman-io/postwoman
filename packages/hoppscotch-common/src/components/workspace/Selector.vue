@@ -65,6 +65,14 @@
         <icon-lucide-help-circle class="svg-icons mb-4" />
         {{ t("error.something_went_wrong") }}
       </div>
+
+      <div v-if="showCreateOrganizationCTA" class="flex flex-col">
+        <hr />
+        <HoppButtonPrimary
+          :label="t('organization.create_an_organization')"
+          to="/orgs"
+        />
+      </div>
     </div>
     <TeamsAdd
       :show="showModalAdd"
@@ -150,6 +158,12 @@ const workspace = workspaceService.currentWorkspace
 const isActiveWorkspace = computed(() => (id: string) => {
   if (workspace.value.type === "personal") return false
   return workspace.value.teamID === id
+})
+
+const showCreateOrganizationCTA = computed(() => {
+  const { organization } = platform
+
+  return organization?.isDefaultCloudInstance ?? false
 })
 
 const switchToTeamWorkspace = (team: GetMyTeamsQuery["myTeams"][number]) => {

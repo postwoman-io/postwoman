@@ -1,9 +1,7 @@
 import { HoppRESTRequest } from "@hoppscotch/data"
+import { platform } from "~/platform"
 import { runMutation } from "../GQLClient"
 import {
-  CreateShortcodeDocument,
-  CreateShortcodeMutation,
-  CreateShortcodeMutationVariables,
   DeleteShortcodeDocument,
   DeleteShortcodeMutation,
   DeleteShortcodeMutationVariables,
@@ -17,14 +15,7 @@ type DeleteShortcodeErrors = "shortcode/not_found"
 export const createShortcode = (
   request: HoppRESTRequest,
   properties?: string
-) =>
-  runMutation<CreateShortcodeMutation, CreateShortcodeMutationVariables, "">(
-    CreateShortcodeDocument,
-    {
-      request: JSON.stringify(request),
-      properties,
-    }
-  )
+) => platform.backend.createShortcode(request, properties)
 
 export const deleteShortcode = (code: string) =>
   runMutation<
