@@ -54,6 +54,11 @@ export type HoppGQLDocument = {
   isDirty: boolean
 
   /**
+   * The cursor position in the document
+   */
+  cursorPosition: number
+
+  /**
    * Info about where this request should be saved.
    * This contains where the request is originated from basically.
    */

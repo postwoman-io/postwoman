@@ -93,14 +93,14 @@ import IconCheck from "~icons/lucide/check"
 import IconInfo from "~icons/lucide/info"
 import IconWand from "~icons/lucide/wand"
 import IconWrapText from "~icons/lucide/wrap-text"
-import { onMounted, reactive, ref, markRaw } from "vue"
+import { onMounted, reactive, ref, markRaw, watch, nextTick } from "vue"
 import { copyToClipboard } from "@helpers/utils/clipboard"
 import { useCodemirror } from "@composables/codemirror"
 import { useI18n } from "@composables/i18n"
 import { refAutoReset, useVModel } from "@vueuse/core"
 import { useToast } from "~/composables/toast"
 import { getPlatformSpecialKey as getSpecialKey } from "~/helpers/platformutils"
-import * as gql from "graphql"
+import { OperationDefinitionNode, parse, print } from "graphql"
 import { createGQLQueryLinter } from "~/helpers/editor/linting/gqlQuery"
 import queryCompleter from "~/helpers/editor/completion/gqlQuery"
 import { selectedGQLOpHighlight } from "~/helpers/editor/gql/operation"
@@ -114,6 +114,7 @@ import {
 } from "~/helpers/graphql/connection"
 import { useNestedSetting } from "~/composables/settings"
 import { toggleNestedSetting } from "~/newstore/settings"
+import { useQuery } from "~/helpers/graphql/query"
 
 // Template refs
 const queryEditor = ref<any | null>(null)
@@ -128,7 +129,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "save-request"): void
   (e: "update:modelValue", val: string): void
-  (e: "run-query", definition: gql.OperationDefinitionNode | null): void
+  (e: "cursor-position", val: number): void
+  (e: "run-query", definition: OperationDefinitionNode | null): void
 }>()
 
 const copyQueryIcon = refAutoReset<typeof IconCopy | typeof IconCheck>(
@@ -141,45 +143,60 @@ const prettifyQueryIcon = refAutoReset<
 
 const WRAP_LINES = useNestedSetting("WRAP_LINES", "graphqlQuery")
 
-const selectedOperation = ref<gql.OperationDefinitionNode | null>(null)
+const selectedOperation = ref<OperationDefinitionNode | null>(null)
 
 const gqlQueryString = useVModel(props, "modelValue", emit)
 
+// Add useQuery
+const { updatedQuery, cursorPosition, operationDefinitions } = useQuery()
+
 const debouncedOnUpdateQueryState = debounce((update: ViewUpdate) => {
   const selectedPos = update.state.selection.main.head
+  emit("cursor-position", selectedPos)
+  selectedOperation.value = null
   const queryString = update.state.doc.toJSON().join(update.state.lineBreak)
 
   try {
-    const operations = gql.parse(queryString)
-    if (operations.definitions.length === 1) {
-      selectedOperation.value = operations
-        .definitions[0] as gql.OperationDefinitionNode
+    const ast = parse(queryString)
+
+    operationDefinitions.value = ast.definitions.filter(
+      (def) => def.kind === "OperationDefinition"
+    ) as OperationDefinitionNode[]
+
+    if (ast.definitions.length === 1) {
+      selectedOperation.value = ast.definitions[0] as OperationDefinitionNode
       return
     }
 
     selectedOperation.value =
-      (operations.definitions.find((def) => {
+      (ast.definitions.find((def) => {
         if (def.kind !== "OperationDefinition") return false
         const { start, end } = def.loc!
         return selectedPos >= start && selectedPos <= end
-      }) as gql.OperationDefinitionNode) ?? null
+      }) as OperationDefinitionNode) ?? null
   } catch (error) {
-    // console.error(error)
+    if (queryString.trim() === "") {
+      operationDefinitions.value = []
+    }
   }
-}, 300)
+}, 150)
 
 onMounted(() => {
   try {
-    const operations = gql.parse(gqlQueryString.value)
-    if (operations.definitions.length) {
-      selectedOperation.value = operations
-        .definitions[0] as gql.OperationDefinitionNode
+    const ast = parse(gqlQueryString.value)
+
+    operationDefinitions.value = ast.definitions.filter(
+      (def) => def.kind === "OperationDefinition"
+    ) as OperationDefinitionNode[]
+
+    if (ast.definitions.length) {
+      selectedOperation.value = ast.definitions[0] as OperationDefinitionNode
       return
     }
   } catch (error) {}
 })
 
-useCodemirror(
+const cmQueryEditor = useCodemirror(
   queryEditor,
   gqlQueryString,
   reactive({
@@ -196,13 +213,27 @@ useCodemirror(
   })
 )
 
+// Add watcher for query updates
+watch(updatedQuery, async (newQuery) => {
+  if (newQuery) {
+    gqlQueryString.value = newQuery
+
+    await nextTick()
+
+    // Update cursor position
+    if (cursorPosition.value) {
+      cmQueryEditor.cursor.value = cursorPosition.value
+    }
+  }
+})
+
 // operations on graphql query string
 // const operations = useReadonlyStream(props.request.operations$, [])
 
 const prettifyQuery = () => {
   try {
-    gqlQueryString.value = gql.print(
-      gql.parse(gqlQueryString.value, {
+    gqlQueryString.value = print(
+      parse(gqlQueryString.value, {
         allowLegacyFragmentVariables: true,
       })
     )
@@ -223,7 +254,7 @@ const clearGQLQuery = () => {
   gqlQueryString.value = ""
 }
 
-const runQuery = (definition: gql.OperationDefinitionNode | null = null) => {
+const runQuery = (definition: OperationDefinitionNode | null = null) => {
   emit("run-query", definition)
 }
 const unsubscribe = () => {

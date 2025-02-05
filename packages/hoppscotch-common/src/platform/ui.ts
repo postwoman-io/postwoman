@@ -48,4 +48,14 @@ export type UIPlatformDef = {
    * Additional profile Section components in the profile page
    */
   additionalProfileSections?: Component[]
+
+  /**
+   * Custom history related components to be shown in the history page
+   */
+  additionalHistoryComponent?: Component
+
+  /**
+   * Custom sidebar header item to be shown in the sidebar header
+   */
+  additionalSidebarHeaderItem?: Component
 }

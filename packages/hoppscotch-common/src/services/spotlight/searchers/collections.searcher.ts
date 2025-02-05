@@ -360,6 +360,7 @@ export class CollectionsSpotlightSearcherService
           folderPath: folderPath.join("/"),
           requestIndex: reqIndex,
         },
+        cursorPosition: 0,
         request: req,
         isDirty: false,
         inheritedProperties: {

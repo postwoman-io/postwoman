@@ -24,7 +24,7 @@
       :icon="IconClock"
       :label="`${t('tab.history')}`"
     >
-      <History :page="'rest'" />
+      <History :page="'rest'" :selected-tab="selectedNavigationTab" />
     </HoppSmartTab>
     <HoppSmartTab
       :id="'share-request'"

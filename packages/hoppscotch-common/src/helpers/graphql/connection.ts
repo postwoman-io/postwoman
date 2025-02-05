@@ -207,6 +207,7 @@ export const disconnect = () => {
 
   clearTimeout(timeoutSubscription)
   connection.state = "DISCONNECTED"
+  connection.schema = null
 }
 
 export const reset = () => {

@@ -12,9 +12,14 @@
           class="flex-grow"
           placeholder=" "
           :label="t('action.label')"
-          input-styles="floating-input"
+          input-styles="floating-input !border-0"
+          styles="border border-divider rounded"
           @submit="editRequest"
-        />
+        >
+          <template #button>
+            <AppInspection :inspection-results="hasSameNameInspectionResult" />
+          </template>
+        </HoppSmartInput>
       </div>
     </template>
     <template #footer>
@@ -40,6 +45,9 @@
 import { useI18n } from "@composables/i18n"
 import { useToast } from "@composables/toast"
 import { useVModel } from "@vueuse/core"
+import { computed, ComputedRef, markRaw } from "vue"
+import { InspectorResult } from "~/services/inspection"
+import IconAlertTriangle from "~icons/lucide/alert-triangle"
 
 const toast = useToast()
 const t = useI18n()
@@ -48,22 +56,50 @@ const props = withDefaults(
   defineProps<{
     show: boolean
     loadingState?: boolean
-    modelValue?: string
+    responseName?: string
+    hasSameNameResponse?: boolean
   }>(),
   {
     show: false,
     loadingState: false,
-    modelValue: "",
+    responseName: "",
+    hasSameNameResponse: false,
   }
 )
 
 const emit = defineEmits<{
   (e: "submit", name: string): void
   (e: "hide-modal"): void
-  (e: "update:modelValue", value: string): void
+  (e: "update:responseName", value: string): void
 }>()
 
-const editingName = useVModel(props, "modelValue")
+const editingName = useVModel(props, "responseName")
+
+const hasSameNameInspectionResult: ComputedRef<InspectorResult[]> = computed(
+  () => {
+    if (!props.hasSameNameResponse) return []
+
+    return [
+      {
+        id: "same-name-response",
+        severity: 2,
+        icon: markRaw(IconAlertTriangle),
+        isApplicable: true,
+        text: {
+          type: "text",
+          text: t("response.same_name_inspector_warning"),
+        },
+        doc: {
+          text: t("action.learn_more"),
+          link: "https://docs.hoppscotch.io/documentation/getting-started/rest/response-handling#save-a-response-as-an-example",
+        },
+        locations: {
+          type: "url",
+        },
+      },
+    ]
+  }
+)
 
 const editRequest = () => {
   if (editingName.value.trim() === "") {

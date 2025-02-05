@@ -197,11 +197,16 @@ type PMRequestAuthDef<
 const getVariableValue = (defs: VariableDefinition[], key: string) =>
   defs.find((param) => param.key === key)?.value as string | undefined
 
-const getHoppReqAuth = (hoppAuth: Item["request"]["auth"]): HoppRESTAuth => {
-  if (!hoppAuth) return { authType: "none", authActive: true }
+const getHoppReqAuth = (
+  hoppAuth: Item["request"]["auth"] | null
+): HoppRESTAuth => {
+  if (!hoppAuth) return { authType: "inherit", authActive: false }
 
-  // Cast to the type for more stricter checking down the line
   const auth = hoppAuth as unknown as PMRequestAuthDef
+
+  if (auth.type === "noauth") {
+    return { authType: "none", authActive: true }
+  }
 
   if (auth.type === "basic") {
     return {
@@ -269,7 +274,7 @@ const getHoppReqAuth = (hoppAuth: Item["request"]["auth"]): HoppRESTAuth => {
     }
   }
 
-  return { authType: "none", authActive: true }
+  return { authType: "inherit", authActive: true }
 }
 
 const getHoppReqBody = ({
@@ -413,7 +418,7 @@ const getHoppFolder = (ig: ItemGroup<Item>): HoppCollection =>
       A.map(getHoppFolder)
     ),
     requests: pipe(ig.items.all(), A.filter(isPMItem), A.map(getHoppRequest)),
-    auth: { authType: "inherit", authActive: true },
+    auth: getHoppReqAuth(ig.auth),
     headers: [],
   })
 

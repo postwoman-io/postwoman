@@ -87,53 +87,70 @@
                   <label class="text-secondaryLight">{{
                     t("settings.ai_request_naming_style")
                   }}</label>
-                  <div class="flex">
-                    <tippy
-                      interactive
-                      trigger="click"
-                      theme="popover"
-                      :on-shown="() => namingStyleTippyActions?.focus()"
-                    >
-                      <HoppSmartSelectWrapper>
-                        <HoppButtonSecondary
-                          class="flex flex-1 !justify-start rounded-none pr-8"
-                          :label="activeNamingStyle?.label"
-                          outline
-                        />
-                      </HoppSmartSelectWrapper>
-                      <template #content="{ hide }">
-                        <div
-                          ref="namingStyleTippyActions"
-                          class="flex flex-col focus:outline-none"
-                          tabindex="0"
-                          @keyup.escape="hide()"
-                        >
-                          <HoppSmartLink
-                            v-for="style in supportedNamingStyles"
-                            :key="style"
-                            class="flex flex-1"
-                            @click="
-                              () => {
-                                AI_REQUEST_NAMING_STYLE = style.id
-                                hide()
-                              }
-                            "
+                  <div class="flex flex-col space-y-4">
+                    <div class="flex">
+                      <tippy
+                        interactive
+                        trigger="click"
+                        theme="popover"
+                        :on-shown="() => namingStyleTippyActions?.focus()"
+                      >
+                        <HoppSmartSelectWrapper>
+                          <HoppButtonSecondary
+                            class="flex flex-1 !justify-start rounded-none pr-8"
+                            :label="activeNamingStyle?.label"
+                            outline
+                          />
+                        </HoppSmartSelectWrapper>
+                        <template #content="{ hide }">
+                          <div
+                            ref="namingStyleTippyActions"
+                            class="flex flex-col focus:outline-none"
+                            tabindex="0"
+                            @keyup.escape="hide()"
                           >
-                            <HoppSmartItem
-                              :label="style.label"
-                              :active-info-icon="
-                                AI_REQUEST_NAMING_STYLE === style.id
+                            <HoppSmartLink
+                              v-for="style in supportedNamingStyles"
+                              :key="style.id"
+                              class="flex flex-1"
+                              @click="
+                                () => {
+                                  AI_REQUEST_NAMING_STYLE = style.id
+                                  hide()
+                                }
                               "
-                              :info-icon="
-                                AI_REQUEST_NAMING_STYLE === style.id
-                                  ? IconDone
-                                  : null
-                              "
-                            />
-                          </HoppSmartLink>
-                        </div>
-                      </template>
-                    </tippy>
+                            >
+                              <HoppSmartItem
+                                :label="style.label"
+                                :active-info-icon="
+                                  AI_REQUEST_NAMING_STYLE === style.id
+                                "
+                                :info-icon="
+                                  AI_REQUEST_NAMING_STYLE === style.id
+                                    ? IconDone
+                                    : null
+                                "
+                              />
+                            </HoppSmartLink>
+                          </div>
+                        </template>
+                      </tippy>
+                    </div>
+                    <div
+                      v-if="AI_REQUEST_NAMING_STYLE === 'CUSTOM'"
+                      class="flex"
+                    >
+                      <textarea
+                        v-model="CUSTOM_NAMING_STYLE"
+                        class="flex flex-1 bg-primaryLight px-4 py-2 rounded border border-dividerLight focus:border-divider transition resize-none"
+                        :placeholder="
+                          t(
+                            'settings.ai_request_naming_style_custom_placeholder'
+                          )
+                        "
+                        rows="4"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -274,6 +291,7 @@ const EXPAND_NAVIGATION = useSetting("EXPAND_NAVIGATION")
 const SIDEBAR_ON_LEFT = useSetting("SIDEBAR_ON_LEFT")
 const ENABLE_AI_EXPERIMENTS = useSetting("ENABLE_AI_EXPERIMENTS")
 const AI_REQUEST_NAMING_STYLE = useSetting("AI_REQUEST_NAMING_STYLE")
+const CUSTOM_NAMING_STYLE = useSetting("CUSTOM_NAMING_STYLE")
 
 const supportedNamingStyles = [
   {
@@ -291,6 +309,10 @@ const supportedNamingStyles = [
   {
     id: "PascalCase" as const,
     label: t("settings.ai_request_naming_style_pascal_case"),
+  },
+  {
+    id: "CUSTOM" as const,
+    label: t("settings.ai_request_naming_style_custom"),
   },
 ]
 

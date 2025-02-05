@@ -50,6 +50,7 @@ export const useRequestNameGeneration = (targetNameRef: Ref<string>) => {
     }
 
     const namingStyle = useSetting("AI_REQUEST_NAMING_STYLE").value
+    const customNamingStyle = useSetting("CUSTOM_NAMING_STYLE").value
 
     isGenerateRequestNamePending.value = true
 
@@ -60,7 +61,7 @@ export const useRequestNameGeneration = (targetNameRef: Ref<string>) => {
 
     const result = await generateRequestNameForPlatform(
       JSON.stringify(requestContext),
-      namingStyle
+      namingStyle === "CUSTOM" ? customNamingStyle : namingStyle
     )
 
     if (result && E.isLeft(result)) {

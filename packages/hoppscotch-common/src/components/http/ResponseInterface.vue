@@ -185,6 +185,11 @@ const response = computed(() => {
       if (res?.type === "success" || res?.type === "fail") {
         response = getResponseBodyText(res.body)
       }
+    } else if (doc.type === "test-runner") {
+      const res = doc.request?.response
+      if (res?.type === "success" || res?.type === "fail") {
+        response = getResponseBodyText(res.body)
+      }
     } else {
       const res = doc.response.body
       response = res

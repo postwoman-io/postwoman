@@ -78,6 +78,8 @@ export type SettingsDef = {
     | "camelCase"
     | "snake_case"
     | "PascalCase"
+    | "CUSTOM"
+  CUSTOM_NAMING_STYLE: string
 }
 
 export const getDefaultSettings = (): SettingsDef => ({
@@ -129,6 +131,7 @@ export const getDefaultSettings = (): SettingsDef => ({
   HAS_OPENED_SPOTLIGHT: false,
   ENABLE_AI_EXPERIMENTS: true,
   AI_REQUEST_NAMING_STYLE: "DESCRIPTIVE_WITH_SPACES",
+  CUSTOM_NAMING_STYLE: "",
 })
 
 type ApplySettingPayload = {

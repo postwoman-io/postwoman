@@ -68,7 +68,7 @@
     </div>
   </div>
   <div class="h-full relative">
-    <div ref="variableEditor" class="flex flex-1 flex-col"></div>
+    <div ref="variableEditor" class="flex flex-1 flex-col h-full"></div>
   </div>
 </template>
 

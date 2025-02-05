@@ -8,7 +8,7 @@
           v-if="currentTabID"
           :id="'gql_windows'"
           :model-value="currentTabID"
-          @update:model-value="(tabID) => tabs.setActiveTab(tabID)"
+          @update:model-value="changeTab"
           @remove-tab="removeTab"
           @add-tab="addNewTab"
           @sort="sortTabs"
@@ -92,12 +92,14 @@ import { defineActionHandler } from "~/helpers/actions"
 import { connection, disconnect } from "~/helpers/graphql/connection"
 import { getDefaultGQLRequest } from "~/helpers/graphql/default"
 import { HoppGQLDocument } from "~/helpers/graphql/document"
+import { useExplorer } from "~/helpers/graphql/explorer"
 import { InspectionService } from "~/services/inspection"
 import { HoppTab } from "~/services/tab"
 import { GQLTabService } from "~/services/tab/graphql"
 
 const t = useI18n()
 const tabs = useService(GQLTabService)
+const { reset } = useExplorer()
 
 const currentTabID = computed(() => tabs.currentTabID.value)
 
@@ -115,12 +117,17 @@ const addNewTab = () => {
   const tab = tabs.createNewTab({
     request: getDefaultGQLRequest(),
     isDirty: false,
+    cursorPosition: 0,
   })
 
   tabs.setActiveTab(tab.id)
 }
 const sortTabs = (e: { oldIndex: number; newIndex: number }) => {
   tabs.updateTabOrdering(e.oldIndex, e.newIndex)
+}
+const changeTab = (tabID: string) => {
+  reset()
+  tabs.setActiveTab(tabID)
 }
 
 const removeTab = (tabID: string) => {
@@ -211,6 +218,7 @@ const duplicateTab = (tabID: string) => {
     const newTab = tabs.createNewTab({
       request: tab.value.document.request,
       isDirty: true,
+      cursorPosition: 0,
     })
     tabs.setActiveTab(newTab.id)
   }
@@ -221,6 +229,7 @@ defineActionHandler("gql.request.open", ({ request, saveContext }) => {
     saveContext,
     request: request,
     isDirty: false,
+    cursorPosition: 0,
   })
 })
 
