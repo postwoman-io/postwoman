@@ -200,7 +200,7 @@ const getVariableValue = (defs: VariableDefinition[], key: string) =>
 const getHoppReqAuth = (
   hoppAuth: Item["request"]["auth"] | null
 ): HoppRESTAuth => {
-  if (!hoppAuth) return { authType: "inherit", authActive: false }
+  if (!hoppAuth) return { authType: "inherit", authActive: true }
 
   const auth = hoppAuth as unknown as PMRequestAuthDef
 
