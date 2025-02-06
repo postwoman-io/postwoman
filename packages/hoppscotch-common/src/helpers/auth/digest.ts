@@ -3,7 +3,7 @@ import { md5 } from "js-md5"
 
 import { getService } from "~/modules/dioc"
 import { getI18n } from "~/modules/i18n"
-import { InterceptorService } from "~/services/interceptor.service"
+import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 
 export interface DigestAuthParams {
   username: string
@@ -85,11 +85,15 @@ export async function fetchInitialDigestAuthInfo(
   const t = getI18n()
 
   try {
-    const service = getService(InterceptorService)
-    const initialResponse = await service.runRequest({
+    const interceptorService = getService(KernelInterceptorService)
+    const exec = await interceptorService.execute({
+      id: Date.now(),
       url,
       method,
-    }).response
+      version: "HTTP/1.1",
+    })
+
+    const initialResponse = await exec.response
 
     if (E.isLeft(initialResponse)) {
       const initialFetchFailureReason =

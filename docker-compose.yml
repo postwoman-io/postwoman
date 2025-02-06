@@ -2,9 +2,36 @@
 # has a container with a Postgres instance running.
 # You can tweak around this file to match your instances
 
+# PROFILES EXPLANATION:
+#
+# We use Docker Compose profiles to manage different deployment scenarios and avoid port conflicts.
+#
+# These are all the available profiles:
+# - default: All-in-one service + database + auto-migration (recommended for most users)
+# - default-no-db: All-in-one service without database (for users with external DB)
+# - backend: The backend service only
+# - app: The main Hoppscotch application only
+# - admin: The self-host admin dashboard only
+# - webapp: The static web app server only
+# - database: Just the PostgreSQL database
+# - just-backend: All services except webapp for local development
+# - deprecated: All deprecated services (not recommended)
+
+# USAGE:
+#
+# To run the default setup: docker compose --profile default up
+# To run without database: docker compose --profile default-no-db up
+# To run specific components: docker compose --profile backend up
+# To run all except webapp: docker compose --profile just-backend up
+# To run deprecated services: docker compose --profile deprecated up
+
+# NOTE: The default and default-no-db profiles should not be mixed with individual service
+# profiles as they would conflict on ports.
+
 services:
   # This service runs the backend app in the port 3170
   hoppscotch-backend:
+    profiles: ["backend", "just-backend"]
     container_name: hoppscotch-backend
     build:
       dockerfile: prod.Dockerfile
@@ -32,6 +59,7 @@ services:
   # NOTE: To do TLS or play around with how the app is hosted, you can look into the Caddyfile for
   #       the SH admin dashboard server at packages/hoppscotch-selfhost-web/Caddyfile
   hoppscotch-app:
+    profiles: ["app"]
     container_name: hoppscotch-app
     build:
       dockerfile: prod.Dockerfile
@@ -49,6 +77,7 @@ services:
   # NOTE: To do TLS or play around with how the app is hosted, you can look into the Caddyfile for
   #       the SH admin dashboard server at packages/hoppscotch-sh-admin/Caddyfile
   hoppscotch-sh-admin:
+    profiles: ["admin"]
     container_name: hoppscotch-sh-admin
     build:
       dockerfile: prod.Dockerfile
@@ -62,8 +91,22 @@ services:
       - "3280:80"
       - "3100:3100"
 
-  # The service that spins up all 3 services at once in one container
+  # The static server for serving web content to desktop shell, hosted at port 3200
+  hoppscotch-webapp-server:
+    profiles: ["webapp"]
+    container_name: hoppscotch-webapp-server
+    env_file:
+      - ./.env
+    build:
+      dockerfile: prod.Dockerfile
+      context: .
+      target: webapp_server
+    ports:
+      - "3200:3200"
+
+  # The service that spins up all services at once in one container
   hoppscotch-aio:
+    profiles: ["default", "default-no-db"]
     container_name: hoppscotch-aio
     restart: unless-stopped
     build:
@@ -79,12 +122,14 @@ services:
       - "3000:3000"
       - "3100:3100"
       - "3170:3170"
+      - "3200:3200"
       - "3080:80"
 
   # The preset DB service, you can delete/comment the below lines if
   # you are using an external postgres instance
   # This will be exposed at port 5432
   hoppscotch-db:
+    profiles: ["default", "database", "just-backend"]
     image: postgres:15
     ports:
       - "5432:5432"
@@ -105,8 +150,24 @@ services:
       timeout: 5s
       retries: 10
 
-  # All the services listed below are deprececated
+  # Auto-migration service - handles database migrations automatically
+  hoppscotch-migrate:
+    profiles: ["default", "just-backend"]
+    build:
+      dockerfile: prod.Dockerfile
+      context: .
+      target: backend
+    env_file:
+      - ./.env
+    depends_on:
+      hoppscotch-db:
+        condition: service_healthy
+    command: sh -c "pnpx prisma migrate deploy"
+
+  # All the services listed below are deprecated
+  # These services are kept for backward compatibility but should not be used for new deployments
   hoppscotch-old-backend:
+    profiles: ["deprecated"]
     container_name: hoppscotch-old-backend
     build:
       dockerfile: packages/hoppscotch-backend/Dockerfile
@@ -130,6 +191,7 @@ services:
       - "3170:3000"
 
   hoppscotch-old-app:
+    profiles: ["deprecated"]
     container_name: hoppscotch-old-app
     build:
       dockerfile: packages/hoppscotch-selfhost-web/Dockerfile
@@ -142,6 +204,7 @@ services:
       - "3000:8080"
 
   hoppscotch-old-sh-admin:
+    profiles: ["deprecated"]
     container_name: hoppscotch-old-sh-admin
     build:
       dockerfile: packages/hoppscotch-sh-admin/Dockerfile
@@ -152,3 +215,29 @@ services:
       - hoppscotch-old-backend
     ports:
       - "3100:8080"
+
+# DEPLOYMENT SCENARIOS:
+# 1. Default deployment (recommended):
+#    docker compose --profile default up
+#    This will start: AIO + database + auto-migration
+#
+# 2. Default deployment without database:
+#    docker compose --profile default-no-db up
+#    This will start: AIO only (use when you have an external database)
+#
+# 3. Individual service deployment:
+#    docker compose --profile backend up  # Just the backend
+#    docker compose --profile app up      # Just the app
+#    docker compose --profile admin up    # Just the admin dashboard
+#    docker compose --profile webapp up   # Just the static web server
+#    docker compose --profile database up # Just the database
+#
+# 4. Development deployment:
+#    docker compose --profile just-backend up  # All services except webapp
+#
+# 5. Deprecated services:
+#    docker compose --profile deprecated up
+#    This will start all deprecated services (not recommended for new deployments)
+#
+# Remember: The default and default-no-db profiles should not be mixed with individual service
+# profiles as they would conflict on ports.

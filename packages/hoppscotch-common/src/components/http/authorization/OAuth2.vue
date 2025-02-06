@@ -1084,7 +1084,7 @@ const generateOAuthToken = async () => {
         : { type: "request-tab", metadata: {} },
       grant_type: auth.value.grantTypeInfo.grantType,
     }
-    persistenceService.setLocalConfig(
+    await persistenceService.setLocalConfig(
       "oauth_temp_config",
       JSON.stringify(authConfig)
     )

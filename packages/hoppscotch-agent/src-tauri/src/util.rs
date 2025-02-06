@@ -7,6 +7,14 @@ use axum::{
 };
 use rand::rngs::OsRng;
 use serde::Serialize;
+use sha2::{Digest, Sha256};
+
+use crate::global::NONCE;
+
+pub fn generate_auth_key_hash(auth_key: &str) -> String {
+    let hash = Sha256::digest(auth_key.as_bytes());
+    base16::encode_lower(&hash[..3])
+}
 
 pub fn open_link(link: &str) -> Option<()> {
     let null = Stdio::null();
@@ -79,7 +87,7 @@ where
         let response_headers = response.headers_mut();
 
         response_headers.insert("Content-Type", "application/octet-stream".parse().unwrap());
-        response_headers.insert("X-Hopp-Nonce", nonce_b16.parse().unwrap());
+        response_headers.insert(NONCE, nonce_b16.parse().unwrap());
 
         response
     }

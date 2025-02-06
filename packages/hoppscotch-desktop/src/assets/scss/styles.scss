@@ -1,0 +1,103 @@
+@mixin base-theme {
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
+  --font-size-body: 0.75rem;
+  --font-size-tiny: 0.625rem;
+  --line-height-body: 1rem;
+}
+
+@mixin dark-theme {
+  --primary-color: #181818;
+  --primary-light-color: #1c1c1e;
+  --primary-dark-color: #262626;
+  --primary-contrast-color: #171717;
+
+  --secondary-color: #a3a3a3;
+  --secondary-light-color: #737373;
+  --secondary-dark-color: #fafafa;
+
+  --divider-color: #262626;
+  --divider-light-color: #1f1f1f;
+  --divider-dark-color: #2d2d2d;
+
+  --error-color: #292524;
+  --tooltip-color: #f5f5f5;
+  --popover-color: #1b1b1b;
+}
+
+@mixin green-theme {
+  --accent-color: #10b981;
+  --accent-light-color: #34d399;
+  --accent-dark-color: #059669;
+  --accent-contrast-color: #fff;
+  --gradient-from-color: #a7f3d0;
+  --gradient-via-color: #34d399;
+  --gradient-to-color: #059669;
+}
+
+:root {
+  @include base-theme;
+  @include dark-theme;
+  @include green-theme;
+}
+
+:root.dark {
+  @include dark-theme;
+  color-scheme: dark;
+}
+
+:root[data-accent='green'] {
+  @include green-theme;
+}
+
+* {
+  backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  &::before {
+    backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  &::after {
+    backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  @apply selection:bg-accentDark;
+  @apply selection:text-accentContrast;
+  @apply overscroll-none;
+}
+
+:root {
+  @apply antialiased;
+  accent-color: var(--accent-color);
+  font-variant-ligatures: common-ligatures;
+}
+
+input::placeholder,
+textarea::placeholder {
+  @apply text-secondary;
+  @apply opacity-50 #{!important};
+}
+
+input,
+textarea {
+  @apply text-secondaryDark;
+  @apply font-medium;
+}
+
+body {
+  @apply bg-primary;
+  @apply text-body text-secondary;
+  @apply font-medium;
+  @apply select-none;
+  @apply overflow-x-hidden;
+  @apply leading-body #{!important};
+  animation: fade 300ms forwards;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}

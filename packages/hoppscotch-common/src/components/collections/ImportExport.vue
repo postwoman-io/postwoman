@@ -625,7 +625,7 @@ const HoppGistCollectionsExporter: ImporterOrExporter = {
         platform: "rest",
       })
 
-      platform.io.openExternalLink(res.right)
+      platform.kernelIO.openExternalLink(res.right)
     } else {
       toast.error(collectionJSON.left)
     }

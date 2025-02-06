@@ -9,7 +9,7 @@ export const exportTestResults = async (testResults: HoppTestResult) => {
 
   const fileName = url.split("/").pop()!.split("#")[0].split("?")[0]
 
-  const result = await platform.io.saveFileWithDialog({
+  const result = await platform.kernelIO.saveFileWithDialog({
     data: contentsJSON,
     contentType: "application/json",
     suggestedFilename: `${fileName}.json`,

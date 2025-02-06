@@ -1,3 +1,5 @@
+import * as E from "fp-ts/Either"
+import * as O from "fp-ts/Option"
 import {
   OauthAuthService,
   createFlowConfig,
@@ -5,12 +7,13 @@ import {
 } from "../oauth.service"
 import { z } from "zod"
 import { getService } from "~/modules/dioc"
-import * as E from "fp-ts/Either"
-import { InterceptorService } from "~/services/interceptor.service"
+import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
 import { useToast } from "~/composables/toast"
 import { PasswordGrantTypeParams } from "@hoppscotch/data"
+import { content } from "@hoppscotch/kernel"
+import { parseBytesToJSON } from "~/helpers/functional/json"
 
-const interceptorService = getService(InterceptorService)
+const interceptorService = getService(KernelInterceptorService)
 
 const PasswordFlowParamsSchema = PasswordGrantTypeParams.pick({
   authEndpoint: true,
@@ -55,28 +58,27 @@ const initPasswordOauthFlow = async ({
 }: PasswordFlowParams) => {
   const toast = useToast()
 
-  const formData = new URLSearchParams()
-  formData.append("grant_type", "password")
-  formData.append("client_id", clientID)
-  formData.append("username", username)
-  formData.append("password", password)
-
-  if (clientSecret) {
-    formData.append("client_secret", clientSecret)
-  }
-
-  if (scopes) {
-    formData.append("scope", scopes)
-  }
-
-  const { response } = interceptorService.runRequest({
+  const { response } = interceptorService.execute({
+    id: Date.now(),
     url: authEndpoint,
     method: "POST",
+    version: "HTTP/1.1",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
     },
-    data: formData.toString(),
+    content: content.urlencoded({
+      grant_type: "password",
+      client_id: clientID,
+      username,
+      password,
+      ...(clientSecret && {
+        client_secret: clientSecret,
+      }),
+      ...(scopes && {
+        scopes: scopes,
+      }),
+    }),
   })
 
   const res = await response
@@ -86,25 +88,24 @@ const initPasswordOauthFlow = async ({
     return E.left("AUTH_TOKEN_REQUEST_FAILED" as const)
   }
 
-  const responsePayload = new TextDecoder("utf-8")
-    .decode(res.right.data as any)
-    .replaceAll("\x00", "")
-
   const withAccessTokenSchema = z.object({
     access_token: z.string(),
   })
 
-  const parsedTokenResponse = withAccessTokenSchema.safeParse(
-    JSON.parse(responsePayload)
+  const responsePayload = parseBytesToJSON<{ access_token: string }>(
+    res.right.body.body
   )
 
-  if (!parsedTokenResponse.success) {
-    toast.error("AUTH_TOKEN_REQUEST_INVALID_RESPONSE")
+  if (O.isSome(responsePayload)) {
+    const parsedTokenResponse = withAccessTokenSchema.safeParse(
+      responsePayload.value
+    )
+    return parsedTokenResponse.success
+      ? E.right(parsedTokenResponse.data)
+      : E.left("AUTH_TOKEN_REQUEST_INVALID_RESPONSE" as const)
   }
 
-  return parsedTokenResponse.success
-    ? E.right(parsedTokenResponse.data)
-    : E.left("AUTH_TOKEN_REQUEST_INVALID_RESPONSE" as const)
+  return E.left("AUTH_TOKEN_REQUEST_INVALID_RESPONSE" as const)
 }
 
 const handleRedirectForAuthCodeOauthFlow = async (localConfig: string) => {
@@ -142,20 +143,22 @@ const handleRedirectForAuthCodeOauthFlow = async (localConfig: string) => {
   }
 
   // exchange the code for a token
-  const formData = new URLSearchParams()
-  formData.append("code", code)
-  formData.append("client_id", decodedLocalConfig.data.clientID)
-  formData.append("client_secret", decodedLocalConfig.data.clientSecret)
-  formData.append("redirect_uri", OauthAuthService.redirectURI)
+  const config = {
+    code,
+    client_id: decodedLocalConfig.data.clientID,
+    client_secret: decodedLocalConfig.data.clientSecret,
+    redirect_uri: OauthAuthService.redirectURI,
+  }
 
-  const { response } = interceptorService.runRequest({
+  const { response } = interceptorService.execute({
+    id: Date.now(),
     url: decodedLocalConfig.data.tokenEndpoint,
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
     },
-    data: formData.toString(),
+    content: content.urlencoded(config),
   })
 
   const res = await response

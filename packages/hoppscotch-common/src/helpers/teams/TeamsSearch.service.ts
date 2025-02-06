@@ -211,7 +211,12 @@ export class TeamSearchService extends Service {
     this.searchResultsRequests = {}
     this.expandedCollections.value = []
 
-    const axiosPlatformConfig = platform.auth.axiosPlatformConfig?.() ?? {}
+    const getAxiosPlatformConfig = async () => {
+      await platform.auth.waitProbableLoginToConfirm()
+      return platform.auth.axiosPlatformConfig?.() ?? {}
+    }
+
+    const axiosPlatformConfig = await getAxiosPlatformConfig()
 
     try {
       const searchResponse = await axios.get(

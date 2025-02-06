@@ -40,12 +40,12 @@ ENV HOPP_ALLOW_RUNTIME_ENV=true
 # Required by @hoppscotch/js-sandbox to build `isolated-vm`
 RUN apk add python3 make g++ zlib-dev brotli-dev c-ares-dev nghttp2-dev openssl-dev icu-dev
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 COPY pnpm-lock.yaml .
 RUN pnpm fetch
 
 COPY . .
-RUN pnpm install -f --offline
+RUN pnpm install -f --prefer-offline
 
 
 
@@ -67,7 +67,7 @@ RUN sh -c "curl -qL https://www.npmjs.com/install.sh | env npm_install=10.9.2 sh
 # Install caddy
 COPY --from=caddy_builder /tmp/caddy-build/cmd/caddy/caddy /usr/bin/caddy
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 
 COPY --from=base_builder  /usr/src/app/packages/hoppscotch-backend/backend.Caddyfile /etc/caddy/backend.Caddyfile
 COPY --from=backend_builder /dist/backend /dist/backend
@@ -91,6 +91,12 @@ FROM base_builder AS fe_builder
 WORKDIR /usr/src/app/packages/hoppscotch-selfhost-web
 RUN pnpm run generate
 
+FROM rust:1-alpine AS webapp_server_builder
+WORKDIR /usr/src/app
+RUN apk add --no-cache musl-dev
+COPY . .
+WORKDIR /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server
+RUN cargo build --release
 
 
 
@@ -158,6 +164,17 @@ WORKDIR /site
 
 CMD ["node","/site/prod_run.mjs"]
 
+FROM node:20-alpine AS webapp_server
+COPY --from=webapp_server_builder /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server/target/release/webapp-server /usr/local/bin/
+RUN mkdir -p /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/dist /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/prod_run.mjs /site/prod_run.mjs
+RUN apk add nodejs npm
+RUN npm install -g @import-meta-env/cli
+WORKDIR /site
+CMD ["/bin/sh", "-c", "node /site/prod_run.mjs && webapp-server"]
+EXPOSE 3200
+
 FROM alpine:3.19.6 AS aio
 
 RUN apk add nodejs curl
@@ -181,13 +198,18 @@ LABEL org.opencontainers.image.source="https://github.com/hoppscotch/hoppscotch"
 
 RUN apk add tini
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 
 # Copy necessary files
 # Backend files
 COPY --from=base_builder /usr/src/app/packages/hoppscotch-backend/backend.Caddyfile /etc/caddy/backend.Caddyfile
 COPY --from=backend_builder /dist/backend /dist/backend
 COPY --from=base_builder /usr/src/app/packages/hoppscotch-backend/prod_run.mjs /dist/backend
+
+# Static Server
+COPY --from=webapp_server_builder /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server/target/release/webapp-server /usr/local/bin/
+RUN mkdir -p /site/selfhost-web
+COPY --from=fe_builder /usr/src/app/packages/hoppscotch-selfhost-web/dist /site/selfhost-web
 
 # FE Files
 COPY --from=base_builder /usr/src/app/aio_run.mjs /usr/src/app/aio_run.mjs
@@ -211,4 +233,5 @@ CMD ["node", "/usr/src/app/aio_run.mjs"]
 EXPOSE 3170
 EXPOSE 3000
 EXPOSE 3100
+EXPOSE 3200
 EXPOSE 80

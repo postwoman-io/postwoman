@@ -8,6 +8,7 @@ import {
   HoppRESTHeaders,
   HoppRESTRequestResponse,
   HoppCollection,
+  GlobalEnvironment,
 } from "@hoppscotch/data"
 import { entityReference } from "verzod"
 import { z } from "zod"
@@ -35,6 +36,7 @@ const SettingsDefSchema = z.object({
   syncEnvironments: z.boolean(),
   PROXY_URL: z.string(),
   CURRENT_INTERCEPTOR_ID: z.string(),
+  CURRENT_KERNEL_INTERCEPTOR_ID: z.string(),
   URL_EXCLUDES: z.object({
     auth: z.boolean(),
     httpUser: z.boolean(),
@@ -154,6 +156,8 @@ export const REST_COLLECTION_SCHEMA = HoppRESTCollectionSchema
 export const GQL_COLLECTION_SCHEMA = HoppGQLCollectionSchema
 
 export const ENVIRONMENTS_SCHEMA = z.array(entityReference(Environment))
+
+export const GLOBAL_ENVIRONMENT_SCHEMA = entityReference(GlobalEnvironment)
 
 export const SELECTED_ENV_INDEX_SCHEMA = z.nullable(
   z.discriminatedUnion("type", [

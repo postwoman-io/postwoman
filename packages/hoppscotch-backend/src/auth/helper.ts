@@ -3,9 +3,10 @@ import { DateTime } from 'luxon';
 import { AuthTokens } from 'src/types/AuthTokens';
 import { Response } from 'express';
 import * as cookie from 'cookie';
-import { AUTH_PROVIDER_NOT_SPECIFIED, COOKIES_NOT_FOUND } from 'src/errors';
+import { AUTH_HEADER_NOT_FOUND, AUTH_PROVIDER_NOT_SPECIFIED, COOKIES_NOT_FOUND, INVALID_AUTH_HEADER } from 'src/errors';
 import { throwErr } from 'src/utils';
 import { ConfigService } from '@nestjs/config';
+import { IncomingHttpHeaders } from 'http';
 
 enum AuthTokenType {
   ACCESS_TOKEN = 'access_token',
@@ -117,11 +118,102 @@ export function authProviderCheck(
 
   const envVariables = VITE_ALLOWED_AUTH_PROVIDERS
     ? VITE_ALLOWED_AUTH_PROVIDERS.split(',').map((provider) =>
-        provider.trim().toUpperCase(),
-      )
+      provider.trim().toUpperCase(),
+    )
     : [];
 
   if (!envVariables.includes(provider.toUpperCase())) return false;
 
   return true;
 }
+
+/**
+ * Extract cookie as key-value pairs from headers of a request
+ * @param headers HTTP request headers containing auth tokens
+ * @returns Cookie's key-value pairs
+ */
+export const extractCookieAsKeyValuesFromHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieHeader = headers['cookie'] || headers['Cookie'] || headers['COOKIE'];
+
+  if (!cookieHeader) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  const cookieStr = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader;
+
+  const kv = cookieStr.split(';')
+    .map(cookie => cookie.trim())
+    .reduce((acc, curr) => {
+      const [key, value] = curr.split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+
+  return kv;
+};
+
+/**
+ * Extract auth tokens from cookie headers of a request
+ * @param headers HTTP request headers containing auth tokens
+ * @returns AuthTokens for JWT strategy to use
+ */
+export const extractAuthTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieKV = extractCookieAsKeyValuesFromHeaders(headers);
+
+  if (!cookieKV[AuthTokenType.ACCESS_TOKEN] || !cookieKV[AuthTokenType.REFRESH_TOKEN]) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  return <AuthTokens>{
+    access_token: cookieKV[AuthTokenType.ACCESS_TOKEN],
+    refresh_token: cookieKV[AuthTokenType.REFRESH_TOKEN],
+  };
+};
+
+/**
+ * Extract access tokens from cookie headers of a request
+ * @param headers HTTP request headers containing access tokens
+ * @returns AccessTokens for JWT strategy to use
+ */
+export const extractAccessTokensFromCookieHeaders = (headers: IncomingHttpHeaders) => {
+  const cookieKV = extractCookieAsKeyValuesFromHeaders(headers);
+
+  if (!cookieKV[AuthTokenType.ACCESS_TOKEN]) {
+    throw new HttpException(COOKIES_NOT_FOUND, 400, {
+      cause: new Error(COOKIES_NOT_FOUND),
+    });
+  }
+
+  return {
+    access_token: cookieKV[AuthTokenType.ACCESS_TOKEN],
+  };
+};
+
+/**
+ * Extract access token from authorization header
+ * @param headers HTTP request headers containing bearer token
+ * @returns AccessTokens for JWT strategy
+ */
+export const extractAccessTokenFromAuthRecords = (headers: IncomingHttpHeaders) => {
+  const authHeader = headers['authorization'] || headers['Authorization'];
+  if (!authHeader) {
+    throw new HttpException(AUTH_HEADER_NOT_FOUND, 400, {
+      cause: new Error(AUTH_HEADER_NOT_FOUND),
+    });
+  }
+
+  const headerValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+  const [bearer, access_token] = headerValue.split(' ');
+
+  if (bearer !== 'Bearer' || !access_token) {
+    throw new HttpException(INVALID_AUTH_HEADER, 400, {
+      cause: new Error(INVALID_AUTH_HEADER),
+    });
+  }
+
+  return access_token;
+};

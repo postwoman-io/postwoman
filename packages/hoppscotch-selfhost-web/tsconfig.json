@@ -16,6 +16,8 @@
       "@hoppscotch/common": ["../hoppscotch-common/src/index.ts"],
       "@hoppscotch/common/*": ["../hoppscotch-common/src/*"],
       "@platform/*": ["./src/platform/*"],
+      "@platform-components/*": ["./src/components/*"],
+      "@api/*": ["./src/api/*"],
       "@lib/*": ["./src/lib/*"]
     }
   },

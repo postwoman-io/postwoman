@@ -28,8 +28,14 @@
     "@fontsource-variable/roboto-mono": "5.1.0",
     "@hoppscotch/common": "workspace:^",
     "@hoppscotch/data": "workspace:^",
+    "@hoppscotch/kernel": "workspace:^",
     "@hoppscotch/ui": "0.2.1",
     "@import-meta-env/unplugin": "0.6.0",
+    "@tauri-apps/api": "2.1.1",
+    "@tauri-apps/plugin-shell": "2.0.1",
+    "@tauri-apps/plugin-dialog": "2.0.1",
+    "@tauri-apps/plugin-fs": "2.0.2",
+    "@vueuse/core": "10.5.0",
     "axios": "1.7.7",
     "buffer": "6.0.3",
     "fp-ts": "2.16.9",
@@ -40,6 +46,7 @@
     "verzod": "0.2.4",
     "vue": "3.5.12",
     "workbox-window": "7.1.0",
+    "dioc": "3.0.2",
     "zod": "3.23.8"
   },
   "devDependencies": {

@@ -68,7 +68,7 @@ export function useDownloadResponse(
     const dataToWrite = responseBody.value
 
     // TODO: Look at the mime type and determine extension ?
-    const result = await platform.io.saveFileWithDialog({
+    const result = await platform.kernelIO.saveFileWithDialog({
       data: dataToWrite,
       contentType: contentType,
       suggestedFilename: filename,

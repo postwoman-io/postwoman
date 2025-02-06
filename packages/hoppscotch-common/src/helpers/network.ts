@@ -1,49 +1,16 @@
-import { AxiosRequestConfig } from "axios"
+import * as TE from "fp-ts/TaskEither"
 import { BehaviorSubject, Observable } from "rxjs"
 import { cloneDeep } from "lodash-es"
-import * as E from "fp-ts/Either"
-import * as TE from "fp-ts/TaskEither"
 import { HoppRESTResponse } from "./types/HoppRESTResponse"
 import { EffectiveHoppRESTRequest } from "./utils/EffectiveURL"
 import { getService } from "~/modules/dioc"
-import {
-  InterceptorService,
-  NetworkResponse,
-} from "~/services/interceptor.service"
+import { KernelInterceptorService } from "~/services/kernel-interceptor.service"
+import { RESTRequest, RESTResponse } from "~/helpers/kernel/rest"
+import { RelayError } from "@hoppscotch/kernel"
 
 export type NetworkStrategy = (
-  req: AxiosRequestConfig
-) => TE.TaskEither<any, NetworkResponse>
-
-function processResponse(
-  res: NetworkResponse,
-  req: EffectiveHoppRESTRequest,
-  backupTimeStart: number,
-  backupTimeEnd: number,
-  successState: HoppRESTResponse["type"]
-) {
-  const contentLength = res.headers["content-length"]
-    ? parseInt(res.headers["content-length"])
-    : (res.data as ArrayBuffer).byteLength
-  return <HoppRESTResponse>{
-    type: successState,
-    statusCode: res.status,
-    statusText: res.statusText,
-    body: res.data,
-    // If multi headers are present, then we can just use that, else fallback to Axios type
-    headers:
-      res.additional?.multiHeaders ??
-      Object.keys(res.headers).map((x) => ({
-        key: x,
-        value: res.headers[x],
-      })),
-    meta: {
-      responseSize: contentLength,
-      responseDuration: backupTimeEnd - backupTimeStart,
-    },
-    req,
-  }
-}
+  req: EffectiveHoppRESTRequest
+) => TE.TaskEither<RelayError, HoppRESTResponse>
 
 export function createRESTNetworkRequestStream(
   request: EffectiveHoppRESTRequest
@@ -55,52 +22,58 @@ export function createRESTNetworkRequestStream(
 
   const req = cloneDeep(request)
 
-  const headers = req.effectiveFinalHeaders.reduce((acc, { key, value }) => {
-    return Object.assign(acc, { [key]: value })
-  }, {})
+  console.info("[helpers/network]: req", req)
 
-  const params = new URLSearchParams()
-  for (const param of req.effectiveFinalParams) {
-    params.append(param.key, param.value)
-  }
+  const execResult = RESTRequest.toRequest(req).then((kernelRequest) => {
+    console.info("[helpers/network]: kernelRequest", kernelRequest)
 
-  const backupTimeStart = Date.now()
-
-  const service = getService(InterceptorService)
-
-  const res = service.runRequest({
-    method: req.method as any,
-    url: req.effectiveFinalURL.trim(),
-    headers,
-    params,
-    data: req.effectiveFinalBody,
-  })
-
-  res.response.then((res) => {
-    const backupTimeEnd = Date.now()
-
-    if (E.isRight(res)) {
-      const processedRes = processResponse(
-        res.right,
+    if (!kernelRequest) {
+      response.next({
+        type: "network_fail",
         req,
-        backupTimeStart,
-        backupTimeEnd,
-        "success"
-      )
-
-      response.next(processedRes)
+        error: new Error("Failed to create kernel request"),
+      })
       response.complete()
-
       return
     }
 
-    response.next({
-      type: "network_fail",
-      req,
-      error: res.left,
-    })
-    response.complete()
+    return service.execute(kernelRequest)
   })
 
-  return [response, () => res.cancel()]
+  const service = getService(KernelInterceptorService)
+
+  execResult.then((result) => {
+    if (!result) return
+
+    result.response.then(async (res) => {
+      if (res._tag === "Right") {
+        const processedRes = await RESTResponse.toResponse(res.right, req)
+
+        if (processedRes.type === "success") {
+          response.next(processedRes)
+        } else {
+          response.next({
+            type: "network_fail",
+            req,
+            error: processedRes.error,
+          })
+        }
+      } else {
+        response.next({
+          type: "interceptor_error",
+          req,
+          error: res.left,
+        })
+      }
+      response.complete()
+    })
+  })
+
+  return [
+    response,
+    async () => {
+      const result = await execResult
+      if (result) await result.cancel()
+    },
+  ]
 }

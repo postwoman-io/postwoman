@@ -104,7 +104,9 @@ import {
 } from "~/services/spotlight/searchers/environment.searcher"
 import { GeneralSpotlightSearcherService } from "~/services/spotlight/searchers/general.searcher"
 import { HistorySpotlightSearcherService } from "~/services/spotlight/searchers/history.searcher"
-import { InterceptorSpotlightSearcherService } from "~/services/spotlight/searchers/interceptor.searcher"
+// NOTE: Old interceptors
+// import { InterceptorSpotlightSearcherService } from "~/services/spotlight/searchers/interceptor.searcher"
+import { KernelInterceptorSpotlightSearcherService } from "~/services/spotlight/searchers/kernel-interceptor.searcher"
 import { MiscellaneousSpotlightSearcherService } from "~/services/spotlight/searchers/miscellaneous.searcher"
 import { NavigationSpotlightSearcherService } from "~/services/spotlight/searchers/navigation.searcher"
 import { RequestSpotlightSearcherService } from "~/services/spotlight/searchers/request.searcher"
@@ -144,7 +146,9 @@ useService(EnvironmentsSpotlightSearcherService)
 useService(SwitchEnvSpotlightSearcherService)
 useService(WorkspaceSpotlightSearcherService)
 useService(SwitchWorkspaceSpotlightSearcherService)
-useService(InterceptorSpotlightSearcherService)
+// NOTE: Old interceptors
+// useService(InterceptorSpotlightSearcherService)
+useService(KernelInterceptorSpotlightSearcherService)
 useService(TeamsSpotlightSearcherService)
 
 platform.spotlight?.additionalSearchers?.forEach((searcher) =>

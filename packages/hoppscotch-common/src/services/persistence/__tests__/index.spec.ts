@@ -7,7 +7,8 @@ import {
 import { watchDebounced } from "@vueuse/core"
 import { TestContainer } from "dioc/testing"
 import { cloneDeep } from "lodash-es"
-import { afterAll, describe, expect, it, vi } from "vitest"
+import superjson from "superjson"
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { MQTTRequest$, setMQTTRequest } from "~/newstore/MQTTSession"
 import { SSERequest$, setSSERequest } from "~/newstore/SSESession"
@@ -45,7 +46,11 @@ import {
 } from "~/newstore/settings"
 import { GQLTabService } from "~/services/tab/graphql"
 import { RESTTabService } from "~/services/tab/rest"
-import { PersistenceService } from "../../persistence"
+import {
+  PersistenceService,
+  STORE_KEYS,
+  STORE_NAMESPACE,
+} from "../../persistence"
 import {
   ENVIRONMENTS_MOCK,
   GLOBAL_ENV_MOCK,
@@ -64,6 +69,10 @@ import {
   WEBSOCKET_REQUEST_MOCK,
 } from "./__mocks__"
 import { SecretEnvironmentService } from "~/services/secret-environment.service"
+import { getKernelMode, initKernel } from "@hoppscotch/kernel"
+import { Store } from "~/kernel"
+
+initKernel(getKernelMode())
 
 vi.mock("~/modules/i18n", () => {
   return {
@@ -121,6 +130,34 @@ const spyOnGetItem = () => vi.spyOn(Storage.prototype, "getItem")
 const spyOnRemoveItem = () => vi.spyOn(Storage.prototype, "removeItem")
 const spyOnSetItem = () => vi.spyOn(Storage.prototype, "setItem")
 
+const schemaVersionKey = `${STORE_NAMESPACE}:${STORE_KEYS.SCHEMA_VERSION}`
+
+const getStoreItem = async (key: string) => {
+  const storedData = window.localStorage.getItem(key)
+
+  if (!storedData) return
+
+  const parsedData = superjson.parse<{ data: string }>(storedData)
+
+  return JSON.stringify(parsedData.data)
+}
+
+const setStoreItem = async <T>(key: string, value: T) => {
+  const storedData = {
+    schemaVersion: 1,
+    metadata: {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      namespace: STORE_NAMESPACE,
+      encrypted: false,
+      compressed: false,
+    },
+    data: value,
+  }
+
+  window.localStorage.setItem(key, superjson.stringify(storedData))
+}
+
 const bindPersistenceService = ({
   mockGQLTabService = false,
   mockRESTTabService = false,
@@ -152,14 +189,23 @@ const bindPersistenceService = ({
   return service
 }
 
-const invokeSetupLocalPersistence = (
+const invokeSetupLocalPersistence = async (
   serviceBindMock?: Record<string, unknown>
 ) => {
   const service = bindPersistenceService(serviceBindMock)
-  service.setupLocalPersistence()
+  await service.setupFirst()
+  await service.setupLater()
 }
 
 describe("PersistenceService", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  beforeEach(async () => {
+    await Store.remove(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION)
+  })
+
   afterAll(() => {
     // Clear all mocks
     vi.clearAllMocks()
@@ -168,7 +214,7 @@ describe("PersistenceService", () => {
     vi.restoreAllMocks()
   })
 
-  describe("setupLocalPersistence", () => {
+  describe("setup", () => {
     describe("Check and migrate old settings", () => {
       // Set of keys read from localStorage across test cases
       const bgColorKey = "BG_COLOR"
@@ -176,57 +222,73 @@ describe("PersistenceService", () => {
       const selectedEnvIndexKey = "selectedEnvIndex"
       const themeColorKey = "THEME_COLOR"
       const vuexKey = "vuex"
+      const storagePrefix = "persistence.v1:"
 
-      it(`sets the selected environment index type as "NO_ENV" in localStorage if the value retrieved for ${selectedEnvIndexKey} is "-1"`, () => {
+      beforeEach(() => {
+        window.localStorage.clear()
+      })
+
+      beforeEach(async () => {
+        await Store.remove(STORE_NAMESPACE, STORE_KEYS.SCHEMA_VERSION)
+      })
+
+      it(`sets the selected environment index type as "NO_ENV" in localStorage if the value retrieved for ${selectedEnvIndexKey} is "-1"`, async () => {
         window.localStorage.setItem(selectedEnvIndexKey, "-1")
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
         expect(setItemSpy).toHaveBeenCalledWith(
-          selectedEnvIndexKey,
-          JSON.stringify({
-            type: "NO_ENV_SELECTED",
-          })
+          `${storagePrefix}selectedEnv`,
+          expect.stringContaining(
+            JSON.stringify({
+              type: "NO_ENV_SELECTED",
+            })
+          )
         )
       })
 
-      it(`sets the selected environment index type as "MY_ENV" in localStorage if the value retrieved for "${selectedEnvIndexKey}" is greater than "0"`, () => {
+      it(`sets the selected environment index type as "MY_ENV" in localStorage if the value retrieved for "${selectedEnvIndexKey}" is greater than "0"`, async () => {
         window.localStorage.setItem(selectedEnvIndexKey, "1")
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
         expect(setItemSpy).toHaveBeenCalledWith(
-          selectedEnvIndexKey,
-          JSON.stringify({
-            type: "MY_ENV",
-            index: 1,
-          })
+          `${storagePrefix}selectedEnv`,
+          expect.stringContaining(
+            JSON.stringify({
+              type: "MY_ENV",
+              index: 1,
+            })
+          )
         )
       })
 
-      it(`skips schema parsing and setting other properties if ${vuexKey} read from localStorage is an empty entity`, () => {
+      it(`skips schema parsing and setting other properties if ${vuexKey} read from localStorage is an empty entity`, async () => {
         window.localStorage.setItem(vuexKey, JSON.stringify({}))
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).not.toHaveBeenCalled()
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          `${storagePrefix}schema_version`,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${vuexKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${vuexKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `vuex`
         // `postwoman.settings.CURRENT_INTERCEPTOR_ID` -> `string`
         const vuexData = {
@@ -245,7 +307,7 @@ describe("PersistenceService", () => {
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
         expect(toastErrorFn).toHaveBeenCalledWith(
@@ -253,11 +315,11 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${vuexKey}-backup`,
-          JSON.stringify(vuexData)
+          expect.stringContaining(JSON.stringify(vuexData))
         )
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${themeColorKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${themeColorKey}" read from localStorage doesn't match the schema`, async () => {
         const vuexData = cloneDeep(VUEX_DATA_MOCK)
         window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
 
@@ -268,10 +330,9 @@ describe("PersistenceService", () => {
         const removeItemSpy = spyOnRemoveItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).toHaveBeenCalledWith(
           expect.stringContaining(themeColorKey)
         )
@@ -279,15 +340,14 @@ describe("PersistenceService", () => {
           `${themeColorKey}-backup`,
           themeColorValue
         )
-
-        expect(applySetting).toHaveBeenCalledWith(
+        expect(applySetting).not.toHaveBeenCalledWith(
           themeColorKey,
           themeColorValue
         )
         expect(removeItemSpy).toHaveBeenCalledWith(themeColorKey)
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${nuxtColorModeKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${nuxtColorModeKey}" read from localStorage doesn't match the schema`, async () => {
         const vuexData = cloneDeep(VUEX_DATA_MOCK)
         window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
 
@@ -298,10 +358,9 @@ describe("PersistenceService", () => {
         const removeItemSpy = spyOnRemoveItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).toHaveBeenCalledWith(
           expect.stringContaining(nuxtColorModeKey)
         )
@@ -309,15 +368,14 @@ describe("PersistenceService", () => {
           `${nuxtColorModeKey}-backup`,
           nuxtColorModeValue
         )
-
-        expect(applySetting).toHaveBeenCalledWith(
+        expect(applySetting).not.toHaveBeenCalledWith(
           bgColorKey,
           nuxtColorModeValue
         )
         expect(removeItemSpy).toHaveBeenCalledWith(nuxtColorModeKey)
       })
 
-      it(`extracts individual properties from the key "${vuexKey}" and sets them in localStorage`, () => {
+      it(`extracts individual properties from the key "${vuexKey}" and sets them in localStorage`, async () => {
         const vuexData = cloneDeep(VUEX_DATA_MOCK)
         window.localStorage.setItem(vuexKey, JSON.stringify(vuexData))
 
@@ -331,73 +389,54 @@ describe("PersistenceService", () => {
         const removeItemSpy = spyOnRemoveItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(vuexKey)
-
         expect(toastErrorFn).not.toHaveBeenCalledWith(nuxtColorModeKey)
         expect(setItemSpy).not.toHaveBeenCalledWith(
           `${nuxtColorModeKey}-backup`
         )
 
+        // Check settings is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          "settings",
-          JSON.stringify(vuexData.postwoman.settings)
+          `${storagePrefix}settings`,
+          expect.stringContaining(JSON.stringify(vuexData.postwoman.settings))
         )
 
         const { postwoman } = vuexData
         delete postwoman.settings
 
+        // Check collections is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        // Excluding `settings`
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "collections",
-          JSON.stringify(postwoman.collections)
+          `${storagePrefix}restCollections`,
+          expect.stringContaining(JSON.stringify(postwoman.collections))
         )
 
         delete postwoman.collections
 
-        // Excluding `settings` & `collections`
+        // Check graphql collections is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "collectionsGraphql",
-          JSON.stringify(postwoman.collectionsGraphql)
+          `${storagePrefix}gqlCollections`,
+          expect.stringContaining(JSON.stringify(postwoman.collectionsGraphql))
         )
 
         delete postwoman.collectionsGraphql
 
-        // Excluding `settings, `collections` & `collectionsGraphql`
+        // Check environments is saved with new format
         expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
-        expect(setItemSpy).toHaveBeenCalledWith(
-          "environments",
-          JSON.stringify(postwoman.environments)
+          `${storagePrefix}environments`,
+          expect.stringContaining(JSON.stringify(postwoman.environments))
         )
 
         delete postwoman.environments
 
-        // Excluding `settings, `collections`, `collectionsGraphql` & `environments`
-        expect(setItemSpy).toHaveBeenCalledWith(
-          vuexKey,
-          JSON.stringify(vuexData)
-        )
-
+        // Check theme color handling
         expect(getItemSpy).toHaveBeenCalledWith(themeColorKey)
         expect(applySetting).toHaveBeenCalledWith(themeColorKey, themeColor)
         expect(removeItemSpy).toHaveBeenCalledWith(themeColorKey)
         expect(window.localStorage.getItem(themeColorKey)).toBe(null)
 
+        // Check color mode handling
         expect(getItemSpy).toHaveBeenCalledWith(nuxtColorModeKey)
         expect(applySetting).toHaveBeenCalledWith(bgColorKey, nuxtColorMode)
         expect(removeItemSpy).toHaveBeenCalledWith(nuxtColorModeKey)
@@ -407,21 +446,18 @@ describe("PersistenceService", () => {
 
     describe("Setup local state persistence", () => {
       // Key read from localStorage across test cases
-      const localStateKey = "localState"
+      const localStateKey = `${STORE_NAMESPACE}:${STORE_KEYS.LOCAL_STATE}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${localStateKey}" read from localStorage has a value which is not a "string" or "undefined"`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${localStateKey}" read from localStorage has a value which is not a "string" or "undefined"`, async () => {
         const localStateData = {
           REMEMBERED_TEAM_ID: null,
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
@@ -430,23 +466,20 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${localStateKey}-backup`,
-          JSON.stringify(localStateData)
+          expect.stringContaining(JSON.stringify(localStateData))
         )
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${localStateKey}" read from localStorage has an invalid key`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${localStateKey}" read from localStorage has an invalid key`, async () => {
         const localStateData = {
           INVALID_KEY: null,
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
@@ -455,25 +488,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${localStateKey}-backup`,
-          JSON.stringify(localStateData)
+          expect.stringContaining(JSON.stringify(localStateData))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${localStateKey}" key present in localStorage where the fallback of "{}" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${localStateKey}" key present in localStorage where the fallback of "{}" is chosen`, async () => {
         window.localStorage.removeItem(localStateKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(localStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
-      it(`reads the value for "${localStateKey}" key from localStorage, invokes "bulkApplyLocalState" function if a value is yielded and subscribes to "localStateStore" updates`, () => {
+      it(`reads the value for "${localStateKey}" key from localStorage, invokes "bulkApplyLocalState" function if a value is yielded and subscribes to "localStateStore" updates`, async () => {
         vi.mock("~/newstore/localstate", () => {
           return {
             bulkApplyLocalState: vi.fn(),
@@ -488,20 +525,21 @@ describe("PersistenceService", () => {
         const localStateData = {
           REMEMBERED_TEAM_ID: "test-id",
         }
-        window.localStorage.setItem(
-          localStateKey,
-          JSON.stringify(localStateData)
-        )
+        await setStoreItem(localStateKey, localStateData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(localStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(localStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(bulkApplyLocalState).toHaveBeenCalledWith(localStateData)
         expect(localStateStore.subject$.subscribe).toHaveBeenCalledWith(
@@ -510,23 +548,23 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup settings persistence", () => {
+    describe("setup settings persistence", () => {
       // Key read from localStorage across test cases
-      const settingsKey = "settings"
+      const settingsKey = `${STORE_NAMESPACE}:${STORE_KEYS.SETTINGS}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${settingsKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${settingsKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `settings`
-        // Expected value are booleans
+        // Expected values are booleans
         const settings = {
           EXTENSIONS_ENABLED: "true",
           PROXY_ENABLED: "true",
         }
-        window.localStorage.setItem(settingsKey, JSON.stringify(settings))
+        await setStoreItem(settingsKey, settings)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(settingsKey)
 
@@ -535,25 +573,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${settingsKey}-backup`,
-          JSON.stringify(settings)
+          expect.stringContaining(JSON.stringify(settings))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${settingsKey}" key present in localStorage where the fallback of "{}" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${settingsKey}" key present in localStorage where the fallback of "{}" is chosen`, async () => {
         window.localStorage.removeItem(settingsKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(settingsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(settingsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
-      it(`reads the value for "${settingsKey}" from localStorage, invokes "performSettingsDataMigrations" and "bulkApplySettings" functions as required and subscribes to "settingsStore" updates`, () => {
+      it(`reads the value for "${settingsKey}" from localStorage, invokes "performSettingsDataMigrations" and "bulkApplySettings" functions as required and subscribes to "settingsStore" updates`, async () => {
         vi.mock("~/newstore/settings", async (importOriginal) => {
           const actualModule: Record<string, unknown> = await importOriginal()
 
@@ -573,19 +615,21 @@ describe("PersistenceService", () => {
         })
 
         const { settings } = VUEX_DATA_MOCK.postwoman
-        window.localStorage.setItem(settingsKey, JSON.stringify(settings))
+        await setStoreItem(settingsKey, settings)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
-
-        // toastErrorFn = vi.fn()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(settingsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(settingsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(performSettingsDataMigrations).toHaveBeenCalledWith(settings)
         expect(bulkApplySettings).toHaveBeenCalledWith(settings)
@@ -596,21 +640,21 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup history persistence", () => {
+    describe("setup history persistence", () => {
       // Keys read from localStorage across test cases
-      const historyKey = "history"
-      const graphqlHistoryKey = "graphqlHistory"
+      const historyKey = `${STORE_NAMESPACE}:${STORE_KEYS.REST_HISTORY}`
+      const graphqlHistoryKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_HISTORY}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${historyKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${historyKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `history`
         // `v` -> `number`
         const restHistoryData = [{ ...REST_HISTORY_MOCK, v: "1" }]
-        window.localStorage.setItem(historyKey, JSON.stringify(restHistoryData))
+        await setStoreItem(historyKey, restHistoryData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(historyKey)
 
@@ -619,61 +663,69 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${historyKey}-backup`,
-          JSON.stringify(restHistoryData)
+          expect.stringContaining(JSON.stringify(restHistoryData))
         )
       })
 
-      it(`REST history schema parsing succeeds if there is no "${historyKey}" key present in localStorage where the fallback of "[]" is chosen`, () => {
+      it(`REST history schema parsing succeeds if there is no "${historyKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
         window.localStorage.removeItem(historyKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(historyKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(historyKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${graphqlHistoryKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${graphqlHistoryKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `graphqlHistory`
         // `v` -> `number`
         const graphqlHistoryData = [{ ...GQL_HISTORY_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          graphqlHistoryKey,
-          JSON.stringify(graphqlHistoryData)
-        )
+        await setStoreItem(graphqlHistoryKey, graphqlHistoryData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(graphqlHistoryKey)
 
+        expect(toastErrorFn).toHaveBeenCalledWith(
+          expect.stringContaining(graphqlHistoryKey)
+        )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${graphqlHistoryKey}-backup`,
-          JSON.stringify(graphqlHistoryData)
+          expect.stringContaining(JSON.stringify(graphqlHistoryData))
         )
       })
 
-      it(`GQL history schema parsing succeeds if there is no "${graphqlHistoryKey}" key present in localStorage where the fallback of "[]" is chosen`, () => {
+      it(`GQL history schema parsing succeeds if there is no "${graphqlHistoryKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
         window.localStorage.removeItem(graphqlHistoryKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(graphqlHistoryKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(graphqlHistoryKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
       })
 
-      it("reads REST and GQL history entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", () => {
+      it("reads REST and GQL history entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", async () => {
         vi.mock("~/newstore/history", () => {
           return {
             setGraphqlHistoryEntries: vi.fn(),
@@ -697,16 +749,16 @@ describe("PersistenceService", () => {
           }
         })
 
-        const stringifiedRestHistory = JSON.stringify(REST_HISTORY_MOCK)
-        const stringifiedGqlHistory = JSON.stringify(GQL_HISTORY_MOCK)
+        const restHistory = REST_HISTORY_MOCK
+        const gqlHistory = GQL_HISTORY_MOCK
 
-        window.localStorage.setItem(historyKey, stringifiedRestHistory)
-        window.localStorage.setItem(graphqlHistoryKey, stringifiedGqlHistory)
+        await setStoreItem(historyKey, restHistory)
+        await setStoreItem(graphqlHistoryKey, gqlHistory)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(historyKey)
         expect(getItemSpy).toHaveBeenCalledWith(graphqlHistoryKey)
@@ -715,17 +767,17 @@ describe("PersistenceService", () => {
           historyKey,
           graphqlHistoryKey
         )
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(translateToNewRESTHistory).toHaveBeenCalled()
         expect(translateToNewGQLHistory).toHaveBeenCalled()
 
-        // This ensures `updatedOn` field is treated as a `string`
-        const parsedRestHistory = JSON.parse(stringifiedRestHistory)
-        const parsedGqlHistory = JSON.parse(stringifiedGqlHistory)
-
-        expect(setRESTHistoryEntries).toHaveBeenCalledWith(parsedRestHistory)
-        expect(setGraphqlHistoryEntries).toHaveBeenCalledWith(parsedGqlHistory)
+        expect(setRESTHistoryEntries).toHaveBeenCalledWith(restHistory)
+        expect(setGraphqlHistoryEntries).toHaveBeenCalledWith(gqlHistory)
 
         expect(restHistoryStore.subject$.subscribe).toHaveBeenCalledWith(
           expect.any(Function)
@@ -736,63 +788,61 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup collections persistence", () => {
+    describe("setup collections persistence", () => {
       // Keys read from localStorage across test cases
-      const collectionsKey = "collections"
-      const collectionsGraphqlKey = "collectionsGraphql"
+      const collectionsRESTKey = `${STORE_NAMESPACE}:${STORE_KEYS.REST_COLLECTIONS}`
+      const collectionsGraphqlKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_COLLECTIONS}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsRESTKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `collections`
         // `v` -> `number`
         const restCollectionsData = [{ ...REST_COLLECTIONS_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          collectionsKey,
-          JSON.stringify(restCollectionsData)
-        )
+        await setStoreItem(collectionsRESTKey, restCollectionsData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
 
         expect(toastErrorFn).toHaveBeenCalledWith(
-          expect.stringContaining(collectionsKey)
+          expect.stringContaining(collectionsRESTKey)
         )
         expect(setItemSpy).toHaveBeenCalledWith(
-          `${collectionsKey}-backup`,
-          JSON.stringify(restCollectionsData)
+          `${collectionsRESTKey}-backup`,
+          expect.stringContaining(JSON.stringify(restCollectionsData))
         )
       })
 
-      it(`REST collections schema parsing succeeds if there is no "${collectionsKey}" key present in localStorage where the fallback of "[]" is chosen`, () => {
-        window.localStorage.removeItem(collectionsKey)
+      it(`REST collections schema parsing succeeds if there is no "${collectionsRESTKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
+        window.localStorage.removeItem(collectionsRESTKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
 
-        expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsRESTKey)
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsGraphqlKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${collectionsGraphqlKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `collectionsGraphql`
         // `v` -> `number`
         const graphqlCollectionsData = [{ ...GQL_COLLECTIONS_MOCK, v: "1" }]
-        window.localStorage.setItem(
-          collectionsGraphqlKey,
-          JSON.stringify(graphqlCollectionsData)
-        )
+        await setStoreItem(collectionsGraphqlKey, graphqlCollectionsData)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(collectionsGraphqlKey)
 
@@ -801,25 +851,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${collectionsGraphqlKey}-backup`,
-          JSON.stringify(graphqlCollectionsData)
+          expect.stringContaining(JSON.stringify(graphqlCollectionsData))
         )
       })
 
-      it(`GQL history schema parsing succeeds if there is no "${collectionsGraphqlKey}" key present in localStorage where the fallback of "[]" is chosen`, () => {
+      it(`GQL collections schema parsing succeeds if there is no "${collectionsGraphqlKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
         window.localStorage.removeItem(collectionsGraphqlKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(collectionsGraphqlKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(collectionsGraphqlKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it("reads REST and GQL collection entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", () => {
+      it("reads REST and GQL collection entries from localStorage, translates them to the new format, writes back the updates and subscribes to the respective store for updates", async () => {
         vi.mock("@hoppscotch/data", async (importOriginal) => {
           const actualModule: Record<string, unknown> = await importOriginal()
 
@@ -854,29 +908,26 @@ describe("PersistenceService", () => {
         const restCollections = REST_COLLECTIONS_MOCK
         const gqlCollections = GQL_COLLECTIONS_MOCK
 
-        window.localStorage.setItem(
-          collectionsKey,
-          JSON.stringify(restCollections)
-        )
-
-        window.localStorage.setItem(
-          collectionsGraphqlKey,
-          JSON.stringify(gqlCollections)
-        )
+        await setStoreItem(collectionsRESTKey, restCollections)
+        await setStoreItem(collectionsGraphqlKey, gqlCollections)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
-        expect(getItemSpy).toHaveBeenCalledWith(collectionsKey)
+        expect(getItemSpy).toHaveBeenCalledWith(collectionsRESTKey)
         expect(getItemSpy).toHaveBeenCalledWith(collectionsGraphqlKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(
-          collectionsKey,
+          collectionsRESTKey,
           collectionsGraphqlKey
         )
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(translateToNewGQLCollection).toHaveBeenCalled()
         expect(translateToNewRESTCollection).toHaveBeenCalled()
@@ -893,11 +944,11 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup environments persistence", () => {
+    describe("setup environments persistence", () => {
       // Key read from localStorage across test cases
-      const environmentsKey = "environments"
+      const environmentsKey = `${STORE_NAMESPACE}:${STORE_KEYS.ENVIRONMENTS}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${environmentsKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${environmentsKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `environments`
         const environments = [
           // `entries` -> `variables`
@@ -909,15 +960,12 @@ describe("PersistenceService", () => {
           },
         ]
 
-        window.localStorage.setItem(
-          environmentsKey,
-          JSON.stringify(environments)
-        )
+        await setStoreItem(environmentsKey, environments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(environmentsKey)
 
@@ -926,24 +974,20 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${environmentsKey}-backup`,
-          JSON.stringify(environments)
+          expect.stringContaining(JSON.stringify(environments))
         )
       })
 
-      it(`separates "globals" entries from "${environmentsKey}", subscribes to the "environmentStore" and updates localStorage entries`, () => {
+      it(`separates "globals" entries from "${environmentsKey}", subscribes to the "environmentStore" and updates localStorage entries`, async () => {
         const environments = cloneDeep(ENVIRONMENTS_MOCK)
-        window.localStorage.setItem(
-          "environments",
-          JSON.stringify(environments)
-        )
+        await setStoreItem(environmentsKey, environments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(environmentsKey)
-
         expect(toastErrorFn).not.toHaveBeenCalledWith(environmentsKey)
         expect(setItemSpy).not.toHaveBeenCalledWith(`${environmentsKey}-backup`)
 
@@ -954,9 +998,10 @@ describe("PersistenceService", () => {
         // Removes `globals` from environments
         environments.splice(0, 1)
 
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
         expect(setItemSpy).toHaveBeenCalledWith(
-          environmentsKey,
-          JSON.stringify(environments)
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
         )
         expect(replaceEnvironments).toBeCalledWith(environments)
         expect(environments$.subscribe).toHaveBeenCalledWith(
@@ -965,24 +1010,21 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup selected environment persistence", () => {
+    describe("setup selected environment persistence", () => {
       // Key read from localStorage across test cases
-      const selectedEnvIndexKey = "selectedEnvIndex"
+      const selectedEnvIndexKey = `${STORE_NAMESPACE}:${STORE_KEYS.SELECTED_ENV}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${selectedEnvIndexKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${selectedEnvIndexKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `selectedEnvIndex`
         // `index` -> `number`
         const selectedEnvIndex = { ...SELECTED_ENV_INDEX_MOCK, index: "1" }
 
-        window.localStorage.setItem(
-          selectedEnvIndexKey,
-          JSON.stringify(selectedEnvIndex)
-        )
+        await setStoreItem(selectedEnvIndexKey, selectedEnvIndex)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
@@ -991,41 +1033,46 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${selectedEnvIndexKey}-backup`,
-          JSON.stringify(selectedEnvIndex)
+          expect.stringContaining(JSON.stringify(selectedEnvIndex))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${selectedEnvIndexKey}" key present in localStorage where the fallback of "null" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${selectedEnvIndexKey}" key present in localStorage where the fallback of "null" is chosen`, async () => {
         window.localStorage.removeItem(selectedEnvIndexKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`sets it to the store if there is a value associated with the "${selectedEnvIndexKey}" key in localStorage`, () => {
+      it(`sets it to the store if there is a value associated with the "${selectedEnvIndexKey}" key in localStorage`, async () => {
         const selectedEnvIndex = SELECTED_ENV_INDEX_MOCK
 
-        window.localStorage.setItem(
-          selectedEnvIndexKey,
-          JSON.stringify(selectedEnvIndex)
-        )
+        await setStoreItem(selectedEnvIndexKey, selectedEnvIndex)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSelectedEnvironmentIndex).toHaveBeenCalledWith(
           selectedEnvIndex
@@ -1035,18 +1082,22 @@ describe("PersistenceService", () => {
         )
       })
 
-      it(`sets it to "NO_ENV_SELECTED" if there is no value associated with the "${selectedEnvIndexKey}" in localStorage`, () => {
+      it(`sets it to "NO_ENV_SELECTED" if there is no value associated with the "${selectedEnvIndexKey}" in localStorage`, async () => {
         window.localStorage.removeItem(selectedEnvIndexKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(selectedEnvIndexKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(selectedEnvIndexKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSelectedEnvironmentIndex).toHaveBeenCalledWith({
           type: "NO_ENV_SELECTED",
@@ -1057,9 +1108,9 @@ describe("PersistenceService", () => {
       })
     })
 
-    describe("Setup secret Environments persistence", () => {
+    describe("setup secret Environments persistence", () => {
       // Key read from localStorage across test cases
-      const secretEnvironmentsKey = "secretEnvironments"
+      const secretEnvironmentsKey = `${STORE_NAMESPACE}:${STORE_KEYS.SECRET_ENVIRONMENTS}`
 
       const loadSecretEnvironmentsFromPersistedStateFn = vi.fn()
       const mock = {
@@ -1067,7 +1118,7 @@ describe("PersistenceService", () => {
           loadSecretEnvironmentsFromPersistedStateFn,
       }
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${secretEnvironmentsKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${secretEnvironmentsKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `secretEnvironments`
         const secretEnvironments = {
           clryz7ir7002al4162bsj0azg: {
@@ -1076,15 +1127,12 @@ describe("PersistenceService", () => {
           },
         }
 
-        window.localStorage.setItem(
-          secretEnvironmentsKey,
-          JSON.stringify(secretEnvironments)
-        )
+        await setStoreItem(secretEnvironmentsKey, secretEnvironments)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
@@ -1093,20 +1141,18 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${secretEnvironmentsKey}-backup`,
-          JSON.stringify(secretEnvironments)
+          expect.stringContaining(JSON.stringify(secretEnvironments))
         )
       })
 
-      it("loads secret environments from the state persisted in localStorage and sets watcher for `persistableSecretEnvironment`", () => {
+      it("loads secret environments from the state persisted in localStorage and sets watcher for `persistableSecretEnvironment`", async () => {
         const secretEnvironment = SECRET_ENVIRONMENTS_MOCK
-        window.localStorage.setItem(
-          secretEnvironmentsKey,
-          JSON.stringify(secretEnvironment)
-        )
+        await setStoreItem(secretEnvironmentsKey, secretEnvironment)
 
         const getItemSpy = spyOnGetItem()
+        const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({
+        await invokeSetupLocalPersistence({
           mockSecretEnvironmentsService: true,
           mock,
         })
@@ -1114,24 +1160,24 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(loadSecretEnvironmentsFromPersistedStateFn).toHaveBeenCalledWith(
           secretEnvironment
         )
-        expect(watchDebounced).toHaveBeenCalledWith(
-          expect.any(Object),
-          expect.any(Function),
-          { debounce: 500 }
-        )
+        expect(watchDebounced).toHaveBeenCalled()
       })
 
-      it(`skips schema parsing and the loading of persisted secret environments if there is no "${secretEnvironmentsKey}" key present in localStorage`, () => {
+      it(`skips schema parsing and the loading of persisted secret environments if there is no "${secretEnvironmentsKey}" key present in localStorage`, async () => {
         window.localStorage.removeItem(secretEnvironmentsKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({
+        await invokeSetupLocalPersistence({
           mockSecretEnvironmentsService: true,
           mock,
         })
@@ -1139,29 +1185,36 @@ describe("PersistenceService", () => {
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(watchDebounced).toHaveBeenCalled()
       })
 
-      it("logs an error to the console on failing to parse persisted secret environments", () => {
-        window.localStorage.setItem(secretEnvironmentsKey, "invalid-json")
+      it("logs an error to the console on failing to parse persisted secret environments", async () => {
+        await setStoreItem(secretEnvironmentsKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(secretEnvironmentsKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(secretEnvironmentsKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(console.error).toHaveBeenCalledWith(
-          `Failed parsing persisted secret environment, state:`,
-          window.localStorage.getItem(secretEnvironmentsKey)
+          `Failed parsing persisted SECRET_ENVIRONMENTS:`,
+          await getStoreItem(secretEnvironmentsKey)
         )
+
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),
           expect.any(Function),
@@ -1172,9 +1225,9 @@ describe("PersistenceService", () => {
 
     describe("setup WebSocket persistence", () => {
       // Key read from localStorage across test cases
-      const wsRequestKey = "WebsocketRequest"
+      const wsRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.WEBSOCKET}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${wsRequestKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${wsRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `WebsocketRequest`
         const request = {
           ...WEBSOCKET_REQUEST_MOCK,
@@ -1182,12 +1235,12 @@ describe("PersistenceService", () => {
           protocols: {},
         }
 
-        window.localStorage.setItem(wsRequestKey, JSON.stringify(request))
+        await setStoreItem(wsRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(wsRequestKey)
 
@@ -1196,25 +1249,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${wsRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${wsRequestKey}" key present in localStorage where the fallback of "null" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${wsRequestKey}" key present in localStorage where the fallback of "null" is chosen`, async () => {
         window.localStorage.removeItem(wsRequestKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(wsRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(wsRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`reads the "${wsRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "WSSessionStore" and updates localStorage entries`, () => {
+      it(`reads the "${wsRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "WSSessionStore" and updates localStorage entries`, async () => {
         vi.mock("~/newstore/WebSocketSession", () => {
           return {
             setWSRequest: vi.fn(),
@@ -1225,17 +1282,21 @@ describe("PersistenceService", () => {
         })
 
         const request = WEBSOCKET_REQUEST_MOCK
-        window.localStorage.setItem(wsRequestKey, JSON.stringify(request))
+        await setStoreItem(wsRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(wsRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(wsRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setWSRequest).toHaveBeenCalledWith(request)
         expect(WSRequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
@@ -1244,9 +1305,9 @@ describe("PersistenceService", () => {
 
     describe("setup Socket.IO persistence", () => {
       // Key read from localStorage across test cases
-      const sioRequestKey = "SocketIORequest"
+      const sioRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.SOCKETIO}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${sioRequestKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${sioRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `SocketIORequest`
         const request = {
           ...SOCKET_IO_REQUEST_MOCK,
@@ -1254,12 +1315,12 @@ describe("PersistenceService", () => {
           v: "4",
         }
 
-        window.localStorage.setItem(sioRequestKey, JSON.stringify(request))
+        await setStoreItem(sioRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sioRequestKey)
 
@@ -1268,25 +1329,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${sioRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${sioRequestKey}" key present in localStorage where the fallback of "null" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${sioRequestKey}" key present in localStorage where the fallback of "null" is chosen`, async () => {
         window.localStorage.removeItem(sioRequestKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sioRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sioRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`reads the "${sioRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SIOSessionStore" and updates localStorage entries`, () => {
+      it(`reads the "${sioRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SIOSessionStore" and updates localStorage entries`, async () => {
         vi.mock("~/newstore/SocketIOSession", () => {
           return {
             setSIORequest: vi.fn(),
@@ -1297,29 +1362,32 @@ describe("PersistenceService", () => {
         })
 
         const request = SOCKET_IO_REQUEST_MOCK
-
-        window.localStorage.setItem(sioRequestKey, JSON.stringify(request))
+        await setStoreItem(sioRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sioRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sioRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSIORequest).toHaveBeenCalledWith(request)
         expect(SIORequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
       })
     })
 
-    describe("setup SSE Persistence", () => {
+    describe("setup SSE persistence", () => {
       // Key read from localStorage across test cases
-      const sseRequestKey = "SSERequest"
+      const sseRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.SSE}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${sseRequestKey}" read from localStorage doesn't match the versioned schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${sseRequestKey}" read from localStorage doesn't match the versioned schema`, async () => {
         // Invalid shape for `SSERequest`
         const request = {
           ...SSE_REQUEST_MOCK,
@@ -1327,12 +1395,12 @@ describe("PersistenceService", () => {
           url: "https://express-eventsource.herokuapp.com/events",
         }
 
-        window.localStorage.setItem(sseRequestKey, JSON.stringify(request))
+        await setStoreItem(sseRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sseRequestKey)
 
@@ -1341,25 +1409,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${sseRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${sseRequestKey}" key present in localStorage where the fallback of "null" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${sseRequestKey}" key present in localStorage where the fallback of "null" is chosen`, async () => {
         window.localStorage.removeItem(sseRequestKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sseRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sseRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`reads the "${sseRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SSESessionStore" and updates localStorage entries`, () => {
+      it(`reads the "${sseRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "SSESessionStore" and updates localStorage entries`, async () => {
         vi.mock("~/newstore/SSESession", () => {
           return {
             setSSERequest: vi.fn(),
@@ -1370,28 +1442,32 @@ describe("PersistenceService", () => {
         })
 
         const request = SSE_REQUEST_MOCK
-        window.localStorage.setItem(sseRequestKey, JSON.stringify(request))
+        await setStoreItem(sseRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(sseRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(sseRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setSSERequest).toHaveBeenCalledWith(request)
         expect(SSERequest$.subscribe).toHaveBeenCalledWith(expect.any(Function))
       })
     })
 
-    describe("setup MQTT Persistence", () => {
+    describe("setup MQTT persistence", () => {
       // Key read from localStorage across test cases
-      const mqttRequestKey = "MQTTRequest"
+      const mqttRequestKey = `${STORE_NAMESPACE}:${STORE_KEYS.MQTT}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${mqttRequestKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${mqttRequestKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `MQTTRequest`
         const request = {
           ...MQTT_REQUEST_MOCK,
@@ -1399,12 +1475,12 @@ describe("PersistenceService", () => {
           url: "wss://test.mosquitto.org:8081",
         }
 
-        window.localStorage.setItem(mqttRequestKey, JSON.stringify(request))
+        await setStoreItem(mqttRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(mqttRequestKey)
 
@@ -1413,25 +1489,29 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${mqttRequestKey}-backup`,
-          JSON.stringify(request)
+          expect.stringContaining(JSON.stringify(request))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${mqttRequestKey}" key present in localStorage where the fallback of "null" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${mqttRequestKey}" key present in localStorage where the fallback of "null" is chosen`, async () => {
         window.localStorage.removeItem(mqttRequestKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(mqttRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(mqttRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`reads the ${mqttRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "MQTTSessionStore" and updates localStorage entries`, () => {
+      it(`reads the ${mqttRequestKey}" entry from localStorage, sets it as the new request, subscribes to the "MQTTSessionStore" and updates localStorage entries`, async () => {
         vi.mock("~/newstore/MQTTSession", () => {
           return {
             setMQTTRequest: vi.fn(),
@@ -1442,17 +1522,21 @@ describe("PersistenceService", () => {
         })
 
         const request = MQTT_REQUEST_MOCK
-        window.localStorage.setItem(mqttRequestKey, JSON.stringify(request))
+        await setStoreItem(mqttRequestKey, request)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(mqttRequestKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(mqttRequestKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setMQTTRequest).toHaveBeenCalledWith(request)
         expect(MQTTRequest$.subscribe).toHaveBeenCalledWith(
@@ -1463,9 +1547,9 @@ describe("PersistenceService", () => {
 
     describe("setup global environments persistence", () => {
       // Key read from localStorage across test cases
-      const globalEnvKey = "globalEnv"
+      const globalEnvKey = `${STORE_NAMESPACE}:${STORE_KEYS.GLOBAL_ENV}`
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${globalEnvKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${globalEnvKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `globalEnv`
         const globalEnv = [
           {
@@ -1475,12 +1559,12 @@ describe("PersistenceService", () => {
           },
         ]
 
-        window.localStorage.setItem(globalEnvKey, JSON.stringify(globalEnv))
+        await setStoreItem(globalEnvKey, globalEnv)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(globalEnvKey)
 
@@ -1489,37 +1573,45 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${globalEnvKey}-backup`,
-          JSON.stringify(globalEnv)
+          expect.stringContaining(JSON.stringify(globalEnv))
         )
       })
 
-      it(`schema parsing succeeds if there is no "${globalEnvKey}" key present in localStorage where the fallback of "[]" is chosen`, () => {
+      it(`schema parsing succeeds if there is no "${globalEnvKey}" key present in localStorage where the fallback of "[]" is chosen`, async () => {
         window.localStorage.removeItem(globalEnvKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(globalEnvKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(globalEnvKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
       })
 
-      it(`reads the "globalEnv" entry from localStorage, dispatches the new value, subscribes to the "environmentsStore" and updates localStorage entries`, () => {
+      it(`reads the "globalEnv" entry from localStorage, dispatches the new value, subscribes to the "environmentsStore" and updates localStorage entries`, async () => {
         const globalEnv = GLOBAL_ENV_MOCK
-        window.localStorage.setItem(globalEnvKey, JSON.stringify(globalEnv))
+        await setStoreItem(globalEnvKey, globalEnv)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(globalEnvKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(globalEnvKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringContaining('"schemaVersion":1')
+        )
 
         expect(setGlobalEnvVariables).toHaveBeenCalledWith(globalEnv)
         expect(globalEnv$.subscribe).toHaveBeenCalledWith(expect.any(Function))
@@ -1528,22 +1620,22 @@ describe("PersistenceService", () => {
 
     describe("setup GQL tabs persistence", () => {
       // Key read from localStorage across test cases
-      const gqlTabStateKey = "gqlTabState"
+      const gqlTabStateKey = `${STORE_NAMESPACE}:${STORE_KEYS.GQL_TABS}`
 
       const loadTabsFromPersistedStateFn = vi.fn()
       const mock = { loadTabsFromPersistedState: loadTabsFromPersistedStateFn }
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${gqlTabStateKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${gqlTabStateKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `gqlTabState`
         // `lastActiveTabID` -> `string`
         const gqlTabState = { ...GQL_TAB_STATE_MOCK, lastActiveTabID: 1234 }
 
-        window.localStorage.setItem(gqlTabStateKey, JSON.stringify(gqlTabState))
+        await setStoreItem(gqlTabStateKey, gqlTabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
@@ -1552,40 +1644,49 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${gqlTabStateKey}-backup`,
-          JSON.stringify(gqlTabState)
+          expect.stringContaining(JSON.stringify(gqlTabState))
         )
       })
 
-      it(`skips schema parsing and the loading of persisted tabs if there is no "${gqlTabStateKey}" key present in localStorage`, () => {
+      it(`skips schema parsing and the loading of persisted tabs if there is no "${gqlTabStateKey}" key present in localStorage`, async () => {
         window.localStorage.removeItem(gqlTabStateKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
+
         expect(loadTabsFromPersistedStateFn).not.toHaveBeenCalled()
 
         expect(watchDebounced).toHaveBeenCalled()
       })
 
-      it("loads tabs from the state persisted in localStorage and sets watcher for `persistableTabState`", () => {
+      it("loads tabs from the state persisted in localStorage and sets watcher for `persistableTabState`", async () => {
         const tabState = GQL_TAB_STATE_MOCK
-        window.localStorage.setItem(gqlTabStateKey, JSON.stringify(tabState))
+        await setStoreItem(gqlTabStateKey, tabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockGQLTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(loadTabsFromPersistedStateFn).toHaveBeenCalledWith(tabState)
         expect(watchDebounced).toHaveBeenCalledWith(
@@ -1595,23 +1696,21 @@ describe("PersistenceService", () => {
         )
       })
 
-      it("logs an error to the console on failing to parse persisted tab state", () => {
-        window.localStorage.setItem(gqlTabStateKey, "invalid-json")
+      it("logs an error to the console on failing to parse persisted gql tab state", async () => {
+        await setStoreItem(gqlTabStateKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
-        const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(gqlTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(gqlTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
 
         expect(console.error).toHaveBeenCalledWith(
-          `Failed parsing persisted tab state, state:`,
-          window.localStorage.getItem(gqlTabStateKey)
+          `Failed parsing persisted GQL_TABS:`,
+          await getStoreItem(gqlTabStateKey)
         )
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),
@@ -1623,25 +1722,22 @@ describe("PersistenceService", () => {
 
     describe("setup REST tabs persistence", () => {
       // Key read from localStorage across test cases
-      const restTabStateKey = "restTabState"
+      const restTabStateKey = `${STORE_NAMESPACE}:${STORE_KEYS.REST_TABS}`
 
       const loadTabsFromPersistedStateFn = vi.fn()
       const mock = { loadTabsFromPersistedState: loadTabsFromPersistedStateFn }
 
-      it(`shows an error and sets the entry as a backup in localStorage if "${restTabStateKey}" read from localStorage doesn't match the schema`, () => {
+      it(`shows an error and sets the entry as a backup in localStorage if "${restTabStateKey}" read from localStorage doesn't match the schema`, async () => {
         // Invalid shape for `restTabState`
         // `lastActiveTabID` -> `string`
         const restTabState = { ...REST_TAB_STATE_MOCK, lastActiveTabID: 1234 }
 
-        window.localStorage.setItem(
-          restTabStateKey,
-          JSON.stringify(restTabState)
-        )
+        await setStoreItem(restTabStateKey, restTabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
@@ -1650,40 +1746,48 @@ describe("PersistenceService", () => {
         )
         expect(setItemSpy).toHaveBeenCalledWith(
           `${restTabStateKey}-backup`,
-          JSON.stringify(restTabState)
+          expect.stringContaining(JSON.stringify(restTabState))
         )
       })
 
-      it(`skips schema parsing and the loading of persisted tabs if there is no "${restTabStateKey}" key present in localStorage`, () => {
+      it(`skips schema parsing and the loading of persisted tabs if there is no "${restTabStateKey}" key present in localStorage`, async () => {
         window.localStorage.removeItem(restTabStateKey)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockRESTTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockRESTTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(restTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
         expect(loadTabsFromPersistedStateFn).not.toHaveBeenCalled()
 
         expect(watchDebounced).toHaveBeenCalled()
       })
 
-      it("loads tabs from the state persisted in localStorage and sets watcher for `persistableTabState`", () => {
+      it("loads tabs from the state persisted in localStorage and sets watcher for `persistableTabState`", async () => {
         const tabState = REST_TAB_STATE_MOCK
-        window.localStorage.setItem(restTabStateKey, JSON.stringify(tabState))
+        await setStoreItem(restTabStateKey, tabState)
 
         const getItemSpy = spyOnGetItem()
         const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence({ mockRESTTabService: true, mock })
+        await invokeSetupLocalPersistence({ mockRESTTabService: true, mock })
 
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(restTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
+        expect(setItemSpy).toHaveBeenCalledTimes(1)
+        expect(setItemSpy).toHaveBeenCalledWith(
+          schemaVersionKey,
+          expect.stringMatching(/"schemaVersion":1/)
+        )
 
         expect(loadTabsFromPersistedStateFn).toHaveBeenCalledWith(tabState)
         expect(watchDebounced).toHaveBeenCalledWith(
@@ -1693,23 +1797,21 @@ describe("PersistenceService", () => {
         )
       })
 
-      it("logs an error to the console on failing to parse persisted tab state", () => {
-        window.localStorage.setItem(restTabStateKey, "invalid-json")
+      it("logs an error to the console on failing to parse persisted rest tab state", async () => {
+        await setStoreItem(restTabStateKey, "invalid-json")
 
         console.error = vi.fn()
         const getItemSpy = spyOnGetItem()
-        const setItemSpy = spyOnSetItem()
 
-        invokeSetupLocalPersistence()
+        await invokeSetupLocalPersistence()
 
         expect(getItemSpy).toHaveBeenCalledWith(restTabStateKey)
 
         expect(toastErrorFn).not.toHaveBeenCalledWith(restTabStateKey)
-        expect(setItemSpy).not.toHaveBeenCalled()
 
         expect(console.error).toHaveBeenCalledWith(
-          `Failed parsing persisted tab state, state:`,
-          window.localStorage.getItem(restTabStateKey)
+          `Failed parsing persisted REST_TABS:`,
+          await getStoreItem(restTabStateKey)
         )
         expect(watchDebounced).toHaveBeenCalledWith(
           expect.any(Object),
@@ -1720,7 +1822,7 @@ describe("PersistenceService", () => {
     })
   })
 
-  it("`setLocalConfig` method sets a value in localStorage", () => {
+  it("`setLocalConfig` method sets a value in localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1728,11 +1830,14 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
+    await service.setLocalConfig(testKey, testValue)
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
   })
 
-  it("`getLocalConfig` method gets a value from localStorage", () => {
+  it("`getLocalConfig` method gets a value from localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1741,15 +1846,18 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    const retrievedValue = service.getLocalConfig(testKey)
+    await service.setLocalConfig(testKey, testValue)
+    const retrievedValue = await service.getLocalConfig(testKey)
 
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
-    expect(getItemSpy).toHaveBeenCalledWith(testKey)
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
+    expect(getItemSpy).toHaveBeenCalledWith(`${STORE_NAMESPACE}:${testKey}`)
     expect(retrievedValue).toBe(testValue)
   })
 
-  it("`removeLocalConfig` method clears a value in localStorage", () => {
+  it("`removeLocalConfig` method clears a value in localStorage", async () => {
     const testKey = "test-key"
     const testValue = "test-value"
 
@@ -1758,10 +1866,13 @@ describe("PersistenceService", () => {
 
     const service = bindPersistenceService()
 
-    service.setLocalConfig(testKey, testValue)
-    service.removeLocalConfig(testKey)
+    await service.setLocalConfig(testKey, testValue)
+    await service.removeLocalConfig(testKey)
 
-    expect(setItemSpy).toHaveBeenCalledWith(testKey, testValue)
-    expect(removeItemSpy).toHaveBeenCalledWith(testKey)
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `${STORE_NAMESPACE}:${testKey}`,
+      expect.stringContaining(testValue)
+    )
+    expect(removeItemSpy).toHaveBeenCalledWith(`${STORE_NAMESPACE}:${testKey}`)
   })
 })

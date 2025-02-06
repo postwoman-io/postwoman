@@ -5,6 +5,7 @@
   "author": "Hoppscotch (support@hoppscotch.io)",
   "private": true,
   "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky",

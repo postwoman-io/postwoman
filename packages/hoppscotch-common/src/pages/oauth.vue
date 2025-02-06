@@ -69,7 +69,7 @@ function translateOAuthRedirectError(error: string) {
 
 onMounted(async () => {
   const localOAuthTempConfig =
-    persistenceService.getLocalConfig("oauth_temp_config")
+    await persistenceService.getLocalConfig("oauth_temp_config")
 
   if (!localOAuthTempConfig) {
     toast.error(t("authorization.oauth.something_went_wrong_on_oauth_redirect"))
@@ -102,7 +102,7 @@ onMounted(async () => {
       authConfig.refresh_token = tokenInfo.right.refresh_token
     }
 
-    persistenceService.setLocalConfig(
+    await persistenceService.setLocalConfig(
       "oauth_temp_config",
       JSON.stringify(authConfig)
     )

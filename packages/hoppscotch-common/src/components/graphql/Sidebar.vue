@@ -147,7 +147,7 @@ const downloadSchema = async () => {
 
   URL.revokeObjectURL(url)
 
-  const result = await platform.io.saveFileWithDialog({
+  const result = await platform.kernelIO.saveFileWithDialog({
     data: dataToWrite,
     contentType: "application/graphql",
     suggestedFilename: filename,

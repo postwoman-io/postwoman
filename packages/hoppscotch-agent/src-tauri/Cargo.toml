@@ -1,6 +1,6 @@
 [package]
 name = "hoppscotch-agent"
-version = "0.1.3"
+version = "0.1.4"
 description = "A cross-platform HTTP request agent for Hoppscotch for advanced request handling including custom headers, certificates, proxies, and local system integration."
 authors = ["AndrewBastin", "CuriousCorrelation"]
 edition = "2021"
@@ -29,9 +29,10 @@ tokio-util = "0.7.12"
 uuid = { version = "1.11.0", features = [ "v4", "fast-rng" ] }
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8.5"
-log = "0.4.22"
-env_logger = "0.11.5"
-hoppscotch-relay = { path = "../../hoppscotch-relay" }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json", "fmt", "std", "time"] }
+tracing-appender = "0.2.3"
+relay = { git = "https://github.com/CuriousCorrelation/relay.git" }
 thiserror = "1.0.64"
 tauri-plugin-store = "2.1.0"
 x25519-dalek = { version = "2.0.1", features = ["getrandom"] }
@@ -43,13 +44,11 @@ lazy_static = "1.5.0"
 tauri-plugin-single-instance = "2.0.1"
 tauri-plugin-http = { version = "2.0.1", features = ["gzip"] }
 native-dialog = "0.7.0"
+sha2 = "0.10.8"
 
 [target.'cfg(windows)'.dependencies]
 tempfile = { version = "3.13.0" }
 winreg = { version = "0.52.0" }
-
-[dev-dependencies]
-mockito = "1.5.0"
 
 [features]
 default = ["tauri-plugin-autostart"]

@@ -51,7 +51,7 @@
     "@graphql-codegen/urql-introspection": "2.2.1",
     "@graphql-typed-document-node/core": "3.2.0",
     "@iconify-json/lucide": "1.1.144",
-    "@intlify/vite-plugin-vue-i18n": "6.0.1",
+    "@intlify/vite-plugin-vue-i18n": "7.0.0",
     "@rushstack/eslint-patch": "1.3.3",
     "@types/lodash-es": "4.17.10",
     "@types/node": "18.18.8",

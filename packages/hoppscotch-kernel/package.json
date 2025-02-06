@@ -1,0 +1,62 @@
+{
+  "name": "@hoppscotch/kernel",
+  "version": "0.1.0",
+  "description": "Cross-platform runtime kernel for Hoppscotch platform-ops",
+  "type": "module",
+  "main": "dist/hoppscotch-kernel.cjs",
+  "module": "dist/hoppscotch-kernel.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "build:code": "vite build",
+    "build:decl": "tsc --project tsconfig.decl.json",
+    "build": "pnpm run build:code && pnpm run build:decl",
+    "prepare": "pnpm run build:code && pnpm run build:decl",
+    "do-typecheck": "pnpm exec tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "type": "./dist/index.d.ts",
+      "import": "./dist/hoppscotch-kernel.js",
+      "require": "./dist/hoppscotch-kernel.cjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoppscotch/hoppscotch.git"
+  },
+  "author": "Hoppscotch (support@hoppscotch.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hoppscotch/hoppscotch/issues"
+  },
+  "homepage": "https://github.com/hoppscotch/hoppscotch#readme",
+  "devDependencies": {
+    "@types/node": "22.9.3",
+    "typescript": "5.7.2",
+    "vite": "5.4.11"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "2.1.1"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "axios": "1.6.2",
+    "fp-ts": "2.16.9",
+    "aws4fetch": "1.0.20",
+    "zod": "3.22.4",
+    "superjson": "2.2.2",
+    "@tauri-apps/plugin-shell": "2.0.1",
+    "@tauri-apps/plugin-dialog": "2.0.1",
+    "@tauri-apps/plugin-fs": "2.0.2",
+    "@tauri-apps/plugin-store": "2.2.0",
+    "@hoppscotch/plugin-relay": "github:CuriousCorrelation/tauri-plugin-relay"
+  }
+}

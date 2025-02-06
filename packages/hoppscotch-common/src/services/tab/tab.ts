@@ -58,6 +58,15 @@ export abstract class TabService<Doc>
     )
   }
 
+  public async init() {
+    const persistedState = await this.loadPersistedState()
+    if (persistedState) {
+      this.loadTabsFromPersistedState(persistedState)
+    }
+  }
+
+  protected abstract loadPersistedState(): Promise<PersistableTabState<Doc> | null>
+
   public createNewTab(document: Doc, switchToIt = true): HoppTab<Doc> {
     const id = this.generateNewTabID()
 

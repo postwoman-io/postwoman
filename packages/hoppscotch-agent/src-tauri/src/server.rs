@@ -6,11 +6,13 @@ use tower_http::cors::CorsLayer;
 use crate::route;
 use crate::state::AppState;
 
+#[tracing::instrument(skip(state, cancellation_token, app_handle))]
 pub async fn run_server(
     state: Arc<AppState>,
     cancellation_token: CancellationToken,
     app_handle: tauri::AppHandle,
 ) {
+    tracing::info!("Initializing server");
     let cors = CorsLayer::permissive();
 
     let app = Router::new()
@@ -18,17 +20,31 @@ pub async fn run_server(
         .layer(cors);
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 9119));
+    tracing::info!(address = %addr, "Starting server");
 
-    println!("Server running on http://{}", addr);
+    match tokio::net::TcpListener::bind(&addr).await {
+        Ok(listener) => {
+            tracing::info!(address = %addr, "Server bound successfully");
 
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+            if let Err(e) = axum::serve(listener, app.into_make_service())
+                .with_graceful_shutdown(async move {
+                    cancellation_token.cancelled().await;
+                    tracing::info!("Graceful shutdown initiated");
+                })
+                .await
+            {
+                tracing::error!(error = %e, "Server error occurred");
+                return;
+            }
 
-    axum::serve(listener, app.into_make_service())
-        .with_graceful_shutdown(async move {
-            cancellation_token.cancelled().await;
-        })
-        .await
-        .unwrap();
-
-    println!("Server shut down");
+            tracing::info!("Server shut down successfully");
+        }
+        Err(e) => {
+            tracing::error!(
+                error = %e,
+                address = %addr,
+                "Failed to bind server to address"
+            );
+        }
+    }
 }

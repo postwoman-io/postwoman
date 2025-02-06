@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "lib": ["esnext", "DOM"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"],
+      "@io/*": ["src/io/*"],
+      "@relay/*": ["src/relay/*"],
+      "@store/*": ["src/store/*"],
+      "@type/*": ["src/type/*"],
+      "@util/*": ["src/util/*"]
+    }
+  }
+}
