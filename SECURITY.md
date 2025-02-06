@@ -13,7 +13,8 @@ We use [Github Security Advisories](https://github.com/hoppscotch/hoppscotch/sec
 Someone from the Hoppscotch team shall report to you within 48 hours of the disclosure of the vulnerability in GHSA. If no response was received, please reach out to
 Hoppscotch Support at support@hoppscotch.io along with the GHSA advisory link.
 
-> NOTE: Since we have multiple open source components, Advisories may move into the relevant repo (for example, an XSS in a UI component might be part of [`@hoppscotch/ui`](https://github.com/hoppscotch/ui)).
+> [!NOTE]
+> Since we have multiple open source components, Advisories may move into the relevant repo (for example, an XSS in a UI component might be part of [`@hoppscotch/ui`](https://github.com/hoppscotch/ui)).
 > If in doubt, open your report in `hoppscotch/hoppscotch` GHSA.
 
 **Do not create a GitHub issue ticket to report a security vulnerability!**
