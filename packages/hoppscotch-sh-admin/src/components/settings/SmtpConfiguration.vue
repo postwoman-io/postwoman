@@ -87,6 +87,16 @@
                       @click="toggleMask(field.key)"
                     />
                   </span>
+
+                  <div
+                    v-if="getFieldError(field.key)"
+                    class="flex items-center justify-between bg-red-200 px-2 py-2 font-semibold text-red-700 rounded-lg mt-2 max-w-lg"
+                  >
+                    <div class="flex items-center">
+                      <icon-lucide-info class="mr-2" />
+                      <span> {{ field.error }} </span>
+                    </div>
+                  </div>
                 </span>
               </div>
             </div>
@@ -99,9 +109,9 @@
 
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core';
-import { computed, reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { useI18n } from '~/composables/i18n';
-import { ServerConfigs } from '~/helpers/configs';
+import { hasInputValidationFailed, ServerConfigs } from '~/helpers/configs';
 import IconEye from '~icons/lucide/eye';
 import IconEyeOff from '~icons/lucide/eye-off';
 import IconHelpCircle from '~icons/lucide/help-circle';
@@ -132,12 +142,14 @@ const smtpConfigs = computed({
 type Field = {
   name: string;
   key: keyof ServerConfigs['mailConfigs']['fields'];
+  error?: string;
 };
 
 const smtpConfigFields = reactive<Field[]>([
   {
     name: t('configs.mail_configs.smtp_url'),
     key: 'mailer_smtp_url',
+    error: t('configs.mail_configs.input_validation'),
   },
   {
     name: t('configs.mail_configs.address_from'),
@@ -215,4 +227,25 @@ const isCheckboxField = (field: Field) => {
 const toggleCheckbox = (field: Field) =>
   ((smtpConfigs.value.fields[field.key] as boolean) =
     !smtpConfigs.value.fields[field.key]);
+
+// Input Validation
+const fieldErrors = computed(() => {
+  const errors: Record<string, boolean> = {};
+
+  if (smtpConfigs.value?.fields.mailer_smtp_url) {
+    const value = smtpConfigs.value.fields.mailer_smtp_url as string;
+    errors.mailer_smtp_url =
+      !value.startsWith('smtp://') && !value.startsWith('smtps://');
+  }
+
+  return errors;
+});
+
+const getFieldError = (
+  fieldKey: keyof ServerConfigs['mailConfigs']['fields']
+) => fieldErrors.value[fieldKey];
+
+watch(fieldErrors, (errors) => {
+  hasInputValidationFailed.value = Object.values(errors).some(Boolean);
+});
 </script>

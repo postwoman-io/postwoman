@@ -33,7 +33,7 @@
   <div v-if="isConfigUpdated" class="fixed bottom-0 right-0 m-10">
     <HoppButtonPrimary
       :label="t('configs.save_changes')"
-      @click="showSaveChangesModal = !showSaveChangesModal"
+      @click="triggerSaveChangesModal()"
     />
   </div>
 
@@ -57,6 +57,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from '~/composables/i18n';
 import { useToast } from '~/composables/toast';
 import { useConfigHandler } from '~/composables/useConfigHandler';
+import { hasInputValidationFailed } from '~/helpers/configs';
 
 const t = useI18n();
 const toast = useToast();
@@ -90,6 +91,17 @@ const isConfigUpdated = computed(() =>
 const areAnyFieldsEmpty = computed(() =>
   workingConfigs.value ? AreAnyConfigFieldsEmpty(workingConfigs.value) : false
 );
+
+const triggerSaveChangesModal = () => {
+  if (areAnyFieldsEmpty.value) {
+    return toast.error(t('configs.input_empty'));
+  }
+
+  if (hasInputValidationFailed.value) {
+    return toast.error(t('configs.input_validation_error'));
+  }
+  showSaveChangesModal.value = true;
+};
 
 const restartServer = () => {
   if (areAnyFieldsEmpty.value) {
