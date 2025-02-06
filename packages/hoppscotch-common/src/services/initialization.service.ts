@@ -167,12 +167,6 @@ export class InitializationService extends Service<InitEvent> {
     performMigrations()
   }
 
-  public async init() {
-    await this.initPre()
-    await this.initAuthAndSync()
-    await this.initPost()
-  }
-
   public isInitialized() {
     return Object.values(this.initState).every(Boolean)
   }

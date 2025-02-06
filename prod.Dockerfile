@@ -40,12 +40,14 @@ ENV HOPP_ALLOW_RUNTIME_ENV=true
 # Required by @hoppscotch/js-sandbox to build `isolated-vm`
 RUN apk add python3 make g++ zlib-dev brotli-dev c-ares-dev nghttp2-dev openssl-dev icu-dev
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 COPY pnpm-lock.yaml .
 RUN pnpm fetch
 
 COPY . .
 RUN pnpm install -f --prefer-offline
+
+
 
 FROM base_builder AS backend_builder
 WORKDIR /usr/src/app/packages/hoppscotch-backend
@@ -65,7 +67,7 @@ RUN sh -c "curl -qL https://www.npmjs.com/install.sh | env npm_install=10.9.2 sh
 # Install caddy
 COPY --from=caddy_builder /tmp/caddy-build/cmd/caddy/caddy /usr/bin/caddy
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 
 COPY --from=base_builder  /usr/src/app/packages/hoppscotch-backend/backend.Caddyfile /etc/caddy/backend.Caddyfile
 COPY --from=backend_builder /dist/backend /dist/backend
@@ -95,6 +97,8 @@ RUN apk add --no-cache musl-dev
 COPY . .
 WORKDIR /usr/src/app/packages/hoppscotch-selfhost-web/webapp-server
 RUN cargo build --release
+
+
 
 FROM alpine:3.19.6 AS app
 RUN apk add nodejs curl
@@ -194,7 +198,7 @@ LABEL org.opencontainers.image.source="https://github.com/hoppscotch/hoppscotch"
 
 RUN apk add tini
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 
 # Copy necessary files
 # Backend files

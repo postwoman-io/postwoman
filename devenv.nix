@@ -30,10 +30,14 @@ in {
     colima
     docker
     jq
-    nodejs_22
-    nodePackages_latest.typescript-language-server
-    nodePackages_latest."@volar/vue-language-server"
-    nodePackages_latest.prisma
+    # NOTE: In case there's `Cannot find module: ... bcrypt ...` error, try `npm rebuild bcrypt`
+    # See: https://github.com/kelektiv/node.bcrypt.js/issues/800
+    # See: https://github.com/kelektiv/node.bcrypt.js/issues/1055
+    nodejs_20
+    nodePackages.node-gyp
+    nodePackages.typescript-language-server
+    nodePackages."@volar/vue-language-server"
+    nodePackages.prisma
     prisma-engines
     cargo-edit
   ] ++ lib.optionals pkgs.stdenv.isDarwin darwinPackages
@@ -46,7 +50,7 @@ in {
     COMPOSE_DOCKER_CLI_BUILD = "1";
   } // lib.optionalAttrs pkgs.stdenv.isLinux {
     # NOTE: Setting these `PRISMA_*` environment variable fixes
-    # Error: Failed to fetch sha256 checksum at https://binaries.prisma.sh/all_commits/<hash>/linux-nixos/libquery_engine.so.node.gz.sha256 - 404 Not Found
+    # "Error: Failed to fetch sha256 checksum at https://binaries.prisma.sh/all_commits/<hash>/linux-nixos/libquery_engine.so.node.gz.sha256 - 404 Not Found"
     # See: https://github.com/prisma/prisma/discussions/3120
     PRISMA_QUERY_ENGINE_LIBRARY = "${pkgs.prisma-engines}/lib/libquery_engine.node";
     PRISMA_QUERY_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/query-engine";
@@ -63,9 +67,9 @@ in {
   scripts = {
     hello.exec = "echo hello from $APP_GREET";
     e.exec = "emacs";
-    lima-docker-setup.exec = "limactl start template://docker";
-    lima-docker-clean.exec = "limactl rm -f $(limactl ls -q)";
-    colima-docker-start.exec = "colima start --memory 8";
+    lima-setup.exec = "limactl start template://docker";
+    lima-clean.exec = "limactl rm -f $(limactl ls -q)";
+    colima-start.exec = "colima start --cpu 4 --memory 50";
 
     docker-prune.exec = ''
       echo "Cleaning up unused Docker resources..."
@@ -159,10 +163,17 @@ in {
   dotenv.enable = true;
 
   languages = {
-    typescript.enable = true;
-    javascript = {
+    typescript = {
       enable = true;
-      pnpm.enable = true;
+    };
+    javascript = {
+      package = pkgs.nodejs_20;
+      enable = true;
+      pnpm = {
+        # NOTE: This follows pnpm version from `prod.Dockerfile`
+        package = pkgs.pnpm_9;  # This will use pnpm version 9.x
+        enable = true;
+      };
       npm.enable = true;
     };
     rust = {
