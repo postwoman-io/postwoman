@@ -242,10 +242,6 @@ const handleOAuthRedirect = async () => {
     return E.left("NO_CLIENT_ID" as const)
   }
 
-  if (!clientSecret) {
-    return E.left("NO_CLIENT_SECRET" as const)
-  }
-
   if (!codeVerifier) {
     return E.left("NO_CODE_VERIFIER" as const)
   }
